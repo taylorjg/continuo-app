@@ -1,16 +1,33 @@
 import * as Phaser from 'phaser'
 import { Card } from './continuo-lib/card'
 import { Deck } from './continuo-lib/deck'
-import { Colour } from './continuo-lib/enums'
+import { Colour, Orientation } from './continuo-lib/enums'
 
-const CARD_SIZE = 200
+const CELL_SIZE = 28 * 2
+const GAP_SIZE = 2
+const CARD_SIZE = 4 * CELL_SIZE + 3 * GAP_SIZE
 const HALF_CARD_SIZE = CARD_SIZE / 2
 
-const drawCard = (graphics: Phaser.GameObjects.Graphics /* , card: Card */): void => {
-  graphics.fillStyle(0xFF0000)
-  graphics.fillRect(0, 0, HALF_CARD_SIZE, CARD_SIZE)
-  graphics.fillStyle(0x0000FF)
-  graphics.fillRect(HALF_CARD_SIZE, 0, HALF_CARD_SIZE, CARD_SIZE)
+const COLOUR_MAP = new Map([
+  [Colour.Red, 0xFF0000],
+  [Colour.Green, 0x00FF00],
+  [Colour.Blue, 0x0000FF],
+  [Colour.Yellow, 0xFFFF00]
+])
+
+const drawCard = (graphics: Phaser.GameObjects.Graphics, card: Card, orientation: Orientation): void => {
+  graphics.fillStyle(0x000000)
+  graphics.fillRect(0, 0, CARD_SIZE, CARD_SIZE)
+  for (const rowWithinCard of [0, 1, 2, 3]) {
+    for (const colWithinCard of [0, 1, 2, 3]) {
+      const cellColour = card.colourAt(rowWithinCard, colWithinCard, orientation)
+      const colour = COLOUR_MAP.get(cellColour)
+      graphics.fillStyle(colour)
+      const x = rowWithinCard * (CELL_SIZE + GAP_SIZE)
+      const y = colWithinCard * (CELL_SIZE + GAP_SIZE)
+      graphics.fillRect(x, y, CELL_SIZE, CELL_SIZE)
+    }
+  }
 }
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
@@ -21,13 +38,21 @@ const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
 
 export class GameScene extends Phaser.Scene {
 
+  deck: Deck
+
   constructor() {
     super(sceneConfig)
+    this.deck = new Deck()
   }
 
-  public create() { 
+  public create() {
+    // const card1 = Deck.findCard(Colour.Blue, Colour.Green, Colour.Green, Colour.Blue)
+    // const card2 = Deck.findCard(Colour.Blue, Colour.Green, Colour.Red, Colour.Blue)
+    // const placedCard1 = new PlacedCard(card1, 0, 0, Orientation.North)
+    // const placedCard2 = new PlacedCard(card2, -1, 4, Orientation.North)
+    const card = this.deck.nextCard()
     const cardGraphics = new Phaser.GameObjects.Graphics(this)
-    drawCard(cardGraphics)
+    drawCard(cardGraphics, card, Orientation.North)
     cardGraphics.generateTexture('card', CARD_SIZE, CARD_SIZE)
     this.add.image(400, 300, 'card')
   }
