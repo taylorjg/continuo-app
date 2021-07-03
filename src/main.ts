@@ -1,7 +1,8 @@
 import * as Phaser from 'phaser'
-import { Card } from './continuo-lib/card'
+// import { Card } from './continuo-lib/card'
 import { Deck } from './continuo-lib/deck'
 import { Colour, Orientation } from './continuo-lib/enums'
+import { PlacedCard } from './continuo-lib/placedCard'
 
 const CELL_SIZE = 28 * 2
 const GAP_SIZE = 2
@@ -15,12 +16,12 @@ const COLOUR_MAP = new Map([
   [Colour.Yellow, 0xFFFF00]
 ])
 
-const drawCard = (graphics: Phaser.GameObjects.Graphics, card: Card, orientation: Orientation): void => {
+const drawPlacedCard = (graphics: Phaser.GameObjects.Graphics, placedCard: PlacedCard): void => {
   graphics.fillStyle(0x000000)
   graphics.fillRect(0, 0, CARD_SIZE, CARD_SIZE)
   for (const rowWithinCard of [0, 1, 2, 3]) {
     for (const colWithinCard of [0, 1, 2, 3]) {
-      const cellColour = card.colourAt(rowWithinCard, colWithinCard, orientation)
+      const cellColour = placedCard.colourAt(rowWithinCard, colWithinCard)
       const colour = COLOUR_MAP.get(cellColour)
       graphics.fillStyle(colour)
       const x = rowWithinCard * (CELL_SIZE + GAP_SIZE)
@@ -51,10 +52,11 @@ export class GameScene extends Phaser.Scene {
     // const placedCard1 = new PlacedCard(card1, 0, 0, Orientation.North)
     // const placedCard2 = new PlacedCard(card2, -1, 4, Orientation.North)
     const card = this.deck.nextCard()
+    const placedCard = new PlacedCard(card, 0, 0, Orientation.North)
     const cardGraphics = new Phaser.GameObjects.Graphics(this)
-    drawCard(cardGraphics, card, Orientation.North)
+    drawPlacedCard(cardGraphics, placedCard)
     cardGraphics.generateTexture('card', CARD_SIZE, CARD_SIZE)
-    this.add.image(400, 300, 'card')
+    const cardSprite = this.add.sprite(400, 300, 'card')
   }
 }
 
