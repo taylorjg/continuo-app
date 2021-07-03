@@ -1,0 +1,23 @@
+{
+  "name": "continuo-app-phaser-poc",
+  "version": "0.0.1",
+  "description": "Learning Phaser by creating a proof-of-concept Continuo app",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack",
+    "dev": "webpack serve"
+  },
+  "author": "Jonathan Taylor",
+  "license": "MIT",
+  "devDependencies": {
+    "copy-webpack-plugin": "^9.0.1",
+    "ts-loader": "^9.2.3",
+    "typescript": "^4.3.5",
+    "webpack": "^5.42.0",
+    "webpack-cli": "^4.7.2",
+    "webpack-dev-server": "^3.11.2"
+  },
+  "dependencies": {
+    "phaser": "^3.55.2"
+  }
+}
