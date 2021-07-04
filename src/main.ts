@@ -1,6 +1,8 @@
 import * as Phaser from 'phaser'
+import { Board } from './continuo-lib/board'
 import { Deck } from './continuo-lib/deck'
 import { Colour } from './continuo-lib/enums'
+import { evaluatePlacedCard } from './continuo-lib/evaluate'
 import { PlacedCard } from './continuo-lib/placedCard'
 
 const CELL_SIZE = 28 * 2
@@ -45,9 +47,15 @@ export class GameScene extends Phaser.Scene {
     this.deck = new Deck()
   }
 
-  private static getCardPosition(placedCard: PlacedCard): Phaser.Geom.Point {
-    const x = placedCard.col * CARD_SIZE / 4 + 100
-    const y = placedCard.row * CARD_SIZE / 4 + 100
+  private static getCellPosition(row: number, col: number): Phaser.Geom.Point {
+    const x = col * CARD_SIZE / 4 + 100
+    const y = row * CARD_SIZE / 4 + 100
+    return new Phaser.Geom.Point(x, y)
+  }
+
+  private static getCellCentrePosition(row: number, col: number): Phaser.Geom.Point {
+    const x = col * CARD_SIZE / 4 + 100 + CELL_SIZE / 2
+    const y = row * CARD_SIZE / 4 + 100 + CELL_SIZE / 2
     return new Phaser.Geom.Point(x, y)
   }
 
@@ -62,15 +70,28 @@ export class GameScene extends Phaser.Scene {
       new PlacedCard(card3, 3, 5, orientation3),
       new PlacedCard(card4, 4, 1, orientation4)
     ]
+    const board = placedCards.slice(0, -1).reduce((b, pc) => b.placeCard(pc), Board.empty)
+    const possibleMove = evaluatePlacedCard(board, placedCards.slice(-1)[0])
+    console.dir(possibleMove)
 
     placedCards.forEach((placedCard, index) => {
       const cardGraphics = new Phaser.GameObjects.Graphics(this)
       drawPlacedCard(cardGraphics, placedCard)
       const cardSpriteKey = `card${index}`
       cardGraphics.generateTexture(cardSpriteKey, CARD_SIZE, CARD_SIZE)
-      const pos = GameScene.getCardPosition(placedCard)
+      const pos = GameScene.getCellPosition(placedCard.row, placedCard.col)
       const cardSprite = this.add.sprite(pos.x, pos.y, cardSpriteKey)
       cardSprite.setOrigin(0, 0)
+    })
+
+    possibleMove.chains.forEach(chain => {
+      const points = chain.cells.map(cell => GameScene.getCellCentrePosition(cell.row, cell.col))
+      const polygon = new Phaser.GameObjects.Polygon(this, 0, 0, points)
+      polygon.setStrokeStyle(CELL_SIZE / 5, 0xFF00FF)
+      polygon.closePath = false
+      polygon.setOrigin(0, 0)
+      console.dir(polygon)
+      this.add.existing(polygon)
     })
   }
 }
