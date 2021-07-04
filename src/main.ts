@@ -1,13 +1,12 @@
 import * as Phaser from 'phaser'
-// import { Card } from './continuo-lib/card'
 import { Deck } from './continuo-lib/deck'
-import { Colour, Orientation } from './continuo-lib/enums'
+import { Colour } from './continuo-lib/enums'
 import { PlacedCard } from './continuo-lib/placedCard'
 
 const CELL_SIZE = 28 * 2
 const GAP_SIZE = 2
 const CARD_SIZE = 4 * CELL_SIZE + 3 * GAP_SIZE
-const HALF_CARD_SIZE = CARD_SIZE / 2
+// const HALF_CARD_SIZE = CARD_SIZE / 2
 
 const COLOUR_MAP = new Map([
   [Colour.Red, 0xFF0000],
@@ -46,17 +45,33 @@ export class GameScene extends Phaser.Scene {
     this.deck = new Deck()
   }
 
+  private static getCardPosition(placedCard: PlacedCard): Phaser.Geom.Point {
+    const x = placedCard.col * CARD_SIZE / 4 + 100
+    const y = placedCard.row * CARD_SIZE / 4 + 100
+    return new Phaser.Geom.Point(x, y)
+  }
+
   public create() {
-    // const card1 = Deck.findCard(Colour.Blue, Colour.Green, Colour.Green, Colour.Blue)
-    // const card2 = Deck.findCard(Colour.Blue, Colour.Green, Colour.Red, Colour.Blue)
-    // const placedCard1 = new PlacedCard(card1, 0, 0, Orientation.North)
-    // const placedCard2 = new PlacedCard(card2, -1, 4, Orientation.North)
-    const card = this.deck.nextCard()
-    const placedCard = new PlacedCard(card, 0, 0, Orientation.North)
-    const cardGraphics = new Phaser.GameObjects.Graphics(this)
-    drawPlacedCard(cardGraphics, placedCard)
-    cardGraphics.generateTexture('card', CARD_SIZE, CARD_SIZE)
-    const cardSprite = this.add.sprite(400, 300, 'card')
+    const [card1, orientation1] = Deck.findCard(Colour.Blue, Colour.Green, Colour.Green, Colour.Blue)
+    const [card2, orientation2] = Deck.findCard(Colour.Blue, Colour.Green, Colour.Red, Colour.Blue)
+    const [card3, orientation3] = Deck.findCard(Colour.Blue, Colour.Red, Colour.Red, Colour.Yellow)
+    const [card4, orientation4] = Deck.findCard(Colour.Blue, Colour.Green, Colour.Yellow, Colour.Blue)
+    const placedCards = [
+      new PlacedCard(card1, 0, 0, orientation1),
+      new PlacedCard(card2, -1, 4, orientation2),
+      new PlacedCard(card3, 3, 5, orientation3),
+      new PlacedCard(card4, 4, 1, orientation4)
+    ]
+
+    placedCards.forEach((placedCard, index) => {
+      const cardGraphics = new Phaser.GameObjects.Graphics(this)
+      drawPlacedCard(cardGraphics, placedCard)
+      const cardSpriteKey = `card${index}`
+      cardGraphics.generateTexture(cardSpriteKey, CARD_SIZE, CARD_SIZE)
+      const pos = GameScene.getCardPosition(placedCard)
+      const cardSprite = this.add.sprite(pos.x, pos.y, cardSpriteKey)
+      cardSprite.setOrigin(0, 0)
+    })
   }
 }
 
@@ -67,9 +82,8 @@ const gameConfig: Phaser.Types.Core.GameConfig = {
     width: window.innerWidth,
     height: window.innerHeight
   },
-  parent: 'game',
   backgroundColor: '#AAAAAA',
-  scene: [GameScene]
+  scene: GameScene
 }
 
 export const game = new Phaser.Game(gameConfig)
