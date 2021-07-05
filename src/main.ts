@@ -7,9 +7,13 @@ import { evaluatePlacedCard } from './continuo-lib/evaluate'
 import { PlacedCard } from './continuo-lib/placedCard'
 
 const CELL_SIZE = 28 * 2
+const HALF_CELL_SIZE = CELL_SIZE / 2
 const GAP_SIZE = 2
 const CARD_SIZE = 4 * CELL_SIZE + 3 * GAP_SIZE
-// const HALF_CARD_SIZE = CARD_SIZE / 2
+const HALF_CARD_SIZE = CARD_SIZE / 2
+const QUARTER_CARD_SIZE = CARD_SIZE / 4
+const ARBITRARY_OFFSET_X = CARD_SIZE
+const ARBITRARY_OFFSET_Y = CARD_SIZE
 
 const COLOUR_MAP = new Map([
   [Colour.Red, 0xFF0000],
@@ -51,14 +55,14 @@ export class GameScene extends Phaser.Scene {
   }
 
   private static getCardPosition(row: number, col: number): Phaser.Geom.Point {
-    const x = col * CARD_SIZE / 4 + 100
-    const y = row * CARD_SIZE / 4 + 100
+    const x = col * QUARTER_CARD_SIZE + HALF_CARD_SIZE + ARBITRARY_OFFSET_X
+    const y = row * QUARTER_CARD_SIZE + HALF_CARD_SIZE + ARBITRARY_OFFSET_Y
     return new Phaser.Geom.Point(x, y)
   }
 
   private static getCellPosition(row: number, col: number): Phaser.Geom.Point {
-    const x = col * CARD_SIZE / 4 + 100 + CELL_SIZE / 2
-    const y = row * CARD_SIZE / 4 + 100 + CELL_SIZE / 2
+    const x = col * QUARTER_CARD_SIZE + HALF_CELL_SIZE + ARBITRARY_OFFSET_X
+    const y = row * QUARTER_CARD_SIZE + HALF_CELL_SIZE + ARBITRARY_OFFSET_Y
     return new Phaser.Geom.Point(x, y)
   }
 
@@ -74,7 +78,6 @@ export class GameScene extends Phaser.Scene {
       const key = rotated ? `card-${index}-rotated` : `card-${index}`
       graphics.generateTexture(key, CARD_SIZE, CARD_SIZE)
       const sprite = new Phaser.GameObjects.Sprite(this, 0, 0, key)
-      sprite.setOrigin(0, 0)
       sprite.visible = false
       const map = rotated ? this.rotatedCardSpritesMap : this.normalCardSpritesMap
       map.set(card, sprite)
