@@ -92,6 +92,8 @@ export class GameScene extends Phaser.Scene {
       graphics.generateTexture(key, CARD_SIZE, CARD_SIZE)
       const sprite = new Phaser.GameObjects.Sprite(this, 0, 0, key)
       sprite.visible = false
+      sprite.scaleX = 0.99
+      sprite.scaleY = 0.99
       const map = rotated ? this.rotatedCardSpritesMap : this.normalCardSpritesMap
       map.set(card, sprite)
       this.add.existing(sprite)
@@ -138,6 +140,12 @@ export class GameScene extends Phaser.Scene {
       this.rotatedCardSpritesMap.forEach(cardSprite => cardSprite.visible = false)
       this.deck.reset()
       this.board = Board.empty
+      const card1 = this.deck.nextCard()
+      const placedCard = new PlacedCard(card1, 0, 0, Orientation.North)
+      this.placeCard(placedCard)
+      const card2 = this.deck.nextCard()
+      const card2BestMove = evaluateCard(this.board, card2)[0]
+      this.placeCard(card2BestMove.placedCard)
       nextCardElement.disabled = false
     }, this)
 
