@@ -1,10 +1,12 @@
 import * as Phaser from 'phaser'
 import { Board } from './continuo-lib/board'
 import { Card } from './continuo-lib/card'
+import { Chain } from './continuo-lib/chain'
 import { Deck } from './continuo-lib/deck'
 import { Colour, Orientation } from './continuo-lib/enums'
 import { evaluateCard } from './continuo-lib/evaluate'
 import { PlacedCard } from './continuo-lib/placedCard'
+import { PossibleMove } from './continuo-lib/possibleMove'
 
 const CELL_SIZE = 28 * 2
 const HALF_CELL_SIZE = CELL_SIZE / 2
@@ -49,11 +51,15 @@ export class GameScene extends Phaser.Scene {
   board: Board
   normalCardSpritesMap: Map<Card, Phaser.GameObjects.Sprite>
   rotatedCardSpritesMap: Map<Card, Phaser.GameObjects.Sprite>
+  chainHighlights: Phaser.GameObjects.Polygon[]
 
   constructor() {
     super(sceneConfig)
     this.deck = new Deck()
     this.board = Board.empty
+    this.normalCardSpritesMap = new Map<Card, Phaser.GameObjects.Sprite>()
+    this.rotatedCardSpritesMap = new Map<Card, Phaser.GameObjects.Sprite>()
+    this.chainHighlights = []
   }
 
   private static getCardPosition(row: number, col: number): Phaser.Geom.Point {
@@ -68,7 +74,22 @@ export class GameScene extends Phaser.Scene {
     return new Phaser.Geom.Point(x, y)
   }
 
-  private placeCard(placedCard: PlacedCard): void {
+  private highlightChains(chains: readonly Chain[]): void {
+    this.chainHighlights.forEach(chainHighlight => chainHighlight.destroy())
+    this.chainHighlights = []
+    chains.forEach(chain => {
+      const points = chain.cells.map(cell => GameScene.getCellPosition(cell.row, cell.col))
+      const polygon = new Phaser.GameObjects.Polygon(this, 0, 0, points)
+      polygon.setClosePath(false)
+      polygon.setOrigin(0, 0)
+      polygon.setStrokeStyle(CELL_SIZE / 5, 0xFF00FF)
+      this.add.existing(polygon)
+      this.chainHighlights.push(polygon)
+    })
+  }
+
+  private placeCard(possibleMove: PossibleMove): void {
+    const placedCard = possibleMove.placedCard
     this.board = this.board.placeCard(placedCard)
     const map = placedCard.orientation == Orientation.North || placedCard.orientation == Orientation.South
       ? this.normalCardSpritesMap
@@ -77,12 +98,10 @@ export class GameScene extends Phaser.Scene {
     const pos = GameScene.getCardPosition(placedCard.row, placedCard.col)
     cardSprite.setPosition(pos.x, pos.y)
     cardSprite.visible = true
+    this.highlightChains(possibleMove.chains)
   }
 
   public create() {
-
-    this.normalCardSpritesMap = new Map<Card, Phaser.GameObjects.Sprite>()
-    this.rotatedCardSpritesMap = new Map<Card, Phaser.GameObjects.Sprite>()
 
     const makeCardSprite = (card: Card, index: number, rotated: boolean): void => {
       const graphics = new Phaser.GameObjects.Graphics(this)
@@ -105,22 +124,13 @@ export class GameScene extends Phaser.Scene {
     })
 
     const card1 = this.deck.nextCard()
-    const placedCard = new PlacedCard(card1, 0, 0, Orientation.North)
-    this.placeCard(placedCard)
+    const placedCard1 = new PlacedCard(card1, 0, 0, Orientation.North)
+    const move1 = new PossibleMove(placedCard1, [])
+    this.placeCard(move1)
 
     const card2 = this.deck.nextCard()
-    const card2BestMove = evaluateCard(this.board, card2)[0]
-    this.placeCard(card2BestMove.placedCard)
-
-    // const possibleMove = evaluatePlacedCard(board, placedCards.slice(-1)[0])
-    // possibleMove.chains.forEach(chain => {
-    //   const points = chain.cells.map(cell => GameScene.getCellPosition(cell.row, cell.col))
-    //   const polygon = new Phaser.GameObjects.Polygon(this, 0, 0, points)
-    //   polygon.setStrokeStyle(CELL_SIZE / 5, 0xFF00FF)
-    //   polygon.closePath = false
-    //   polygon.setOrigin(0, 0)
-    //   this.add.existing(polygon)
-    // })
+    const move2 = evaluateCard(this.board, card2)[0]
+    this.placeCard(move2)
 
     const restartButton = this.add.dom(0, 0, 'button', 'margin: 10px; width: 80px;', 'Restart')
     restartButton.setOrigin(0, 0)
@@ -141,19 +151,20 @@ export class GameScene extends Phaser.Scene {
       this.deck.reset()
       this.board = Board.empty
       const card1 = this.deck.nextCard()
-      const placedCard = new PlacedCard(card1, 0, 0, Orientation.North)
-      this.placeCard(placedCard)
+      const placedCard1 = new PlacedCard(card1, 0, 0, Orientation.North)
+      const move1 = new PossibleMove(placedCard1, [])
+      this.placeCard(move1)
       const card2 = this.deck.nextCard()
-      const card2BestMove = evaluateCard(this.board, card2)[0]
-      this.placeCard(card2BestMove.placedCard)
+      const move2 = evaluateCard(this.board, card2)[0]
+      this.placeCard(move2)
       nextCardElement.disabled = false
     }, this)
 
     nextCardButton.on('click', () => {
       console.log('[NextCard button click]')
       const card = this.deck.nextCard()
-      const bestMove = evaluateCard(this.board, card)[0]
-      this.placeCard(bestMove.placedCard)
+      const move = evaluateCard(this.board, card)[0]
+      this.placeCard(move)
       nextCardElement.disabled = this.deck.numCardsLeft == 0
     }, this)
   }
