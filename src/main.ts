@@ -9,13 +9,11 @@ import { PlacedCard } from './continuo-lib/placedCard'
 import { PossibleMove } from './continuo-lib/possibleMove'
 
 const CELL_SIZE = 28 * 2
-const HALF_CELL_SIZE = CELL_SIZE / 2
 const GAP_SIZE = 2
 const CARD_SIZE = 4 * CELL_SIZE + 3 * GAP_SIZE
-const HALF_CARD_SIZE = CARD_SIZE / 2
 const QUARTER_CARD_SIZE = CARD_SIZE / 4
-const ARBITRARY_OFFSET_X = CARD_SIZE
-const ARBITRARY_OFFSET_Y = CARD_SIZE
+const EIGHTH_CARD_SIZE = CARD_SIZE / 8
+const NUM_BORDER_CELLS = 5
 
 const COLOUR_MAP = new Map([
   [Colour.Red, 0xFF0000],
@@ -62,15 +60,15 @@ export class GameScene extends Phaser.Scene {
     this.chainHighlights = []
   }
 
-  private static getCardPosition(row: number, col: number): Phaser.Geom.Point {
-    const x = col * QUARTER_CARD_SIZE + HALF_CARD_SIZE + ARBITRARY_OFFSET_X
-    const y = row * QUARTER_CARD_SIZE + HALF_CARD_SIZE + ARBITRARY_OFFSET_Y
+  private getCardPosition(row: number, col: number): Phaser.Geom.Point {
+    const x = (col + 2) * QUARTER_CARD_SIZE
+    const y = (row + 2) * QUARTER_CARD_SIZE
     return new Phaser.Geom.Point(x, y)
   }
 
-  private static getCellPosition(row: number, col: number): Phaser.Geom.Point {
-    const x = col * QUARTER_CARD_SIZE + HALF_CELL_SIZE + ARBITRARY_OFFSET_X
-    const y = row * QUARTER_CARD_SIZE + HALF_CELL_SIZE + ARBITRARY_OFFSET_Y
+  private getCellPosition(row: number, col: number): Phaser.Geom.Point {
+    const x = col * QUARTER_CARD_SIZE + EIGHTH_CARD_SIZE
+    const y = row * QUARTER_CARD_SIZE + EIGHTH_CARD_SIZE
     return new Phaser.Geom.Point(x, y)
   }
 
@@ -78,7 +76,7 @@ export class GameScene extends Phaser.Scene {
     this.chainHighlights.forEach(chainHighlight => chainHighlight.destroy())
     this.chainHighlights = []
     chains.forEach(chain => {
-      const points = chain.cells.map(cell => GameScene.getCellPosition(cell.row, cell.col))
+      const points = chain.cells.map(cell => this.getCellPosition(cell.row, cell.col))
       const polygon = new Phaser.GameObjects.Polygon(this, 0, 0, points)
       polygon.setClosePath(false)
       polygon.setOrigin(0, 0)
@@ -91,17 +89,42 @@ export class GameScene extends Phaser.Scene {
   private placeCard(possibleMove: PossibleMove): void {
     const placedCard = possibleMove.placedCard
     this.board = this.board.placeCard(placedCard)
+
+    const boundaries = this.board.getBoundaries()
+    const [leftMost, rightMost, topMost, bottomMost] = boundaries
+    const width = <number>this.game.config.width
+    const height = <number>this.game.config.height
+    const numCellsWide = rightMost - leftMost + 1 + (2 * NUM_BORDER_CELLS)
+    const numCellsHigh = bottomMost - topMost + 1 + (2 * NUM_BORDER_CELLS)
+    const totalWidth = numCellsWide * QUARTER_CARD_SIZE
+    const totalHeight = numCellsHigh * QUARTER_CARD_SIZE
+    const scaleX = width / totalWidth
+    const scaleY = height / totalHeight
+    const scale = Math.min(scaleX, scaleY)
+    // console.log({ width, height, numCellsWide, numCellsHigh, totalWidth, totalHeight, scaleX, scaleY, scale, boundaries })
+
+    this.cameras.main.zoom = scale
+    const centreX = (leftMost - NUM_BORDER_CELLS) * QUARTER_CARD_SIZE + (totalWidth / 2)
+    const centreY = (topMost - NUM_BORDER_CELLS) * QUARTER_CARD_SIZE + (totalHeight / 2)
+    this.cameras.main.centerOn(centreX, centreY)
+
     const map = placedCard.orientation == Orientation.North || placedCard.orientation == Orientation.South
       ? this.normalCardSpritesMap
       : this.rotatedCardSpritesMap
     const cardSprite = map.get(placedCard.card)
-    const pos = GameScene.getCardPosition(placedCard.row, placedCard.col)
+    const pos = this.getCardPosition(placedCard.row, placedCard.col)
     cardSprite.setPosition(pos.x, pos.y)
     cardSprite.visible = true
     this.highlightChains(possibleMove.chains)
   }
 
   public create() {
+
+    // this.tweens.add({
+    //   targets: this.cameras.main,
+    //   zoom: {from: 1, to: 0.35 },
+    //   duration: 250
+    // })
 
     const makeCardSprite = (card: Card, index: number, rotated: boolean): void => {
       const graphics = new Phaser.GameObjects.Graphics(this)
