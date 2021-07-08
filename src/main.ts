@@ -86,7 +86,7 @@ export class GameScene extends Phaser.Scene {
     })
   }
 
-  private placeCard(possibleMove: PossibleMove): void {
+  private placeCard(possibleMove: PossibleMove, noAnimation: boolean = false): void {
     const placedCard = possibleMove.placedCard
     this.board = this.board.placeCard(placedCard)
 
@@ -103,7 +103,17 @@ export class GameScene extends Phaser.Scene {
     const scale = Math.min(scaleX, scaleY)
     // console.log({ width, height, numCellsWide, numCellsHigh, totalWidth, totalHeight, scaleX, scaleY, scale, boundaries })
 
-    this.cameras.main.zoom = scale
+    if (noAnimation) {
+      this.cameras.main.zoom = scale
+    } else {
+      this.tweens.add({
+        targets: this.cameras.main,
+        zoom: scale,
+        duration: 500,
+        ease: 'Back.InOut'
+      })
+    }
+
     const centreX = (leftMost - NUM_BORDER_CELLS) * QUARTER_CARD_SIZE + (totalWidth / 2)
     const centreY = (topMost - NUM_BORDER_CELLS) * QUARTER_CARD_SIZE + (totalHeight / 2)
     this.cameras.main.centerOn(centreX, centreY)
@@ -119,12 +129,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   public create() {
-
-    // this.tweens.add({
-    //   targets: this.cameras.main,
-    //   zoom: {from: 1, to: 0.35 },
-    //   duration: 250
-    // })
 
     const makeCardSprite = (card: Card, index: number, rotated: boolean): void => {
       const graphics = new Phaser.GameObjects.Graphics(this)
@@ -158,11 +162,11 @@ export class GameScene extends Phaser.Scene {
     const card1 = this.deck.nextCard()
     const placedCard1 = new PlacedCard(card1, 0, 0, Orientation.North)
     const move1 = new PossibleMove(placedCard1, [])
-    this.placeCard(move1)
+    this.placeCard(move1, true /* noAnimation */)
 
     const card2 = this.deck.nextCard()
     const move2 = evaluateCard(this.board, card2)[0]
-    this.placeCard(move2)
+    this.placeCard(move2, true /* noAnimation */)
   }
 
   public onRestart(nextCardElement: HTMLButtonElement): void {
