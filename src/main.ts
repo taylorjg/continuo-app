@@ -1,4 +1,5 @@
 import * as Phaser from 'phaser'
+import log from 'loglevel'
 import { Board } from './continuo-lib/board'
 import { Card } from './continuo-lib/card'
 import { Chain } from './continuo-lib/chain'
@@ -22,18 +23,27 @@ const COLOUR_MAP = new Map([
   [Colour.Yellow, 0xFFFF00]
 ])
 
-const drawCard = (graphics: Phaser.GameObjects.Graphics, card: Card, orientation: Orientation): void => {
+const drawCard = (graphics: Phaser.GameObjects.Graphics, card: Card): void => {
   graphics.fillStyle(0x000000)
   graphics.fillRect(0, 0, CARD_SIZE, CARD_SIZE)
   for (const rowWithinCard of [0, 1, 2, 3]) {
     for (const colWithinCard of [0, 1, 2, 3]) {
-      const cellColour = card.colourAt(rowWithinCard, colWithinCard, orientation)
+      const cellColour = card.colourAt(rowWithinCard, colWithinCard, Orientation.North)
       const colour = COLOUR_MAP.get(cellColour)
       graphics.fillStyle(colour)
       const x = rowWithinCard * (CELL_SIZE + GAP_SIZE)
       const y = colWithinCard * (CELL_SIZE + GAP_SIZE)
       graphics.fillRect(x, y, CELL_SIZE, CELL_SIZE)
     }
+  }
+}
+
+const orientationToAngle = (orientation: Orientation): number => {
+  switch (orientation) {
+    case Orientation.North: return 0
+    case Orientation.South: return 180
+    case Orientation.East: return 90
+    case Orientation.West: return -90
   }
 }
 
@@ -47,16 +57,14 @@ export class GameScene extends Phaser.Scene {
 
   deck: Deck
   board: Board
-  normalCardSpritesMap: Map<Card, Phaser.GameObjects.Sprite>
-  rotatedCardSpritesMap: Map<Card, Phaser.GameObjects.Sprite>
+  cardSpritesMap: Map<Card, Phaser.GameObjects.Sprite>
   chainHighlights: Phaser.GameObjects.Polygon[]
 
   constructor() {
     super(sceneConfig)
     this.deck = new Deck()
     this.board = Board.empty
-    this.normalCardSpritesMap = new Map<Card, Phaser.GameObjects.Sprite>()
-    this.rotatedCardSpritesMap = new Map<Card, Phaser.GameObjects.Sprite>()
+    this.cardSpritesMap = new Map<Card, Phaser.GameObjects.Sprite>()
     this.chainHighlights = []
   }
 
@@ -87,6 +95,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private placeCard(possibleMove: PossibleMove, noAnimation: boolean = false): void {
+
     const placedCard = possibleMove.placedCard
     this.board = this.board.placeCard(placedCard)
 
@@ -101,7 +110,19 @@ export class GameScene extends Phaser.Scene {
     const scaleX = width / totalWidth
     const scaleY = height / totalHeight
     const scale = Math.min(scaleX, scaleY)
-    // console.log({ width, height, numCellsWide, numCellsHigh, totalWidth, totalHeight, scaleX, scaleY, scale, boundaries })
+
+    log.debug('[GameScene#placeCard]', {
+      width,
+      height,
+      numCellsWide,
+      numCellsHigh,
+      totalWidth,
+      totalHeight,
+      scaleX,
+      scaleY,
+      scale,
+      boundaries
+    })
 
     if (noAnimation) {
       this.cameras.main.zoom = scale
@@ -118,44 +139,35 @@ export class GameScene extends Phaser.Scene {
     const centreY = (topMost - NUM_BORDER_CELLS) * QUARTER_CARD_SIZE + (totalHeight / 2)
     this.cameras.main.centerOn(centreX, centreY)
 
-    const map = placedCard.orientation == Orientation.North || placedCard.orientation == Orientation.South
-      ? this.normalCardSpritesMap
-      : this.rotatedCardSpritesMap
-    const cardSprite = map.get(placedCard.card)
-    const pos = this.getCardPosition(placedCard.row, placedCard.col)
-    cardSprite.setPosition(pos.x, pos.y)
-    cardSprite.visible = true
+    const cardSprite = this.cardSpritesMap.get(placedCard.card)
+    const cardPosition = this.getCardPosition(placedCard.row, placedCard.col)
+    cardSprite.setPosition(cardPosition.x, cardPosition.y)
+    cardSprite.setAngle(orientationToAngle(placedCard.orientation))
+    cardSprite.setVisible(true)
+
     this.highlightChains(possibleMove.chains)
   }
 
   public create() {
 
-    const makeCardSprite = (card: Card, index: number, rotated: boolean): void => {
+    Deck.originalCards.forEach((card, index) => {
       const graphics = new Phaser.GameObjects.Graphics(this)
-      const orientation = rotated ? Orientation.East : Orientation.North
-      drawCard(graphics, card, orientation)
-      const key = rotated ? `card-${index}-rotated` : `card-${index}`
+      drawCard(graphics, card)
+      const key = `card-${index}`
       graphics.generateTexture(key, CARD_SIZE, CARD_SIZE)
       const sprite = new Phaser.GameObjects.Sprite(this, 0, 0, key)
       sprite.visible = false
       sprite.scaleX = 0.99
       sprite.scaleY = 0.99
-      const map = rotated ? this.rotatedCardSpritesMap : this.normalCardSpritesMap
-      map.set(card, sprite)
+      this.cardSpritesMap.set(card, sprite)
       this.add.existing(sprite)
-    }
-
-    Deck.originalCards.forEach((card, index) => {
-      makeCardSprite(card, index, false /* rotated */)
-      makeCardSprite(card, index, true /* rotated */)
     })
 
     this.startNewGame()
   }
 
   private startNewGame(): void {
-    this.normalCardSpritesMap.forEach(cardSprite => cardSprite.visible = false)
-    this.rotatedCardSpritesMap.forEach(cardSprite => cardSprite.visible = false)
+    this.cardSpritesMap.forEach(cardSprite => cardSprite.visible = false)
     this.deck.reset()
     this.board = Board.empty
 
@@ -238,4 +250,10 @@ const gameConfig: Phaser.Types.Core.GameConfig = {
   }
 }
 
-export const game = new Phaser.Game(gameConfig)
+const main = () => {
+  (window as any).log = log
+  log.setLevel('info')
+  new Phaser.Game(gameConfig)
+}
+
+main()
