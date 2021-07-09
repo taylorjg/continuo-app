@@ -94,15 +94,12 @@ export class GameScene extends Phaser.Scene {
     })
   }
 
-  private placeCard(possibleMove: PossibleMove, noAnimation: boolean = false): void {
-
-    const placedCard = possibleMove.placedCard
-    this.board = this.board.placeCard(placedCard)
+  private resize(noAnimation: boolean = false): void {
 
     const boundaries = this.board.getBoundaries()
     const [leftMost, rightMost, topMost, bottomMost] = boundaries
-    const width = <number>this.game.config.width
-    const height = <number>this.game.config.height
+    const width = window.innerWidth
+    const height = window.innerHeight
     const numCellsWide = rightMost - leftMost + 1 + (2 * NUM_BORDER_CELLS)
     const numCellsHigh = bottomMost - topMost + 1 + (2 * NUM_BORDER_CELLS)
     const totalWidth = numCellsWide * QUARTER_CARD_SIZE
@@ -111,7 +108,7 @@ export class GameScene extends Phaser.Scene {
     const scaleY = height / totalHeight
     const scale = Math.min(scaleX, scaleY)
 
-    log.debug('[GameScene#placeCard]', {
+    log.debug('[GameScene#resize]', {
       width,
       height,
       numCellsWide,
@@ -138,6 +135,14 @@ export class GameScene extends Phaser.Scene {
     const centreX = (leftMost - NUM_BORDER_CELLS) * QUARTER_CARD_SIZE + (totalWidth / 2)
     const centreY = (topMost - NUM_BORDER_CELLS) * QUARTER_CARD_SIZE + (totalHeight / 2)
     this.cameras.main.centerOn(centreX, centreY)
+  }
+
+  private placeCard(possibleMove: PossibleMove, noAnimation: boolean = false): void {
+
+    const placedCard = possibleMove.placedCard
+    this.board = this.board.placeCard(placedCard)
+
+    this.resize(noAnimation)
 
     const cardSprite = this.cardSpritesMap.get(placedCard.card)
     const cardPosition = this.getCardPosition(placedCard.row, placedCard.col)
@@ -149,6 +154,13 @@ export class GameScene extends Phaser.Scene {
   }
 
   public create() {
+
+    window.addEventListener('resize', () => {
+      const width = window.innerWidth
+      const height = window.innerHeight
+      this.scale.resize(width, height)
+      this.resize()
+    })
 
     Deck.originalCards.forEach((card, index) => {
       const graphics = new Phaser.GameObjects.Graphics(this)
@@ -240,7 +252,8 @@ const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   scale: {
     width: window.innerWidth,
-    height: window.innerHeight
+    height: window.innerHeight,
+    mode: Phaser.Scale.NONE
   },
   backgroundColor: '#AAAAAA',
   scene: [GameScene, HUDScene],
