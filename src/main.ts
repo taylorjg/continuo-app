@@ -109,8 +109,8 @@ export class GameScene extends Phaser.Scene {
       this.tweens.add({
         targets: this.cameras.main,
         zoom: scale,
-        duration: 500,
-        ease: 'Back.InOut'
+        duration: 1000,
+        ease: 'Expo.Out'
       })
     }
 
