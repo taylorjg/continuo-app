@@ -58,6 +58,9 @@ export class GameScene extends Phaser.Scene {
   deck: Deck
   board: Board
   cardSpritesMap: Map<Card, Phaser.GameObjects.Sprite>
+  currentCard: PlacedCard
+  possibleMoves: PossibleMove[]
+  currentPossibleMove: PossibleMove
   chainHighlights: Phaser.GameObjects.Polygon[]
 
   constructor() {
@@ -86,7 +89,8 @@ export class GameScene extends Phaser.Scene {
     chains.forEach(chain => {
       const points = chain.cells.map(cell => this.getCellPosition(cell.row, cell.col))
       const polygon = new Phaser.GameObjects.Polygon(this, 0, 0, points)
-      polygon.setClosePath(false)
+      polygon.setClosePath(chain.isCycle)
+      polygon.isFilled = false
       polygon.setOrigin(0, 0)
       polygon.setStrokeStyle(CELL_SIZE / 5, 0xFF00FF)
       this.add.existing(polygon)
@@ -139,12 +143,19 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.centerOn(centreX, centreY)
   }
 
-  private placeCard(possibleMove: PossibleMove, noAnimation: boolean = false): void {
+  private placeCard(possibleMove: PossibleMove, addToBoard: boolean, noAnimation: boolean): void {
 
     const placedCard = possibleMove.placedCard
-    this.board = this.board.placeCard(placedCard)
 
-    this.resize(noAnimation)
+    if (addToBoard) {
+      this.board = this.board.placeCard(placedCard)
+      this.resize(noAnimation)
+    } else {
+      const savedBoard = this.board
+      this.board = this.board.placeCard(placedCard)
+      this.resize(noAnimation)
+      this.board = savedBoard
+    }
 
     const cardSprite = this.cardSpritesMap.get(placedCard.card)
     const cardPosition = this.getCardPosition(placedCard.row, placedCard.col)
@@ -152,7 +163,12 @@ export class GameScene extends Phaser.Scene {
     cardSprite.setAngle(orientationToAngle(placedCard.orientation))
     cardSprite.setVisible(true)
 
-    this.highlightChains(possibleMove.chains)
+    if (addToBoard) {
+      this.chainHighlights.forEach(chainHighlight => chainHighlight.destroy())
+      this.chainHighlights = []
+    } else {
+      this.highlightChains(possibleMove.chains)
+    }
   }
 
   public create() {
@@ -206,23 +222,27 @@ export class GameScene extends Phaser.Scene {
     const orientation1 = this.chooseRandomOrientation()
     const placedCard1 = new PlacedCard(card1, 0, 0, orientation1)
     const move1 = new PossibleMove(placedCard1, [])
-    this.placeCard(move1, true /* noAnimation */)
+    this.placeCard(move1, true /* addToBoard */, true /* noAnimation */)
 
     const card2 = this.deck.nextCard()
     const move2 = this.chooseRandomBestScoreMove(evaluateCard(this.board, card2))
-    this.placeCard(move2, true /* noAnimation */)
+    this.placeCard(move2, true /* addToBoard */, true /* noAnimation */)
   }
 
-  public onRestart(nextCardElement: HTMLButtonElement): void {
+  public onRestart(): void {
     this.startNewGame()
-    nextCardElement.disabled = false
   }
 
-  public onNextCard(nextCardElement: HTMLButtonElement): void {
+  public onNextCard(): void {
     const card = this.deck.nextCard()
-    const move = this.chooseRandomBestScoreMove(evaluateCard(this.board, card))
-    this.placeCard(move)
-    nextCardElement.disabled = this.deck.numCardsLeft == 0
+    this.possibleMoves = evaluateCard(this.board, card)
+    this.currentPossibleMove = this.possibleMoves[0]
+    this.placeCard(this.currentPossibleMove, false /* addToBoard */, false /* noAnimation */)
+  }
+
+  public onPlaceCard(): number {
+    this.placeCard(this.currentPossibleMove, true /* addToBoard */, false /* noAnimation */)
+    return this.deck.numCardsLeft
   }
 }
 
@@ -230,6 +250,7 @@ export class HUDScene extends Phaser.Scene {
 
   gameScene: GameScene
   nextCardElement: HTMLButtonElement
+  placeCardElement: HTMLButtonElement
 
   constructor() {
     super({
@@ -242,7 +263,10 @@ export class HUDScene extends Phaser.Scene {
   create() {
     this.gameScene = <GameScene>this.scene.get('GameScene')
 
-    const restartButton = this.add.dom(0, 0, 'button', 'margin: 10px; width: 120px;', 'Restart')
+    let y = 0
+
+    const restartButton = this.add.dom(0, y, 'button', 'margin: 10px; width: 120px;', 'Restart')
+    y += 30
     restartButton.setOrigin(0, 0)
     restartButton.addListener('click')
 
@@ -250,20 +274,34 @@ export class HUDScene extends Phaser.Scene {
     this.nextCardElement.style.margin = '10px'
     this.nextCardElement.style.width = '120px'
     this.nextCardElement.innerText = 'Next Card'
-    const nextCardButton = this.add.dom(0, 30, this.nextCardElement)
+    const nextCardButton = this.add.dom(0, y, this.nextCardElement)
+    y += 30
     nextCardButton.setOrigin(0, 0)
     nextCardButton.addListener('click')
 
+    this.placeCardElement = document.createElement('button')
+    this.placeCardElement.style.margin = '10px'
+    this.placeCardElement.style.width = '120px'
+    this.placeCardElement.innerText = 'Place Card'
+    const placeCardButton = this.add.dom(0, y, this.placeCardElement)
+    y += 30
+    placeCardButton.setOrigin(0, 0)
+    placeCardButton.addListener('click')
+
     restartButton.on('click', this.onRestart, this)
     nextCardButton.on('click', this.onNextCard, this)
+    placeCardButton.on('click', this.onPlaceCard, this)
+    this.placeCardElement.disabled = true
 
     if (this.sys.game.device.fullscreen.available) {
-      const enterFullScreenButton = this.add.dom(0, 60, 'button', 'margin: 10px; width: 120px;', 'Enter Full Screen')
+      const enterFullScreenButton = this.add.dom(0, y, 'button', 'margin: 10px; width: 120px;', 'Enter Full Screen')
+      y += 30
       enterFullScreenButton.setOrigin(0, 0)
       enterFullScreenButton.addListener('click')
       enterFullScreenButton.setVisible(true)
 
-      const exitFullScreenButton = this.add.dom(0, 60, 'button', 'margin: 10px; width: 120px;', 'Exit Full Screen')
+      const exitFullScreenButton = this.add.dom(0, y, 'button', 'margin: 10px; width: 120px;', 'Exit Full Screen')
+      y += 30
       exitFullScreenButton.setOrigin(0, 0)
       exitFullScreenButton.addListener('click')
       exitFullScreenButton.setVisible(false)
@@ -284,11 +322,21 @@ export class HUDScene extends Phaser.Scene {
   }
 
   public onRestart(): void {
-    this.gameScene.onRestart(this.nextCardElement)
+    this.gameScene.onRestart()
+    this.nextCardElement.disabled = false
+    this.placeCardElement.disabled = true
   }
 
   public onNextCard(): void {
-    this.gameScene.onNextCard(this.nextCardElement)
+    this.gameScene.onNextCard()
+    this.nextCardElement.disabled = true
+    this.placeCardElement.disabled = false
+  }
+
+  public onPlaceCard(): void {
+    const numCardsLeft = this.gameScene.onPlaceCard()
+    this.nextCardElement.disabled = numCardsLeft == 0
+    this.placeCardElement.disabled = true
   }
 }
 
