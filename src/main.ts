@@ -96,10 +96,12 @@ export class GameScene extends Phaser.Scene {
 
   private resize(noAnimation: boolean = false): void {
 
-    const boundaries = this.board.getBoundaries()
-    const [leftMost, rightMost, topMost, bottomMost] = boundaries
     const width = window.innerWidth
     const height = window.innerHeight
+    this.scale.resize(width, height)
+
+    const boundaries = this.board.getBoundaries()
+    const [leftMost, rightMost, topMost, bottomMost] = boundaries
     const numCellsWide = rightMost - leftMost + 1 + (2 * NUM_BORDER_CELLS)
     const numCellsHigh = bottomMost - topMost + 1 + (2 * NUM_BORDER_CELLS)
     const totalWidth = numCellsWide * QUARTER_CARD_SIZE
@@ -156,9 +158,10 @@ export class GameScene extends Phaser.Scene {
   public create() {
 
     window.addEventListener('resize', () => {
-      const width = window.innerWidth
-      const height = window.innerHeight
-      this.scale.resize(width, height)
+      this.resize()
+    })
+
+    this.scale.on('orientationchange', () => {
       this.resize()
     })
 
