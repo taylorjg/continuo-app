@@ -222,13 +222,13 @@ export class HUDScene extends Phaser.Scene {
   create() {
     this.gameScene = <GameScene>this.scene.get('GameScene')
 
-    const restartButton = this.add.dom(0, 0, 'button', 'margin: 10px; width: 80px;', 'Restart')
+    const restartButton = this.add.dom(0, 0, 'button', 'margin: 10px; width: 120px;', 'Restart')
     restartButton.setOrigin(0, 0)
     restartButton.addListener('click')
 
     this.nextCardElement = document.createElement('button')
     this.nextCardElement.style.margin = '10px'
-    this.nextCardElement.style.width = '80px'
+    this.nextCardElement.style.width = '120px'
     this.nextCardElement.innerText = 'Next Card'
     const nextCardButton = this.add.dom(0, 30, this.nextCardElement)
     nextCardButton.setOrigin(0, 0)
@@ -236,6 +236,31 @@ export class HUDScene extends Phaser.Scene {
 
     restartButton.on('click', this.onRestart, this)
     nextCardButton.on('click', this.onNextCard, this)
+
+    if (this.sys.game.device.fullscreen.available) {
+      const enterFullScreenButton = this.add.dom(0, 60, 'button', 'margin: 10px; width: 120px;', 'Enter Full Screen')
+      enterFullScreenButton.setOrigin(0, 0)
+      enterFullScreenButton.addListener('click')
+      enterFullScreenButton.setVisible(true)
+
+      const exitFullScreenButton = this.add.dom(0, 60, 'button', 'margin: 10px; width: 120px;', 'Exit Full Screen')
+      exitFullScreenButton.setOrigin(0, 0)
+      exitFullScreenButton.addListener('click')
+      exitFullScreenButton.setVisible(false)
+
+      const toggleFullScreenMode = () => {
+        enterFullScreenButton.setVisible(this.scale.isFullscreen)
+        exitFullScreenButton.setVisible(!this.scale.isFullscreen)
+        if (this.scale.isFullscreen) {
+          this.scale.stopFullscreen()
+        } else {
+          this.scale.startFullscreen()
+        }
+      }
+
+      enterFullScreenButton.on('click', toggleFullScreenMode)
+      exitFullScreenButton.on('click', toggleFullScreenMode)
+    }
   }
 
   public onRestart(): void {
@@ -253,7 +278,8 @@ const gameConfig: Phaser.Types.Core.GameConfig = {
   scale: {
     width: window.innerWidth,
     height: window.innerHeight,
-    mode: Phaser.Scale.NONE
+    mode: Phaser.Scale.NONE,
+    fullscreenTarget: 'game'
   },
   backgroundColor: '#AAAAAA',
   scene: [GameScene, HUDScene],
