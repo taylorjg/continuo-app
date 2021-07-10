@@ -178,18 +178,35 @@ export class GameScene extends Phaser.Scene {
     this.startNewGame()
   }
 
+  private chooseRandomOrientation(): Orientation {
+    return Phaser.Utils.Array.GetRandom([
+      Orientation.North,
+      Orientation.South,
+      Orientation.East,
+      Orientation.West
+    ])
+  }
+
+  private chooseRandomBestScoreMove(possibleMoves: PossibleMove[]): PossibleMove {
+    const bestScore = possibleMoves[0].score
+    const bestScoreMoves = possibleMoves.filter(possibleMove => possibleMove.score == bestScore)
+    return Phaser.Utils.Array.GetRandom(bestScoreMoves)
+  }
+
   private startNewGame(): void {
+
     this.cardSpritesMap.forEach(cardSprite => cardSprite.visible = false)
     this.deck.reset()
     this.board = Board.empty
 
     const card1 = this.deck.nextCard()
-    const placedCard1 = new PlacedCard(card1, 0, 0, Orientation.North)
+    const orientation1 = this.chooseRandomOrientation()
+    const placedCard1 = new PlacedCard(card1, 0, 0, orientation1)
     const move1 = new PossibleMove(placedCard1, [])
     this.placeCard(move1, true /* noAnimation */)
 
     const card2 = this.deck.nextCard()
-    const move2 = evaluateCard(this.board, card2)[0]
+    const move2 = this.chooseRandomBestScoreMove(evaluateCard(this.board, card2))
     this.placeCard(move2, true /* noAnimation */)
   }
 
@@ -200,7 +217,7 @@ export class GameScene extends Phaser.Scene {
 
   public onNextCard(nextCardElement: HTMLButtonElement): void {
     const card = this.deck.nextCard()
-    const move = evaluateCard(this.board, card)[0]
+    const move = this.chooseRandomBestScoreMove(evaluateCard(this.board, card))
     this.placeCard(move)
     nextCardElement.disabled = this.deck.numCardsLeft == 0
   }
