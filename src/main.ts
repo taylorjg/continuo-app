@@ -2,7 +2,6 @@ import * as Phaser from 'phaser'
 import log from 'loglevel'
 import { Board } from './continuo-lib/board'
 import { Card } from './continuo-lib/card'
-import { Chain } from './continuo-lib/chain'
 import { Deck } from './continuo-lib/deck'
 import { Colour, Orientation } from './continuo-lib/enums'
 import { evaluateCard } from './continuo-lib/evaluate'
@@ -14,7 +13,8 @@ const GAP_SIZE = 2
 const CARD_SIZE = 4 * CELL_SIZE + 3 * GAP_SIZE
 const QUARTER_CARD_SIZE = CARD_SIZE / 4
 const EIGHTH_CARD_SIZE = CARD_SIZE / 8
-const NUM_BORDER_CELLS = 5
+const NUM_MARGIN_CELLS = 5
+const HIGHLIGHT_LINE_WIDTH = CELL_SIZE / 5
 
 const COLOUR_MAP = new Map([
   [Colour.Red, 0xFF0000],
@@ -22,6 +22,8 @@ const COLOUR_MAP = new Map([
   [Colour.Blue, 0x0000FF],
   [Colour.Yellow, 0xFFFF00]
 ])
+
+const HIGHLIGHT_COLOUR = 0xFF00FF
 
 const drawCard = (graphics: Phaser.GameObjects.Graphics, card: Card): void => {
   graphics.fillStyle(0x000000)
@@ -61,6 +63,7 @@ export class GameScene extends Phaser.Scene {
   currentCard: PlacedCard
   possibleMoves: PossibleMove[]
   currentPossibleMove: PossibleMove
+  currentCardHighlight: Phaser.GameObjects.Rectangle
   chainHighlights: Phaser.GameObjects.Polygon[]
 
   constructor() {
@@ -83,19 +86,38 @@ export class GameScene extends Phaser.Scene {
     return new Phaser.Geom.Point(x, y)
   }
 
-  private highlightChains(chains: readonly Chain[]): void {
-    this.chainHighlights.forEach(chainHighlight => chainHighlight.destroy())
-    this.chainHighlights = []
-    chains.forEach(chain => {
+  private highlightCurrentCard(): void {
+    const placedCard = this.currentPossibleMove.placedCard
+    const { x, y } = this.getCardPosition(placedCard.row, placedCard.col)
+    const rectangle = new Phaser.GameObjects.Rectangle(this, x, y, CARD_SIZE, CARD_SIZE)
+    rectangle.setStrokeStyle(HIGHLIGHT_LINE_WIDTH, HIGHLIGHT_COLOUR)
+    this.add.existing(rectangle)
+    this.currentCardHighlight = rectangle
+  }
+
+  private unhighlightCurrentCard(): void {
+    if (this.currentCardHighlight) {
+      this.currentCardHighlight.destroy()
+      this.currentCardHighlight = null
+    }
+  }
+
+  private highlightChains(): void {
+    this.currentPossibleMove.chains.forEach(chain => {
       const points = chain.cells.map(cell => this.getCellPosition(cell.row, cell.col))
       const polygon = new Phaser.GameObjects.Polygon(this, 0, 0, points)
       polygon.setClosePath(chain.isCycle)
       polygon.isFilled = false
       polygon.setOrigin(0, 0)
-      polygon.setStrokeStyle(CELL_SIZE / 5, 0xFF00FF)
+      polygon.setStrokeStyle(HIGHLIGHT_LINE_WIDTH, HIGHLIGHT_COLOUR)
       this.add.existing(polygon)
       this.chainHighlights.push(polygon)
     })
+  }
+
+  private unhighlightChains(): void {
+    this.chainHighlights.forEach(chainHighlight => chainHighlight.destroy())
+    this.chainHighlights = []
   }
 
   private resize(noAnimation: boolean = false): void {
@@ -106,8 +128,8 @@ export class GameScene extends Phaser.Scene {
 
     const boundaries = this.board.getBoundaries()
     const [leftMost, rightMost, topMost, bottomMost] = boundaries
-    const numCellsWide = rightMost - leftMost + 1 + (2 * NUM_BORDER_CELLS)
-    const numCellsHigh = bottomMost - topMost + 1 + (2 * NUM_BORDER_CELLS)
+    const numCellsWide = rightMost - leftMost + 1 + (2 * NUM_MARGIN_CELLS)
+    const numCellsHigh = bottomMost - topMost + 1 + (2 * NUM_MARGIN_CELLS)
     const totalWidth = numCellsWide * QUARTER_CARD_SIZE
     const totalHeight = numCellsHigh * QUARTER_CARD_SIZE
     const scaleX = width / totalWidth
@@ -138,8 +160,8 @@ export class GameScene extends Phaser.Scene {
       })
     }
 
-    const centreX = (leftMost - NUM_BORDER_CELLS) * QUARTER_CARD_SIZE + (totalWidth / 2)
-    const centreY = (topMost - NUM_BORDER_CELLS) * QUARTER_CARD_SIZE + (totalHeight / 2)
+    const centreX = (leftMost - NUM_MARGIN_CELLS) * QUARTER_CARD_SIZE + (totalWidth / 2)
+    const centreY = (topMost - NUM_MARGIN_CELLS) * QUARTER_CARD_SIZE + (totalHeight / 2)
     this.cameras.main.centerOn(centreX, centreY)
   }
 
@@ -164,10 +186,11 @@ export class GameScene extends Phaser.Scene {
     cardSprite.setVisible(true)
 
     if (addToBoard) {
-      this.chainHighlights.forEach(chainHighlight => chainHighlight.destroy())
-      this.chainHighlights = []
+      this.unhighlightCurrentCard()
+      this.unhighlightChains()
     } else {
-      this.highlightChains(possibleMove.chains)
+      this.highlightCurrentCard()
+      this.highlightChains()
     }
   }
 
@@ -214,6 +237,8 @@ export class GameScene extends Phaser.Scene {
 
   private startNewGame(): void {
 
+    this.unhighlightCurrentCard()
+    this.unhighlightChains()
     this.cardSpritesMap.forEach(cardSprite => cardSprite.visible = false)
     this.deck.reset()
     this.board = Board.empty
