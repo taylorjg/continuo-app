@@ -14,7 +14,11 @@ const CARD_SIZE = 4 * CELL_SIZE + 3 * GAP_SIZE
 const QUARTER_CARD_SIZE = CARD_SIZE / 4
 const EIGHTH_CARD_SIZE = CARD_SIZE / 8
 const NUM_MARGIN_CELLS = 5
-const HIGHLIGHT_LINE_WIDTH = CELL_SIZE / 5
+const CURRENT_CARD_HIGHLIGHT_LINE_WIDTH = CELL_SIZE / 5
+const CHAIN_HIGHLIGHTS_LINE_WIDTH = CELL_SIZE / 5
+
+const CURRENT_CARD_DEPTH = 1
+const CHAIN_HIGHLIGHTS_DEPTH = 2
 
 const COLOUR_MAP = new Map([
   [Colour.Red, 0xFF0000],
@@ -23,7 +27,8 @@ const COLOUR_MAP = new Map([
   [Colour.Yellow, 0xFFFF00]
 ])
 
-const HIGHLIGHT_COLOUR = 0xFF00FF
+const CURRENT_CARD_HIGHLIGHT_COLOUR = 0xFF00FF
+const CHAIN_HIGHLIGHT_COLOUR = 0xFF00FF
 
 const drawCard = (graphics: Phaser.GameObjects.Graphics, card: Card): void => {
   graphics.fillStyle(0x000000)
@@ -63,7 +68,7 @@ export class GameScene extends Phaser.Scene {
   currentCard: PlacedCard
   possibleMoves: PossibleMove[]
   currentPossibleMove: PossibleMove
-  currentCardHighlight: Phaser.GameObjects.Rectangle
+  currentCardContainer: Phaser.GameObjects.Container
   chainHighlights: Phaser.GameObjects.Polygon[]
 
   constructor() {
@@ -86,30 +91,15 @@ export class GameScene extends Phaser.Scene {
     return new Phaser.Geom.Point(x, y)
   }
 
-  private highlightCurrentCard(): void {
-    const placedCard = this.currentPossibleMove.placedCard
-    const { x, y } = this.getCardPosition(placedCard.row, placedCard.col)
-    const rectangle = new Phaser.GameObjects.Rectangle(this, x, y, CARD_SIZE, CARD_SIZE)
-    rectangle.setStrokeStyle(HIGHLIGHT_LINE_WIDTH, HIGHLIGHT_COLOUR)
-    this.add.existing(rectangle)
-    this.currentCardHighlight = rectangle
-  }
-
-  private unhighlightCurrentCard(): void {
-    if (this.currentCardHighlight) {
-      this.currentCardHighlight.destroy()
-      this.currentCardHighlight = null
-    }
-  }
-
   private highlightChains(): void {
     this.currentPossibleMove.chains.forEach(chain => {
       const points = chain.cells.map(cell => this.getCellPosition(cell.row, cell.col))
       const polygon = new Phaser.GameObjects.Polygon(this, 0, 0, points)
-      polygon.setClosePath(chain.isCycle)
       polygon.isFilled = false
+      polygon.setClosePath(chain.isCycle)
       polygon.setOrigin(0, 0)
-      polygon.setStrokeStyle(HIGHLIGHT_LINE_WIDTH, HIGHLIGHT_COLOUR)
+      polygon.setStrokeStyle(CHAIN_HIGHLIGHTS_LINE_WIDTH, CHAIN_HIGHLIGHT_COLOUR)
+      polygon.setDepth(CHAIN_HIGHLIGHTS_DEPTH)
       this.add.existing(polygon)
       this.chainHighlights.push(polygon)
     })
@@ -181,15 +171,24 @@ export class GameScene extends Phaser.Scene {
 
     const cardSprite = this.cardSpritesMap.get(placedCard.card)
     const cardPosition = this.getCardPosition(placedCard.row, placedCard.col)
-    cardSprite.setPosition(cardPosition.x, cardPosition.y)
-    cardSprite.setAngle(orientationToAngle(placedCard.orientation))
-    cardSprite.setVisible(true)
+    const angle = orientationToAngle(placedCard.orientation)
 
     if (addToBoard) {
-      this.unhighlightCurrentCard()
+      this.currentCardContainer.remove(cardSprite)
+      this.currentCardContainer.setVisible(false)
+      cardSprite.setPosition(cardPosition.x, cardPosition.y)
+      cardSprite.setAngle(angle)
+      cardSprite.setVisible(true)
       this.unhighlightChains()
     } else {
-      this.highlightCurrentCard()
+      cardSprite.setPosition(0, 0)
+      cardSprite.setAngle(0)
+      cardSprite.setVisible(true)
+      this.currentCardContainer.add(cardSprite)
+      this.currentCardContainer.moveTo(cardSprite, 0)
+      this.currentCardContainer.setPosition(cardPosition.x, cardPosition.y)
+      this.currentCardContainer.setAngle(angle)
+      this.currentCardContainer.setVisible(true)
       this.highlightChains()
     }
   }
@@ -217,6 +216,13 @@ export class GameScene extends Phaser.Scene {
       this.add.existing(sprite)
     })
 
+    const currentCardHighlight = new Phaser.GameObjects.Rectangle(this, 0, 0, CARD_SIZE, CARD_SIZE)
+    currentCardHighlight.setStrokeStyle(CURRENT_CARD_HIGHLIGHT_LINE_WIDTH, CURRENT_CARD_HIGHLIGHT_COLOUR)
+    this.currentCardContainer = new Phaser.GameObjects.Container(this, 0, 0, [currentCardHighlight])
+    this.currentCardContainer.setVisible(false)
+    this.currentCardContainer.setDepth(CURRENT_CARD_DEPTH)
+    this.add.existing(this.currentCardContainer)
+
     this.startNewGame()
   }
 
@@ -237,9 +243,9 @@ export class GameScene extends Phaser.Scene {
 
   private startNewGame(): void {
 
-    this.unhighlightCurrentCard()
+    this.cardSpritesMap.forEach(cardSprite => cardSprite.setVisible(false))
+    this.currentCardContainer.setVisible(false)
     this.unhighlightChains()
-    this.cardSpritesMap.forEach(cardSprite => cardSprite.visible = false)
     this.deck.reset()
     this.board = Board.empty
 
@@ -320,13 +326,11 @@ export class HUDScene extends Phaser.Scene {
 
     if (this.sys.game.device.fullscreen.available) {
       const enterFullScreenButton = this.add.dom(0, y, 'button', 'margin: 10px; width: 120px;', 'Enter Full Screen')
-      y += 30
       enterFullScreenButton.setOrigin(0, 0)
       enterFullScreenButton.addListener('click')
       enterFullScreenButton.setVisible(true)
 
       const exitFullScreenButton = this.add.dom(0, y, 'button', 'margin: 10px; width: 120px;', 'Exit Full Screen')
-      y += 30
       exitFullScreenButton.setOrigin(0, 0)
       exitFullScreenButton.addListener('click')
       exitFullScreenButton.setVisible(false)
@@ -343,6 +347,8 @@ export class HUDScene extends Phaser.Scene {
 
       enterFullScreenButton.on('click', toggleFullScreenMode)
       exitFullScreenButton.on('click', toggleFullScreenMode)
+
+      y += 30
     }
   }
 
