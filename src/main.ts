@@ -2,6 +2,7 @@ import * as Phaser from 'phaser'
 import log from 'loglevel'
 import { Board } from './continuo-lib/board'
 import { Card } from './continuo-lib/card'
+import { Cell } from './continuo-lib/cell'
 import { Deck } from './continuo-lib/deck'
 import { Colour, Orientation } from './continuo-lib/enums'
 import { evaluateCard } from './continuo-lib/evaluate'
@@ -155,18 +156,20 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.centerOn(centreX, centreY)
   }
 
-  private placeCard(possibleMove: PossibleMove, addToBoard: boolean, noAnimation: boolean): void {
+  private placeCard(possibleMove: PossibleMove, addToBoard: boolean, noAnimation: boolean, noResize: boolean): void {
 
     const placedCard = possibleMove.placedCard
 
-    if (addToBoard) {
-      this.board = this.board.placeCard(placedCard)
-      this.resize(noAnimation)
-    } else {
-      const savedBoard = this.board
-      this.board = this.board.placeCard(placedCard)
-      this.resize(noAnimation)
-      this.board = savedBoard
+    if (!noResize) {
+      if (addToBoard) {
+        this.board = this.board.placeCard(placedCard)
+        this.resize(noAnimation)
+      } else {
+        const savedBoard = this.board
+        this.board = this.board.placeCard(placedCard)
+        this.resize(noAnimation)
+        this.board = savedBoard
+      }
     }
 
     const cardSprite = this.cardSpritesMap.get(placedCard.card)
@@ -221,9 +224,58 @@ export class GameScene extends Phaser.Scene {
     this.currentCardContainer = new Phaser.GameObjects.Container(this, 0, 0, [currentCardHighlight])
     this.currentCardContainer.setVisible(false)
     this.currentCardContainer.setDepth(CURRENT_CARD_DEPTH)
+    this.currentCardContainer.setSize(CARD_SIZE, CARD_SIZE)
+    this.currentCardContainer.setInteractive()
     this.add.existing(this.currentCardContainer)
 
+    this.input.setDraggable(this.currentCardContainer)
+
+    this.input.on('dragstart', (
+      _pointer: Phaser.Input.Pointer,
+      _gameObject: Phaser.GameObjects.GameObject) => {
+      this.unhighlightChains()
+    })
+
+    this.input.on('drag', (
+      _pointer: Phaser.Input.Pointer,
+      _gameObject: Phaser.GameObjects.GameObject,
+      dragX: number,
+      dragY: number) => {
+      this.currentCardContainer.x = dragX
+      this.currentCardContainer.y = dragY
+    })
+
+    this.input.on('dragend', (
+      _pointer: Phaser.Input.Pointer,
+      _gameObject: Phaser.GameObjects.GameObject) => {
+      const { row, col } = this.getSnapPosition(this.currentCardContainer.x, this.currentCardContainer.y)
+      const possibleMove = this.findPossibleMove(row, col, this.currentPossibleMove.placedCard.orientation)
+      if (possibleMove) {
+        this.currentPossibleMove = possibleMove
+        this.placeCard(possibleMove, false, false, true)
+      } else {
+        this.placeCard(this.currentPossibleMove, false, false, true)
+      }
+    })
+
     this.startNewGame()
+  }
+
+  private getSnapPosition(x: number, y: number): Cell {
+    const row = Math.round(y / QUARTER_CARD_SIZE)
+    const col = Math.round(x / QUARTER_CARD_SIZE)
+    return new Cell(row - 2, col - 2)
+  }
+
+  private findPossibleMove(row: number, col: number, orientation: Orientation): PossibleMove {
+    for (const possibleMove of this.possibleMoves) {
+      if (possibleMove.placedCard.row == row &&
+        possibleMove.placedCard.col == col &&
+        possibleMove.placedCard.orientation == orientation) {
+        return possibleMove
+      }
+    }
+    return null
   }
 
   private chooseRandomOrientation(): Orientation {
@@ -253,11 +305,11 @@ export class GameScene extends Phaser.Scene {
     const orientation1 = this.chooseRandomOrientation()
     const placedCard1 = new PlacedCard(card1, 0, 0, orientation1)
     const move1 = new PossibleMove(placedCard1, [])
-    this.placeCard(move1, true /* addToBoard */, true /* noAnimation */)
+    this.placeCard(move1, true /* addToBoard */, true /* noAnimation */, false /* noResize */)
 
     const card2 = this.deck.nextCard()
     const move2 = this.chooseRandomBestScoreMove(evaluateCard(this.board, card2))
-    this.placeCard(move2, true /* addToBoard */, true /* noAnimation */)
+    this.placeCard(move2, true /* addToBoard */, true /* noAnimation */, false /* noResize */)
   }
 
   public onRestart(): void {
@@ -268,11 +320,11 @@ export class GameScene extends Phaser.Scene {
     const card = this.deck.nextCard()
     this.possibleMoves = evaluateCard(this.board, card)
     this.currentPossibleMove = this.possibleMoves[0]
-    this.placeCard(this.currentPossibleMove, false /* addToBoard */, false /* noAnimation */)
+    this.placeCard(this.currentPossibleMove, false /* addToBoard */, false /* noAnimation */, false /* noResize */)
   }
 
   public onPlaceCard(): number {
-    this.placeCard(this.currentPossibleMove, true /* addToBoard */, false /* noAnimation */)
+    this.placeCard(this.currentPossibleMove, true /* addToBoard */, false /* noAnimation */, true /* noResize */)
     return this.deck.numCardsLeft
   }
 }
