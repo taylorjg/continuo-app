@@ -50,6 +50,24 @@ const isRotated = (orientation: Orientation): boolean => {
   return (orientation == Orientation.East || orientation == Orientation.West)
 }
 
+const orientationRotateCW = (orientation: Orientation): Orientation => {
+  switch (orientation) {
+    case Orientation.North: return Orientation.East
+    case Orientation.South: return Orientation.West
+    case Orientation.East: return Orientation.South
+    case Orientation.West: return Orientation.North
+  }
+}
+
+const orientationRotateCCW = (orientation: Orientation): Orientation => {
+  switch (orientation) {
+    case Orientation.North: return Orientation.West
+    case Orientation.South: return Orientation.East
+    case Orientation.East: return Orientation.North
+    case Orientation.West: return Orientation.South
+  }
+}
+
 const orientationToAngle = (orientation: Orientation): number => {
   switch (orientation) {
     case Orientation.North: return 0
@@ -255,7 +273,8 @@ export class GameScene extends Phaser.Scene {
       _pointer: Phaser.Input.Pointer,
       _gameObject: Phaser.GameObjects.GameObject) => {
       const { row, col } = this.getSnapPosition(this.currentCardContainer.x, this.currentCardContainer.y)
-      const possibleMove = this.findPossibleMove(row, col, this.currentPossibleMove.placedCard.orientation)
+      const placedCard = this.currentPossibleMove
+      const possibleMove = this.findPossibleMove(row, col, placedCard.placedCard.orientation)
       if (possibleMove) {
         this.currentPossibleMove = possibleMove
         this.placeCard(possibleMove, false, false, true)
@@ -340,10 +359,26 @@ export class GameScene extends Phaser.Scene {
 
   public onRotateCW(): void {
     log.debug('[GameScene#onRotateCW]')
+    const placedCard = this.currentPossibleMove.placedCard
+    const newOrientation = orientationRotateCW(placedCard.orientation)
+    const possibleMove = this.findPossibleMove(placedCard.row, placedCard.col, newOrientation)
+    if (possibleMove) {
+      this.unhighlightChains()
+      this.currentPossibleMove = possibleMove
+      this.placeCard(possibleMove, false, false, true)
+    }
   }
 
   public onRotateCCW(): void {
     log.debug('[GameScene#onRotateCCW]')
+    const placedCard = this.currentPossibleMove.placedCard
+    const newOrientation = orientationRotateCCW(placedCard.orientation)
+    const possibleMove = this.findPossibleMove(placedCard.row, placedCard.col, newOrientation)
+    if (possibleMove) {
+      this.unhighlightChains()
+      this.currentPossibleMove = possibleMove
+      this.placeCard(possibleMove, false, false, true)
+    }
   }
 
   public onPlaceCard(): number {
