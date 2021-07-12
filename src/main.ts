@@ -326,17 +326,28 @@ export class GameScene extends Phaser.Scene {
   }
 
   public onRestart(): void {
+    log.debug('[GameScene#onRestart]')
     this.startNewGame()
   }
 
   public onNextCard(): void {
+    log.debug('[GameScene#onNextCard]')
     const card = this.deck.nextCard()
     this.possibleMoves = evaluateCard(this.board, card)
     this.currentPossibleMove = this.possibleMoves[0]
     this.placeCard(this.currentPossibleMove, false /* addToBoard */, false /* noAnimation */, false /* noResize */)
   }
 
+  public onRotateCW(): void {
+    log.debug('[GameScene#onRotateCW]')
+  }
+
+  public onRotateCCW(): void {
+    log.debug('[GameScene#onRotateCCW]')
+  }
+
   public onPlaceCard(): number {
+    log.debug('[GameScene#onPlaceCard]')
     this.placeCard(this.currentPossibleMove, true /* addToBoard */, false /* noAnimation */, true /* noResize */)
     return this.deck.numCardsLeft
   }
@@ -345,8 +356,12 @@ export class GameScene extends Phaser.Scene {
 export class HUDScene extends Phaser.Scene {
 
   gameScene: GameScene
+  restartElement: HTMLButtonElement
   nextCardElement: HTMLButtonElement
   placeCardElement: HTMLButtonElement
+  rotateCWElement: HTMLButtonElement
+  rotateCCWElement: HTMLButtonElement
+  toggleFullScreenButton: HTMLButtonElement
 
   constructor() {
     super({
@@ -356,63 +371,50 @@ export class HUDScene extends Phaser.Scene {
     })
   }
 
+  private makeButton(y: number, label: string, handler: Function, initiallyDisabled: boolean): HTMLButtonElement {
+    const element = document.createElement('button')
+    element.style.margin = '10px'
+    element.style.width = '120px'
+    element.innerText = label
+    element.disabled = initiallyDisabled
+    const button = this.add.dom(0, y, element)
+    button.setOrigin(0, 0)
+    button.addListener('click')
+    button.on('click', handler, this)
+    return element
+  }
+
   create() {
     this.gameScene = <GameScene>this.scene.get('GameScene')
 
     let y = 0
 
-    const restartButton = this.add.dom(0, y, 'button', 'margin: 10px; width: 120px;', 'Restart')
+    this.restartElement = this.makeButton(y, 'Restart', this.onRestart, false)
     y += 30
-    restartButton.setOrigin(0, 0)
-    restartButton.addListener('click')
 
-    this.nextCardElement = document.createElement('button')
-    this.nextCardElement.style.margin = '10px'
-    this.nextCardElement.style.width = '120px'
-    this.nextCardElement.innerText = 'Next Card'
-    const nextCardButton = this.add.dom(0, y, this.nextCardElement)
+    this.nextCardElement = this.makeButton(y, 'Next Card', this.onNextCard, false)
     y += 30
-    nextCardButton.setOrigin(0, 0)
-    nextCardButton.addListener('click')
 
-    this.placeCardElement = document.createElement('button')
-    this.placeCardElement.style.margin = '10px'
-    this.placeCardElement.style.width = '120px'
-    this.placeCardElement.innerText = 'Place Card'
-    const placeCardButton = this.add.dom(0, y, this.placeCardElement)
+    this.rotateCWElement = this.makeButton(y, 'Rotate CW', this.onRotateCW, true)
     y += 30
-    placeCardButton.setOrigin(0, 0)
-    placeCardButton.addListener('click')
 
-    restartButton.on('click', this.onRestart, this)
-    nextCardButton.on('click', this.onNextCard, this)
-    placeCardButton.on('click', this.onPlaceCard, this)
-    this.placeCardElement.disabled = true
+    this.rotateCCWElement = this.makeButton(y, 'Rotate CCW', this.onRotateCCW, true)
+    y += 30
+
+    this.placeCardElement = this.makeButton(y, 'Place Card', this.onPlaceCard, true)
+    y += 30
 
     if (this.sys.game.device.fullscreen.available) {
-      const enterFullScreenButton = this.add.dom(0, y, 'button', 'margin: 10px; width: 120px;', 'Enter Full Screen')
-      enterFullScreenButton.setOrigin(0, 0)
-      enterFullScreenButton.addListener('click')
-      enterFullScreenButton.setVisible(true)
-
-      const exitFullScreenButton = this.add.dom(0, y, 'button', 'margin: 10px; width: 120px;', 'Exit Full Screen')
-      exitFullScreenButton.setOrigin(0, 0)
-      exitFullScreenButton.addListener('click')
-      exitFullScreenButton.setVisible(false)
-
-      const toggleFullScreenMode = () => {
-        enterFullScreenButton.setVisible(this.scale.isFullscreen)
-        exitFullScreenButton.setVisible(!this.scale.isFullscreen)
+      const onToggleFullScreenMode = () => {
         if (this.scale.isFullscreen) {
           this.scale.stopFullscreen()
+          this.toggleFullScreenButton.innerText = 'Enter Full Screen'
         } else {
           this.scale.startFullscreen()
+          this.toggleFullScreenButton.innerText = 'Exit Full Screen'
         }
       }
-
-      enterFullScreenButton.on('click', toggleFullScreenMode)
-      exitFullScreenButton.on('click', toggleFullScreenMode)
-
+      this.toggleFullScreenButton = this.makeButton(y, 'Enter Full Screen', onToggleFullScreenMode, false)
       y += 30
     }
   }
@@ -420,18 +422,32 @@ export class HUDScene extends Phaser.Scene {
   public onRestart(): void {
     this.gameScene.onRestart()
     this.nextCardElement.disabled = false
+    this.rotateCWElement.disabled = true
+    this.rotateCCWElement.disabled = true
     this.placeCardElement.disabled = true
   }
 
   public onNextCard(): void {
     this.gameScene.onNextCard()
     this.nextCardElement.disabled = true
+    this.rotateCWElement.disabled = false
+    this.rotateCCWElement.disabled = false
     this.placeCardElement.disabled = false
+  }
+
+  public onRotateCW(): void {
+    this.gameScene.onRotateCW()
+  }
+
+  public onRotateCCW(): void {
+    this.gameScene.onRotateCCW()
   }
 
   public onPlaceCard(): void {
     const numCardsLeft = this.gameScene.onPlaceCard()
     this.nextCardElement.disabled = numCardsLeft == 0
+    this.rotateCWElement.disabled = true
+    this.rotateCCWElement.disabled = true
     this.placeCardElement.disabled = true
   }
 }
