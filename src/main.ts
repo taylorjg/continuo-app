@@ -46,6 +46,10 @@ const drawCard = (graphics: Phaser.GameObjects.Graphics, card: Card): void => {
   }
 }
 
+const isRotated = (orientation: Orientation): boolean => {
+  return (orientation == Orientation.East || orientation == Orientation.West)
+}
+
 const orientationToAngle = (orientation: Orientation): number => {
   switch (orientation) {
     case Orientation.North: return 0
@@ -160,11 +164,13 @@ export class GameScene extends Phaser.Scene {
 
     const placedCard = possibleMove.placedCard
 
-    if (!noResize) {
-      if (addToBoard) {
-        this.board = this.board.placeCard(placedCard)
+    if (addToBoard) {
+      this.board = this.board.placeCard(placedCard)
+      if (!noResize) {
         this.resize(noAnimation)
-      } else {
+      }
+    } else {
+      if (!noResize) {
         const savedBoard = this.board
         this.board = this.board.placeCard(placedCard)
         this.resize(noAnimation)
@@ -268,10 +274,17 @@ export class GameScene extends Phaser.Scene {
   }
 
   private findPossibleMove(row: number, col: number, orientation: Orientation): PossibleMove {
+    log.debug('[findPossibleMove]', { row, col, orientation })
+    log.debug('[findPossibleMove] this.possibleMoves:',)
+    this.possibleMoves.forEach(pm => {
+      const pc = pm.placedCard
+      log.debug('  ', { row: pc.row, col: pc.col, orientation: pc.orientation, score: pm.score })
+    })
+    const isRotated1 = isRotated(orientation)
     for (const possibleMove of this.possibleMoves) {
-      if (possibleMove.placedCard.row == row &&
-        possibleMove.placedCard.col == col &&
-        possibleMove.placedCard.orientation == orientation) {
+      const placedCard = possibleMove.placedCard
+      const isRotated2 = isRotated(placedCard.orientation)
+      if (placedCard.row == row && placedCard.col == col && isRotated1 == isRotated2) {
         return possibleMove
       }
     }
