@@ -325,6 +325,12 @@ export class GameScene extends Phaser.Scene {
     return Phaser.Utils.Array.GetRandom(bestScoreMoves)
   }
 
+  private chooseRandomWorstScoreMove(possibleMoves: PossibleMove[]): PossibleMove {
+    const worstScore = possibleMoves.slice(-1)[0].score
+    const worstScoreMoves = possibleMoves.filter(possibleMove => possibleMove.score == worstScore)
+    return Phaser.Utils.Array.GetRandom(worstScoreMoves)
+  }
+
   private startNewGame(): void {
 
     this.cardSpritesMap.forEach(cardSprite => cardSprite.setVisible(false))
@@ -344,6 +350,28 @@ export class GameScene extends Phaser.Scene {
     this.placeCard(move2, true /* addToBoard */, true /* noAnimation */, false /* noResize */)
   }
 
+  private rotateCommon(angleDelta: number): void {
+    const placedCard = this.currentPossibleMove.placedCard
+    const newOrientation = angleDelta > 0
+      ? orientationRotateCW(placedCard.orientation)
+      : orientationRotateCCW(placedCard.orientation)
+    const possibleMove = this.findPossibleMove(placedCard.row, placedCard.col, newOrientation)
+    if (possibleMove) {
+      this.unhighlightChains()
+      const toAngle = (this.currentCardContainer.angle + angleDelta) % 360
+      this.tweens.add({
+        targets: this.currentCardContainer,
+        angle: toAngle,
+        duration: 500,
+        ease: 'Sine.InOut',
+        onComplete: () => {
+          this.currentPossibleMove = possibleMove
+          this.highlightChains()
+        }
+      })
+    }
+  }
+
   public onRestart(): void {
     log.debug('[GameScene#onRestart]')
     this.startNewGame()
@@ -353,32 +381,18 @@ export class GameScene extends Phaser.Scene {
     log.debug('[GameScene#onNextCard]')
     const card = this.deck.nextCard()
     this.possibleMoves = evaluateCard(this.board, card)
-    this.currentPossibleMove = this.possibleMoves[0]
+    this.currentPossibleMove = this.chooseRandomWorstScoreMove(this.possibleMoves)
     this.placeCard(this.currentPossibleMove, false /* addToBoard */, false /* noAnimation */, false /* noResize */)
   }
 
   public onRotateCW(): void {
     log.debug('[GameScene#onRotateCW]')
-    const placedCard = this.currentPossibleMove.placedCard
-    const newOrientation = orientationRotateCW(placedCard.orientation)
-    const possibleMove = this.findPossibleMove(placedCard.row, placedCard.col, newOrientation)
-    if (possibleMove) {
-      this.unhighlightChains()
-      this.currentPossibleMove = possibleMove
-      this.placeCard(possibleMove, false, false, true)
-    }
+    this.rotateCommon(+90)
   }
 
   public onRotateCCW(): void {
     log.debug('[GameScene#onRotateCCW]')
-    const placedCard = this.currentPossibleMove.placedCard
-    const newOrientation = orientationRotateCCW(placedCard.orientation)
-    const possibleMove = this.findPossibleMove(placedCard.row, placedCard.col, newOrientation)
-    if (possibleMove) {
-      this.unhighlightChains()
-      this.currentPossibleMove = possibleMove
-      this.placeCard(possibleMove, false, false, true)
-    }
+    this.rotateCommon(-90)
   }
 
   public onPlaceCard(): number {
