@@ -1,10 +1,10 @@
 import * as Phaser from 'phaser'
 import log from 'loglevel'
-import { GameScene } from './gameScene'
+import { ContinuoBoardScene } from './continuoBoardScene'
 
 export class HUDScene extends Phaser.Scene {
 
-  gameScene: GameScene
+  continuoBoardScene: ContinuoBoardScene
   restartElement: HTMLButtonElement
   nextCardElement: HTMLButtonElement
   placeCardElement: HTMLButtonElement
@@ -34,7 +34,7 @@ export class HUDScene extends Phaser.Scene {
   }
 
   create() {
-    this.gameScene = <GameScene>this.scene.get('GameScene')
+    this.continuoBoardScene = <ContinuoBoardScene>this.scene.get('ContinuoBoardScene')
 
     let y = 0
 
@@ -70,7 +70,7 @@ export class HUDScene extends Phaser.Scene {
 
   public onRestart(): void {
     log.debug('[HUDScene#onRestart]')
-    this.gameScene.onRestart()
+    this.continuoBoardScene.onRestart()
     this.nextCardElement.disabled = false
     this.rotateCWElement.disabled = true
     this.rotateCCWElement.disabled = true
@@ -79,7 +79,7 @@ export class HUDScene extends Phaser.Scene {
 
   public onNextCard(): void {
     log.debug('[HUDScene#onRestart]')
-    this.gameScene.onNextCard()
+    this.continuoBoardScene.onNextCard()
     this.nextCardElement.disabled = true
     this.rotateCWElement.disabled = false
     this.rotateCCWElement.disabled = false
@@ -88,17 +88,17 @@ export class HUDScene extends Phaser.Scene {
 
   public onRotateCW(): void {
     log.debug('[HUDScene#onRestart]')
-    this.gameScene.onRotateCW()
+    this.continuoBoardScene.onRotateCW()
   }
 
   public onRotateCCW(): void {
     log.debug('[HUDScene#onRestart]')
-    this.gameScene.onRotateCCW()
+    this.continuoBoardScene.onRotateCCW()
   }
 
   public onPlaceCard(): void {
     log.debug('[HUDScene#onRestart]')
-    const numCardsLeft = this.gameScene.onPlaceCard()
+    const numCardsLeft = this.continuoBoardScene.onPlaceCard()
     this.nextCardElement.disabled = numCardsLeft == 0
     this.rotateCWElement.disabled = true
     this.rotateCCWElement.disabled = true

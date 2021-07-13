@@ -1,5 +1,4 @@
 import * as Phaser from 'phaser'
-
 import log from 'loglevel'
 import { Board } from './continuo-lib/board'
 import { Card } from './continuo-lib/card'
@@ -78,13 +77,7 @@ const orientationToAngle = (orientation: Orientation): number => {
   }
 }
 
-const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
-  active: false,
-  visible: false,
-  key: 'GameScene'
-}
-
-export class GameScene extends Phaser.Scene {
+export class ContinuoBoardScene extends Phaser.Scene {
 
   deck: Deck
   board: Board
@@ -96,7 +89,11 @@ export class GameScene extends Phaser.Scene {
   chainHighlights: Phaser.GameObjects.Polygon[]
 
   constructor() {
-    super(sceneConfig)
+    super({
+      active: false,
+      visible: false,
+      key: 'ContinuoBoardScene'
+    })
     this.deck = new Deck()
     this.board = Board.empty
     this.cardSpritesMap = new Map<Card, Phaser.GameObjects.Sprite>()
@@ -150,7 +147,7 @@ export class GameScene extends Phaser.Scene {
     const scaleY = height / totalHeight
     const scale = Math.min(scaleX, scaleY)
 
-    log.debug('[GameScene#resize]', {
+    log.debug('[ContinuoBoardScene#resize]', {
       width,
       height,
       numCellsWide,
@@ -374,12 +371,12 @@ export class GameScene extends Phaser.Scene {
   }
 
   public onRestart(): void {
-    log.debug('[GameScene#onRestart]')
+    log.debug('[ContinuoBoardScene#onRestart]')
     this.startNewGame()
   }
 
   public onNextCard(): void {
-    log.debug('[GameScene#onNextCard]')
+    log.debug('[ContinuoBoardScene#onNextCard]')
     const card = this.deck.nextCard()
     this.possibleMoves = evaluateCard(this.board, card)
     this.currentPossibleMove = this.chooseRandomWorstScoreMove(this.possibleMoves)
@@ -387,17 +384,17 @@ export class GameScene extends Phaser.Scene {
   }
 
   public onRotateCW(): void {
-    log.debug('[GameScene#onRotateCW]')
+    log.debug('[ContinuoBoardScene#onRotateCW]')
     this.rotateCommon(+90)
   }
 
   public onRotateCCW(): void {
-    log.debug('[GameScene#onRotateCCW]')
+    log.debug('[ContinuoBoardScene#onRotateCCW]')
     this.rotateCommon(-90)
   }
 
   public onPlaceCard(): number {
-    log.debug('[GameScene#onPlaceCard]')
+    log.debug('[ContinuoBoardScene#onPlaceCard]')
     this.placeCard(this.currentPossibleMove, true /* addToBoard */, false /* noAnimation */, true /* noResize */)
     return this.deck.numCardsLeft
   }
