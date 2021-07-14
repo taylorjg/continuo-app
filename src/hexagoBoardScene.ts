@@ -4,12 +4,17 @@ import { Board } from './hexago-lib/board'
 import { Card } from './hexago-lib/card'
 import { Cell } from './hexago-lib/cell'
 import { Deck } from './hexago-lib/deck'
-import { Colour, Rotation } from './hexago-lib/enums'
+import { Colour, HexagoNumber, Rotation } from './hexago-lib/enums'
 import { evaluateCard } from './hexago-lib/evaluate'
 import { PlacedCard } from './hexago-lib/placedCard'
 import { PossibleMove } from './hexago-lib/possibleMove'
+import { Wedge } from './hexago-lib/wedge'
 
-const CARD_SIZE = 200
+const TAN_30_DEGREES = Math.tan(30 * Math.PI / 180)
+const CARD_HEIGHT = 200
+// const CARD_WIDTH = CARD_HEIGHT / 4 / TAN_30_DEGREES * 2
+const CARD_WIDTH = CARD_HEIGHT / 2 / TAN_30_DEGREES
+
 const NUM_MARGIN_CARDS = 1
 
 // const CURRENT_CARD_DEPTH = 1
@@ -42,14 +47,14 @@ const calculateHexagonPoints = (cx: number, cy: number, a: number): Phaser.Geom.
 
 const drawCard = (graphics: Phaser.GameObjects.Graphics, card: Card): void => {
 
-  const cx = CARD_SIZE / 2
-  const cy = CARD_SIZE / 2
+  const cx = CARD_WIDTH / 2
+  const cy = CARD_HEIGHT / 2
 
-  const outerPoints = calculateHexagonPoints(cx, cy, CARD_SIZE / 4)
+  const outerPoints = calculateHexagonPoints(cx, cy, CARD_HEIGHT / 4)
   graphics.fillStyle(0x000000)
   graphics.fillPoints(outerPoints, true)
 
-  const innerPoints = calculateHexagonPoints(cx, cy, CARD_SIZE / 4 - 3)
+  const innerPoints = calculateHexagonPoints(cx, cy, CARD_HEIGHT / 4 - 3)
 
   for (const wedgeIndex of [0, 1, 2, 3, 4, 5]) {
     const wedge = card.wedgeAt(wedgeIndex, Rotation.Rotation0)
@@ -65,6 +70,44 @@ const drawCard = (graphics: Phaser.GameObjects.Graphics, card: Card): void => {
     graphics.strokePoints(wedgePoints, true)
   }
 }
+
+const allRotations = [
+  Rotation.Rotation0,
+  Rotation.Rotation60,
+  Rotation.Rotation120,
+  Rotation.Rotation180,
+  Rotation.Rotation240,
+  Rotation.Rotation300
+]
+
+const findRotation = (
+  card: Card,
+  predicate: (card: Card, rotation: Rotation) => boolean): Rotation => {
+  for (const rotation of allRotations) {
+    if (predicate(card, rotation)) {
+      return rotation
+    }
+  }
+  throw new Error('[findRotation] predicate returned false for all rotations')
+}
+
+const findWedgeIndex = (
+  card: Card,
+  rotation: Rotation,
+  predicate: (card: Card, wedge: Wedge) => boolean): number => {
+  for (const wedgeIndex of [0, 1, 2, 3, 4, 5]) {
+    const wedge = card.wedgeAt(wedgeIndex, rotation)
+    if (predicate(card, wedge)) {
+      return wedgeIndex
+    }
+  }
+  throw new Error('[findWedgeIndex] predicate returned false for all wedges')
+}
+
+const findRotationWhereSixIsAtWedgeIndex = (card: Card, wedgeIndex: number): Rotation =>
+  findRotation(card, (_: Card, rotation: Rotation) =>
+    findWedgeIndex(card, rotation, (_: Card, wedge: Wedge) =>
+      wedge.number == HexagoNumber.Number6) == wedgeIndex)
 
 const rotationRotateCW = (rotation: Rotation): Rotation => {
   switch (rotation) {
@@ -123,8 +166,8 @@ export class HexagoBoardScene extends Phaser.Scene {
   }
 
   private getCardPosition(row: number, col: number): Phaser.Geom.Point {
-    const x = col * CARD_SIZE + CARD_SIZE / 2
-    const y = row * CARD_SIZE + CARD_SIZE / 2
+    const x = col * CARD_WIDTH + CARD_WIDTH / 2
+    const y = row * CARD_HEIGHT + CARD_HEIGHT / 2
     return new Phaser.Geom.Point(x, y)
   }
 
@@ -163,8 +206,8 @@ export class HexagoBoardScene extends Phaser.Scene {
     const [leftMost, rightMost, topMost, bottomMost] = boundaries
     const numCellsWide = rightMost - leftMost + 1 + (2 * NUM_MARGIN_CARDS)
     const numCellsHigh = bottomMost - topMost + 1 + (2 * NUM_MARGIN_CARDS)
-    const totalWidth = numCellsWide * CARD_SIZE
-    const totalHeight = numCellsHigh * CARD_SIZE
+    const totalWidth = numCellsWide * CARD_WIDTH
+    const totalHeight = numCellsHigh * CARD_HEIGHT
     const scaleX = width / totalWidth
     const scaleY = height / totalHeight
     const scale = Math.min(scaleX, scaleY)
@@ -193,8 +236,8 @@ export class HexagoBoardScene extends Phaser.Scene {
       })
     }
 
-    const centreX = (leftMost - NUM_MARGIN_CARDS) * CARD_SIZE + (totalWidth / 2)
-    const centreY = (topMost - NUM_MARGIN_CARDS) * CARD_SIZE + (totalHeight / 2)
+    const centreX = (leftMost - NUM_MARGIN_CARDS) * CARD_WIDTH + (totalWidth / 2)
+    const centreY = (topMost - NUM_MARGIN_CARDS) * CARD_HEIGHT + (totalHeight / 2)
     this.cameras.main.centerOn(centreX, centreY)
   }
 
@@ -254,7 +297,7 @@ export class HexagoBoardScene extends Phaser.Scene {
       const graphics = new Phaser.GameObjects.Graphics(this)
       drawCard(graphics, card)
       const key = `card-${index}`
-      graphics.generateTexture(key, CARD_SIZE, CARD_SIZE)
+      graphics.generateTexture(key, CARD_WIDTH, CARD_HEIGHT)
       const sprite = new Phaser.GameObjects.Sprite(this, 0, 0, key)
       sprite.visible = false
       sprite.scaleX = 0.99
@@ -269,7 +312,7 @@ export class HexagoBoardScene extends Phaser.Scene {
     this.currentCardContainer = new Phaser.GameObjects.Container(this, 0, 0)
     this.currentCardContainer.setVisible(false)
     // this.currentCardContainer.setDepth(CURRENT_CARD_DEPTH)
-    this.currentCardContainer.setSize(CARD_SIZE, CARD_SIZE)
+    this.currentCardContainer.setSize(CARD_WIDTH, CARD_HEIGHT)
     this.currentCardContainer.setInteractive()
     this.add.existing(this.currentCardContainer)
 
@@ -308,8 +351,8 @@ export class HexagoBoardScene extends Phaser.Scene {
   }
 
   private getSnapPosition(x: number, y: number): Cell {
-    const row = Math.round(y / CARD_SIZE)
-    const col = Math.round(x / CARD_SIZE)
+    const row = Math.round(y / CARD_HEIGHT)
+    const col = Math.round(x / CARD_WIDTH)
     return new Cell(row, col)
   }
 
@@ -329,22 +372,15 @@ export class HexagoBoardScene extends Phaser.Scene {
     return null
   }
 
-  private chooseRandomRotation(): Rotation {
-    return Phaser.Utils.Array.GetRandom([
-      Rotation.Rotation0,
-      Rotation.Rotation60,
-      Rotation.Rotation120,
-      Rotation.Rotation180,
-      Rotation.Rotation240,
-      Rotation.Rotation300
-    ])
-  }
+  // private chooseRandomRotation(): Rotation {
+  //   return Phaser.Utils.Array.GetRandom(allRotations)
+  // }
 
-  private chooseRandomBestScoreMove(possibleMoves: PossibleMove[]): PossibleMove {
-    const bestScore = possibleMoves[0].score
-    const bestScoreMoves = possibleMoves.filter(possibleMove => possibleMove.score == bestScore)
-    return Phaser.Utils.Array.GetRandom(bestScoreMoves)
-  }
+  // private chooseRandomBestScoreMove(possibleMoves: PossibleMove[]): PossibleMove {
+  //   const bestScore = possibleMoves[0].score
+  //   const bestScoreMoves = possibleMoves.filter(possibleMove => possibleMove.score == bestScore)
+  //   return Phaser.Utils.Array.GetRandom(bestScoreMoves)
+  // }
 
   private chooseRandomWorstScoreMove(possibleMoves: PossibleMove[]): PossibleMove {
     const worstScore = possibleMoves.slice(-1)[0].score
@@ -360,35 +396,17 @@ export class HexagoBoardScene extends Phaser.Scene {
     this.deck.reset()
     this.board = Board.empty
 
-    // const card1 = this.deck.nextCard()
-    // const rotation1 = this.chooseRandomRotation()
-    // const placedCard1 = new PlacedCard(card1, 0, 0, rotation1)
-    // const move1 = new PossibleMove(placedCard1, [])
-    // this.placeCard(move1, true /* addToBoard */, true /* noAnimation */, false /* noResize */)
-
-    // const card2 = this.deck.nextCard()
-    // const move2 = this.chooseRandomBestScoreMove(evaluateCard(this.board, card2))
-    // this.placeCard(move2, true /* addToBoard */, true /* noAnimation */, false /* noResize */)
-
     const card1 = this.deck.nextCard()
-    const rotation1 = this.chooseRandomRotation()
+    const rotation1 = findRotationWhereSixIsAtWedgeIndex(card1, 1)
     const placedCard1 = new PlacedCard(card1, 0, 0, rotation1)
     const move1 = new PossibleMove(placedCard1, [])
     this.placeCard(move1, true /* addToBoard */, true /* noAnimation */, false /* noResize */)
 
-    // const card2 = this.deck.nextCard()
-    // const rotation2 = this.chooseRandomRotation()
-    // const placedCard2 = new PlacedCard(card2, 1, 1, rotation2)
-    // const move2 = new PossibleMove(placedCard2, [])
-    // this.placeCard(move2, true /* addToBoard */, true /* noAnimation */, false /* noResize */)
-
-    // const card1 = this.deck.nextCard()
-    // const card2 = this.deck.nextCard()
-    // find card1 6 and card2 6
-    // place cards horizontally card1 left and card2 right
-    // (later choose random horizontal or vertical and random order of cards)
-    // need to rotate card1 until 6 wedge is at index 1
-    // need to rotate card2 until 6 wedge is at index 4
+    const card2 = this.deck.nextCard()
+    const rotation2 = findRotationWhereSixIsAtWedgeIndex(card2, 4)
+    const placedCard2 = new PlacedCard(card2, 0, 1, rotation2)
+    const move2 = new PossibleMove(placedCard2, [])
+    this.placeCard(move2, true /* addToBoard */, true /* noAnimation */, false /* noResize */)
   }
 
   private rotateCommon(angleDelta: number): void {
@@ -428,12 +446,12 @@ export class HexagoBoardScene extends Phaser.Scene {
 
   public onRotateCW(): void {
     log.debug('[HexagoBoardScene#onRotateCW]')
-    this.rotateCommon(+90)
+    this.rotateCommon(+60)
   }
 
   public onRotateCCW(): void {
     log.debug('[HexagoBoardScene#onRotateCCW]')
-    this.rotateCommon(-90)
+    this.rotateCommon(-60)
   }
 
   public onPlaceCard(): number {
