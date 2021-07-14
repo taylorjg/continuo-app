@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser'
 import log from 'loglevel'
-import { ContinuoBoardScene } from './continuoBoardScene'
+// import { ContinuoBoardScene } from './continuoBoardScene'
+import { HexagoBoardScene } from './hexagoBoardScene'
 import { HUDScene } from './hudScene'
 
 const gameConfig: Phaser.Types.Core.GameConfig = {
@@ -13,7 +14,8 @@ const gameConfig: Phaser.Types.Core.GameConfig = {
     fullscreenTarget: 'game'
   },
   backgroundColor: '#AAAAAA',
-  scene: [ContinuoBoardScene, HUDScene],
+  // scene: [ContinuoBoardScene, HUDScene],
+  scene: [HexagoBoardScene, HUDScene],
   parent: 'game',
   dom: {
     createContainer: true

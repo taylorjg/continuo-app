@@ -1,10 +1,12 @@
 import * as Phaser from 'phaser'
 import log from 'loglevel'
-import { ContinuoBoardScene } from './continuoBoardScene'
+// import { ContinuoBoardScene } from './continuoBoardScene'
+import { HexagoBoardScene } from './hexagoBoardScene'
 
 export class HUDScene extends Phaser.Scene {
 
-  continuoBoardScene: ContinuoBoardScene
+  // boardScene: ContinuoBoardScene
+  boardScene: HexagoBoardScene
   restartElement: HTMLButtonElement
   nextCardElement: HTMLButtonElement
   placeCardElement: HTMLButtonElement
@@ -34,7 +36,8 @@ export class HUDScene extends Phaser.Scene {
   }
 
   create() {
-    this.continuoBoardScene = <ContinuoBoardScene>this.scene.get('ContinuoBoardScene')
+    // this.boardScene = <ContinuoBoardScene>this.scene.get('ContinuoBoardScene')
+    this.boardScene = <HexagoBoardScene>this.scene.get('HexagoBoardScene')
 
     let y = 0
 
@@ -70,7 +73,7 @@ export class HUDScene extends Phaser.Scene {
 
   public onRestart(): void {
     log.debug('[HUDScene#onRestart]')
-    this.continuoBoardScene.onRestart()
+    this.boardScene.onRestart()
     this.nextCardElement.disabled = false
     this.rotateCWElement.disabled = true
     this.rotateCCWElement.disabled = true
@@ -79,7 +82,7 @@ export class HUDScene extends Phaser.Scene {
 
   public onNextCard(): void {
     log.debug('[HUDScene#onRestart]')
-    this.continuoBoardScene.onNextCard()
+    this.boardScene.onNextCard()
     this.nextCardElement.disabled = true
     this.rotateCWElement.disabled = false
     this.rotateCCWElement.disabled = false
@@ -88,17 +91,17 @@ export class HUDScene extends Phaser.Scene {
 
   public onRotateCW(): void {
     log.debug('[HUDScene#onRestart]')
-    this.continuoBoardScene.onRotateCW()
+    this.boardScene.onRotateCW()
   }
 
   public onRotateCCW(): void {
     log.debug('[HUDScene#onRestart]')
-    this.continuoBoardScene.onRotateCCW()
+    this.boardScene.onRotateCCW()
   }
 
   public onPlaceCard(): void {
     log.debug('[HUDScene#onRestart]')
-    const numCardsLeft = this.continuoBoardScene.onPlaceCard()
+    const numCardsLeft = this.boardScene.onPlaceCard()
     this.nextCardElement.disabled = numCardsLeft == 0
     this.rotateCWElement.disabled = true
     this.rotateCCWElement.disabled = true

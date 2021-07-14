@@ -292,7 +292,7 @@ export class ContinuoBoardScene extends Phaser.Scene {
 
   private findPossibleMove(row: number, col: number, orientation: Orientation): PossibleMove {
     log.debug('[findPossibleMove]', { row, col, orientation })
-    log.debug('[findPossibleMove] this.possibleMoves:',)
+    log.debug('[findPossibleMove] this.possibleMoves:')
     this.possibleMoves.forEach(pm => {
       const pc = pm.placedCard
       log.debug('  ', { row: pc.row, col: pc.col, orientation: pc.orientation, score: pm.score })
