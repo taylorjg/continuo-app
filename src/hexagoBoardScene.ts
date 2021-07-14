@@ -71,6 +71,16 @@ const drawCard = (graphics: Phaser.GameObjects.Graphics, card: Card): void => {
     graphics.lineStyle(2, 0x000000)
     graphics.strokePoints(wedgePoints, true)
   }
+
+  for (const wedgeIndex of WEDGE_INDICES) {
+    const angleDegrees = rotationToAngle(allRotations[wedgeIndex]) - 60
+    const angleRadians = angleDegrees * Math.PI / 180
+    const nr = CARD_HEIGHT / 3.65
+    const ncx = cx + nr * Math.cos(angleRadians)
+    const ncy = cy + nr * Math.sin(angleRadians)
+    graphics.fillStyle(0xFFFFFF)
+    graphics.fillCircle(ncx, ncy, CARD_HEIGHT / 9.25)
+  }
 }
 
 const allRotations = [
