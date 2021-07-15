@@ -47,6 +47,44 @@ const calculateHexagonPoints = (cx: number, cy: number, a: number): Phaser.Geom.
   ]
 }
 
+// 0   2
+// 3 4 5
+// 6   8
+const NUMBERS_TO_DOTS = new Map([
+  [HexagoNumber.Number1, [4]],
+  [HexagoNumber.Number2, [0, 8]],
+  [HexagoNumber.Number3, [2, 4, 6]],
+  [HexagoNumber.Number4, [0, 2, 6, 8]],
+  [HexagoNumber.Number5, [0, 2, 4, 6, 8]],
+  [HexagoNumber.Number6, [0, 2, 3, 5, 6, 8]]
+])
+
+const drawWedgeNumber = (graphics: Phaser.GameObjects.Graphics, wedgeIndex: number, number: HexagoNumber): void => {
+
+  const cxCard = CARD_WIDTH / 2
+  const cyCard = CARD_HEIGHT / 2
+
+  const angleDegrees = rotationToAngle(allRotations[wedgeIndex]) - 60
+  const angleRadians = angleDegrees * Math.PI / 180
+
+  const diceDistance = CARD_HEIGHT / 3.65
+  const cxDice = cxCard + diceDistance * Math.cos(angleRadians)
+  const cyDice = cyCard + diceDistance * Math.sin(angleRadians)
+
+  const diceRadius = CARD_HEIGHT / 9.25
+
+  graphics.fillStyle(0xFFFFFF)
+  graphics.fillCircle(cxDice, cyDice, diceRadius)
+
+  const dots = NUMBERS_TO_DOTS.get(number)
+  const dotRadius = diceRadius / 6
+
+  for (const dot of dots) {
+    graphics.fillStyle(0x000000)
+    graphics.fillCircle(cxDice, cyDice, dotRadius)
+  }
+}
+
 const drawCard = (graphics: Phaser.GameObjects.Graphics, card: Card): void => {
 
   const cx = CARD_WIDTH / 2
@@ -70,16 +108,7 @@ const drawCard = (graphics: Phaser.GameObjects.Graphics, card: Card): void => {
     graphics.fillPoints(wedgePoints, true)
     graphics.lineStyle(2, 0x000000)
     graphics.strokePoints(wedgePoints, true)
-  }
-
-  for (const wedgeIndex of WEDGE_INDICES) {
-    const angleDegrees = rotationToAngle(allRotations[wedgeIndex]) - 60
-    const angleRadians = angleDegrees * Math.PI / 180
-    const nr = CARD_HEIGHT / 3.65
-    const ncx = cx + nr * Math.cos(angleRadians)
-    const ncy = cy + nr * Math.sin(angleRadians)
-    graphics.fillStyle(0xFFFFFF)
-    graphics.fillCircle(ncx, ncy, CARD_HEIGHT / 9.25)
+    drawWedgeNumber(graphics, wedgeIndex, wedge.number)
   }
 }
 
