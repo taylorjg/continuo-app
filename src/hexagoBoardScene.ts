@@ -52,8 +52,8 @@ const calculateHexagonPoints = (cx: number, cy: number, a: number): Phaser.Geom.
 // 6   8
 const NUMBERS_TO_DOTS = new Map([
   [HexagoNumber.Number1, [4]],
-  [HexagoNumber.Number2, [0, 8]],
-  [HexagoNumber.Number3, [2, 4, 6]],
+  [HexagoNumber.Number2, [2, 6]],
+  [HexagoNumber.Number3, [0, 4, 8]],
   [HexagoNumber.Number4, [0, 2, 6, 8]],
   [HexagoNumber.Number5, [0, 2, 4, 6, 8]],
   [HexagoNumber.Number6, [0, 2, 3, 5, 6, 8]]
@@ -79,9 +79,44 @@ const drawWedgeNumber = (graphics: Phaser.GameObjects.Graphics, wedgeIndex: numb
   const dots = NUMBERS_TO_DOTS.get(number)
   const dotRadius = diceRadius / 6
 
+  const d = dotRadius * 3 * Math.sqrt(2)
+
+  const calculateCorner = (additionalAngleDegrees: number) => {
+    const totalAngleDegrees = angleDegrees + additionalAngleDegrees
+    const totalAngleRadians = totalAngleDegrees * Math.PI / 180
+    return new Phaser.Geom.Point(
+      cxDice + d * Math.cos(totalAngleRadians),
+      cyDice + d * Math.sin(totalAngleRadians)
+    )
+  }
+
+  // centre
+  const p4 = new Phaser.Geom.Point(cxDice, cyDice)
+
+  // corners
+  const p0 = calculateCorner(1 * 45)
+  const p2 = calculateCorner(7 * 45)
+  const p6 = calculateCorner(3 * 45)
+  const p8 = calculateCorner(5 * 45)
+
+  // midpoints
+  const p3 = Phaser.Geom.Point.Interpolate(p0, p6, 0.5)
+  const p5 = Phaser.Geom.Point.Interpolate(p2, p8, 0.5)
+
+  const dotsToPoints = new Map([
+    [0, p0],
+    [2, p2],
+    [3, p3],
+    [4, p4],
+    [5, p5],
+    [6, p6],
+    [8, p8]
+  ])
+
   for (const dot of dots) {
+    const point = dotsToPoints.get(dot)
     graphics.fillStyle(0x000000)
-    graphics.fillCircle(cxDice, cyDice, dotRadius)
+    graphics.fillCircle(point.x, point.y, dotRadius)
   }
 }
 
