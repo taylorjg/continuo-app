@@ -90,9 +90,9 @@ export class ContinuoBoardScene extends Phaser.Scene {
 
   constructor() {
     super({
-      active: false,
-      visible: false,
-      key: 'ContinuoBoardScene'
+      active: true,
+      visible: true,
+      key: 'BoardScene'
     })
     this.deck = new Deck()
     this.board = Board.empty
@@ -220,6 +220,13 @@ export class ContinuoBoardScene extends Phaser.Scene {
 
   public create() {
 
+    // this.events.on('destroy', () => {
+    //   log.debug('[ContinuoBoardScene on destroy]')
+    //   this.cardSpritesMap.forEach(cardSprite => cardSprite.destroy())
+    //   this.currentCardContainer.destroy()
+    //   this.unhighlightChains()
+    // })
+
     window.addEventListener('resize', () => {
       this.resize()
     })
@@ -231,7 +238,7 @@ export class ContinuoBoardScene extends Phaser.Scene {
     Deck.originalCards.forEach((card, index) => {
       const graphics = new Phaser.GameObjects.Graphics(this)
       drawCard(graphics, card)
-      const key = `card-${index}`
+      const key = `continuo-card-${index}`
       graphics.generateTexture(key, CARD_SIZE, CARD_SIZE)
       const sprite = new Phaser.GameObjects.Sprite(this, 0, 0, key)
       sprite.visible = false
@@ -291,11 +298,11 @@ export class ContinuoBoardScene extends Phaser.Scene {
   }
 
   private findPossibleMove(row: number, col: number, orientation: Orientation): PossibleMove {
-    log.debug('[findPossibleMove]', { row, col, orientation })
-    log.debug('[findPossibleMove] this.possibleMoves:')
+    log.debug('[ContinuoBoardScene#findPossibleMove]', { row, col, orientation })
+    log.debug('[ContinuoBoardScene#findPossibleMove] this.possibleMoves:')
     this.possibleMoves.forEach(pm => {
       const pc = pm.placedCard
-      log.debug('  ', { row: pc.row, col: pc.col, orientation: pc.orientation, score: pm.score })
+      log.debug('[ContinuoBoardScene#findPossibleMove]  ', { row: pc.row, col: pc.col, orientation: pc.orientation, score: pm.score })
     })
     const isRotated1 = isRotated(orientation)
     for (const possibleMove of this.possibleMoves) {

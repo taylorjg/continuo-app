@@ -231,9 +231,9 @@ export class HexagoBoardScene extends Phaser.Scene {
 
   constructor() {
     super({
-      active: false,
-      visible: false,
-      key: 'HexagoBoardScene'
+      active: true,
+      visible: true,
+      key: 'BoardScene'
     })
     this.deck = new Deck()
     this.board = Board.empty
@@ -360,6 +360,13 @@ export class HexagoBoardScene extends Phaser.Scene {
 
   public create() {
 
+    // this.events.on('destroy', () => {
+    //   log.debug('[HexagoBoardScene on destroy]')
+    //   this.cardSpritesMap.forEach(cardSprite => cardSprite.destroy())
+    //   this.currentCardContainer.destroy()
+    //   // this.unhighlightChains()
+    // })
+
     window.addEventListener('resize', () => {
       this.resize()
     })
@@ -371,7 +378,7 @@ export class HexagoBoardScene extends Phaser.Scene {
     Deck.originalCards.forEach((card, index) => {
       const graphics = new Phaser.GameObjects.Graphics(this)
       drawCard(graphics, card)
-      const key = `card-${index}`
+      const key = `hexago-card-${index}`
       graphics.generateTexture(key, CARD_WIDTH, CARD_HEIGHT)
       const sprite = new Phaser.GameObjects.Sprite(this, 0, 0, key)
       sprite.visible = false
@@ -434,11 +441,11 @@ export class HexagoBoardScene extends Phaser.Scene {
   }
 
   private findPossibleMove(row: number, col: number, rotation: Rotation): PossibleMove {
-    log.debug('[findPossibleMove]', { row, col, rotation })
-    log.debug('[findPossibleMove] this.possibleMoves:')
+    log.debug('[HexagoBoardScene#findPossibleMove]', { row, col, rotation })
+    log.debug('[HexagoBoardScene#findPossibleMove] this.possibleMoves:')
     this.possibleMoves.forEach(pm => {
       const pc = pm.placedCard
-      log.debug('  ', { row: pc.row, col: pc.col, rotation: pc.rotation, score: pm.score })
+      log.debug('[HexagoBoardScene#findPossibleMove]  ', { row: pc.row, col: pc.col, rotation: pc.rotation, score: pm.score })
     })
     for (const possibleMove of this.possibleMoves) {
       const placedCard = possibleMove.placedCard

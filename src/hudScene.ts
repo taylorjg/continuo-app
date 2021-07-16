@@ -1,12 +1,11 @@
 import * as Phaser from 'phaser'
 import log from 'loglevel'
-// import { ContinuoBoardScene } from './continuoBoardScene'
-import { HexagoBoardScene } from './hexagoBoardScene'
+import { IBoardScene } from './types'
 
 export class HUDScene extends Phaser.Scene {
 
-  // boardScene: ContinuoBoardScene
-  boardScene: HexagoBoardScene
+  boardScene: IBoardScene
+  homeElement: HTMLButtonElement
   restartElement: HTMLButtonElement
   nextCardElement: HTMLButtonElement
   placeCardElement: HTMLButtonElement
@@ -36,10 +35,12 @@ export class HUDScene extends Phaser.Scene {
   }
 
   create() {
-    // this.boardScene = <ContinuoBoardScene>this.scene.get('ContinuoBoardScene')
-    this.boardScene = <HexagoBoardScene>this.scene.get('HexagoBoardScene')
+    this.boardScene = <IBoardScene><unknown>this.scene.get('BoardScene')
 
     let y = 0
+
+    this.homeElement = this.makeButton(y, 'Home', this.onHome, false)
+    y += 30
 
     this.restartElement = this.makeButton(y, 'Restart', this.onRestart, false)
     y += 30
@@ -69,6 +70,12 @@ export class HUDScene extends Phaser.Scene {
       this.toggleFullScreenButton = this.makeButton(y, 'Enter Full Screen', onToggleFullScreenMode, false)
       y += 30
     }
+  }
+
+  public onHome(): void {
+    log.debug('[HUDScene#onHome]')
+    this.scene.remove('BoardScene')
+    this.scene.remove('HUDScene')
   }
 
   public onRestart(): void {
