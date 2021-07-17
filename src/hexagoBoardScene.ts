@@ -10,10 +10,10 @@ import { PlacedCard } from './hexago-lib/placedCard'
 import { PossibleMove } from './hexago-lib/possibleMove'
 import { Wedge } from './hexago-lib/wedge'
 
-const TAN_30_DEGREES = Math.tan(30 * Math.PI / 180)
+const TAN_30 = Math.tan(Phaser.Math.DegToRad(30))
 
 const CARD_HEIGHT = 200
-const CARD_WIDTH = CARD_HEIGHT / 2 / TAN_30_DEGREES
+const CARD_WIDTH = CARD_HEIGHT / 2 / TAN_30
 
 const NUM_MARGIN_CARDS = 1
 
@@ -35,7 +35,7 @@ const HIGHLIGHT_COLOUR = 0xFF00FF
 
 // https://www.quora.com/How-can-you-find-the-coordinates-in-a-hexagon
 const calculateHexagonPoints = (cx: number, cy: number, a: number): Phaser.Geom.Point[] => {
-  const triangleHeight = a / TAN_30_DEGREES
+  const triangleHeight = a / TAN_30
   return [
     new Phaser.Geom.Point(cx, cy - (2 * a)),
     new Phaser.Geom.Point(cx + triangleHeight, cy - a),
@@ -64,7 +64,7 @@ const drawWedgeNumber = (graphics: Phaser.GameObjects.Graphics, wedgeIndex: numb
   const cyCard = CARD_HEIGHT / 2
 
   const angleDegrees = rotationToAngle(allRotations[wedgeIndex]) - 60
-  const angleRadians = angleDegrees * Math.PI / 180
+  const angleRadians = Phaser.Math.DegToRad(angleDegrees)
 
   const diceDistance = CARD_HEIGHT / 3.65
   const cxDice = cxCard + diceDistance * Math.cos(angleRadians)
@@ -82,7 +82,7 @@ const drawWedgeNumber = (graphics: Phaser.GameObjects.Graphics, wedgeIndex: numb
 
   const calculateCorner = (additionalAngleDegrees: number) => {
     const totalAngleDegrees = angleDegrees + additionalAngleDegrees
-    const totalAngleRadians = totalAngleDegrees * Math.PI / 180
+    const totalAngleRadians = Phaser.Math.DegToRad(totalAngleDegrees)
     return new Phaser.Geom.Point(
       cxDice + d * Math.cos(totalAngleRadians),
       cyDice + d * Math.sin(totalAngleRadians)
@@ -520,7 +520,7 @@ export class HexagoBoardScene extends Phaser.Scene {
       this.tweens.add({
         targets: this.currentCardContainer,
         angle: toAngle,
-        duration: 500,
+        duration: 300,
         ease: 'Sine.InOut',
         onComplete: () => {
           this.currentPossibleMove = possibleMove

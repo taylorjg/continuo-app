@@ -362,7 +362,7 @@ export class ContinuoBoardScene extends Phaser.Scene {
       this.tweens.add({
         targets: this.currentCardContainer,
         angle: toAngle,
-        duration: 500,
+        duration: 300,
         ease: 'Sine.InOut',
         onComplete: () => {
           this.currentPossibleMove = possibleMove
