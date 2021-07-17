@@ -15,11 +15,12 @@ const CARD_SIZE = 4 * CELL_SIZE + 3 * GAP_SIZE
 const QUARTER_CARD_SIZE = CARD_SIZE / 4
 const EIGHTH_CARD_SIZE = CARD_SIZE / 8
 const NUM_MARGIN_CELLS = 5
-const CURRENT_CARD_HIGHLIGHT_LINE_WIDTH = CELL_SIZE / 5
-const CHAIN_HIGHLIGHTS_LINE_WIDTH = CELL_SIZE / 5
 
 const CURRENT_CARD_DEPTH = 1
 const CHAIN_HIGHLIGHTS_DEPTH = 2
+
+const HIGHLIGHT_LINE_WIDTH = CELL_SIZE / 5
+const HIGHLIGHT_COLOUR = 0xFF00FF
 
 const COLOUR_MAP = new Map([
   [Colour.Red, 0xFF0000],
@@ -27,9 +28,6 @@ const COLOUR_MAP = new Map([
   [Colour.Blue, 0x0000FF],
   [Colour.Yellow, 0xFFFF00]
 ])
-
-const CURRENT_CARD_HIGHLIGHT_COLOUR = 0xFF00FF
-const CHAIN_HIGHLIGHT_COLOUR = 0xFF00FF
 
 const drawCard = (graphics: Phaser.GameObjects.Graphics, card: Card): void => {
   graphics.fillStyle(0x000000)
@@ -119,7 +117,7 @@ export class ContinuoBoardScene extends Phaser.Scene {
       polygon.isFilled = false
       polygon.setClosePath(chain.isCycle)
       polygon.setOrigin(0, 0)
-      polygon.setStrokeStyle(CHAIN_HIGHLIGHTS_LINE_WIDTH, CHAIN_HIGHLIGHT_COLOUR)
+      polygon.setStrokeStyle(HIGHLIGHT_LINE_WIDTH, HIGHLIGHT_COLOUR)
       polygon.setDepth(CHAIN_HIGHLIGHTS_DEPTH)
       this.add.existing(polygon)
       this.chainHighlights.push(polygon)
@@ -220,19 +218,16 @@ export class ContinuoBoardScene extends Phaser.Scene {
 
   public create() {
 
-    // this.events.on('destroy', () => {
-    //   log.debug('[ContinuoBoardScene on destroy]')
-    //   this.cardSpritesMap.forEach(cardSprite => cardSprite.destroy())
-    //   this.currentCardContainer.destroy()
-    //   this.unhighlightChains()
-    // })
+    const onResize = () => this.resize()
+    const onOrientationChange = () => this.resize()
 
-    window.addEventListener('resize', () => {
-      this.resize()
-    })
+    window.addEventListener('resize', onResize)
+    this.scale.on('orientationchange', onOrientationChange)
 
-    this.scale.on('orientationchange', () => {
-      this.resize()
+    this.events.on('destroy', () => {
+      log.debug('[ContinuoBoardScene on destroy]')
+      window.removeEventListener('resize', onResize)
+      this.scale.off('orientationchange', onOrientationChange)
     })
 
     Deck.originalCards.forEach((card, index) => {
@@ -249,7 +244,7 @@ export class ContinuoBoardScene extends Phaser.Scene {
     })
 
     const currentCardHighlight = new Phaser.GameObjects.Rectangle(this, 0, 0, CARD_SIZE, CARD_SIZE)
-    currentCardHighlight.setStrokeStyle(CURRENT_CARD_HIGHLIGHT_LINE_WIDTH, CURRENT_CARD_HIGHLIGHT_COLOUR)
+    currentCardHighlight.setStrokeStyle(HIGHLIGHT_LINE_WIDTH, HIGHLIGHT_COLOUR)
     this.currentCardContainer = new Phaser.GameObjects.Container(this, 0, 0, [currentCardHighlight])
     this.currentCardContainer.setVisible(false)
     this.currentCardContainer.setDepth(CURRENT_CARD_DEPTH)

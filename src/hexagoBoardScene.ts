@@ -31,8 +31,7 @@ const COLOUR_MAP = new Map([
   [Colour.Purple, 0x800080]
 ])
 
-// const CURRENT_CARD_HIGHLIGHT_COLOUR = 0xFF00FF
-// const CHAIN_HIGHLIGHT_COLOUR = 0xFF00FF
+const HIGHLIGHT_COLOUR = 0xFF00FF
 
 // https://www.quora.com/How-can-you-find-the-coordinates-in-a-hexagon
 const calculateHexagonPoints = (cx: number, cy: number, a: number): Phaser.Geom.Point[] => {
@@ -227,7 +226,8 @@ export class HexagoBoardScene extends Phaser.Scene {
   possibleMoves: PossibleMove[]
   currentPossibleMove: PossibleMove
   currentCardContainer: Phaser.GameObjects.Container
-  // chainHighlights: Phaser.GameObjects.Polygon[]
+  matchingColourHighlights: Phaser.GameObjects.Triangle[]
+  matchingNumberHighlights: Phaser.GameObjects.Ellipse[]
 
   constructor() {
     super({
@@ -238,7 +238,8 @@ export class HexagoBoardScene extends Phaser.Scene {
     this.deck = new Deck()
     this.board = Board.empty
     this.cardSpritesMap = new Map<Card, Phaser.GameObjects.Sprite>()
-    // this.chainHighlights = []
+    this.matchingColourHighlights = []
+    this.matchingNumberHighlights = []
   }
 
   private getCardPosition(row: number, col: number): Phaser.Geom.Point {
@@ -261,10 +262,31 @@ export class HexagoBoardScene extends Phaser.Scene {
   //   })
   // }
 
-  // private unhighlightChains(): void {
-  //   this.chainHighlights.forEach(chainHighlight => chainHighlight.destroy())
-  //   this.chainHighlights = []
-  // }
+  private highlightMatchingColours(): void {
+  }
+
+  private highlightMatchingNumbers(): void {
+  }
+
+  private highlightMatches(): void {
+    this.highlightMatchingColours()
+    this.highlightMatchingNumbers()
+  }
+
+  private unhighlightMatchingColours(): void {
+    this.matchingColourHighlights.forEach(colourHighlight => colourHighlight.destroy())
+    this.matchingColourHighlights = []
+  }
+
+  private unhighlightMatchingNumbers(): void {
+    this.matchingNumberHighlights.forEach(numberHighlight => numberHighlight.destroy())
+    this.matchingNumberHighlights = []
+  }
+
+  private unhighlightMatches(): void {
+    this.unhighlightMatchingColours()
+    this.unhighlightMatchingNumbers()
+  }
 
   private resize(noAnimation: boolean = false): void {
 
@@ -344,7 +366,7 @@ export class HexagoBoardScene extends Phaser.Scene {
       cardSprite.setPosition(cardPosition.x, cardPosition.y)
       cardSprite.setAngle(angle)
       cardSprite.setVisible(true)
-      // this.unhighlightChains()
+      this.unhighlightMatches()
     } else {
       cardSprite.setPosition(0, 0)
       cardSprite.setAngle(0)
@@ -354,25 +376,22 @@ export class HexagoBoardScene extends Phaser.Scene {
       this.currentCardContainer.setPosition(cardPosition.x, cardPosition.y)
       this.currentCardContainer.setAngle(angle)
       this.currentCardContainer.setVisible(true)
-      // this.highlightChains()
+      this.highlightMatches()
     }
   }
 
   public create() {
 
-    // this.events.on('destroy', () => {
-    //   log.debug('[HexagoBoardScene on destroy]')
-    //   this.cardSpritesMap.forEach(cardSprite => cardSprite.destroy())
-    //   this.currentCardContainer.destroy()
-    //   // this.unhighlightChains()
-    // })
+    const onResize = () => this.resize()
+    const onOrientationChange = () => this.resize()
 
-    window.addEventListener('resize', () => {
-      this.resize()
-    })
+    window.addEventListener('resize', onResize)
+    this.scale.on('orientationchange', onOrientationChange)
 
-    this.scale.on('orientationchange', () => {
-      this.resize()
+    this.events.on('destroy', () => {
+      log.debug('[HexagoBoardScene on destroy]')
+      window.removeEventListener('resize', onResize)
+      this.scale.off('orientationchange', onOrientationChange)
     })
 
     Deck.originalCards.forEach((card, index) => {
@@ -392,7 +411,7 @@ export class HexagoBoardScene extends Phaser.Scene {
     const cy = CARD_HEIGHT / 2
     const points = calculateHexagonPoints(cx, cy, CARD_HEIGHT / 4)
     const currentCardHighlight = new Phaser.GameObjects.Polygon(this, 0, 0, points)
-    currentCardHighlight.setStrokeStyle(6, 0xFF00FF)
+    currentCardHighlight.setStrokeStyle(6, HIGHLIGHT_COLOUR)
     this.currentCardContainer = new Phaser.GameObjects.Container(this, 0, 0, [currentCardHighlight])
     this.currentCardContainer.setVisible(false)
     this.currentCardContainer.setDepth(CURRENT_CARD_DEPTH)
@@ -405,7 +424,7 @@ export class HexagoBoardScene extends Phaser.Scene {
     this.input.on('dragstart', (
       _pointer: Phaser.Input.Pointer,
       _gameObject: Phaser.GameObjects.GameObject) => {
-      // this.unhighlightChains()
+      this.unhighlightMatches()
     })
 
     this.input.on('drag', (
@@ -472,7 +491,7 @@ export class HexagoBoardScene extends Phaser.Scene {
 
     this.cardSpritesMap.forEach(cardSprite => cardSprite.setVisible(false))
     this.currentCardContainer.setVisible(false)
-    // this.unhighlightChains()
+    this.unhighlightMatches()
     this.deck.reset()
     this.board = Board.empty
 
@@ -496,7 +515,7 @@ export class HexagoBoardScene extends Phaser.Scene {
       : rotationRotateCCW(placedCard.rotation)
     const possibleMove = this.findPossibleMove(placedCard.row, placedCard.col, newOrientation)
     if (possibleMove) {
-      // this.unhighlightChains()
+      this.unhighlightMatches()
       const toAngle = (this.currentCardContainer.angle + angleDelta) % 360
       this.tweens.add({
         targets: this.currentCardContainer,
@@ -505,7 +524,7 @@ export class HexagoBoardScene extends Phaser.Scene {
         ease: 'Sine.InOut',
         onComplete: () => {
           this.currentPossibleMove = possibleMove
-          // this.highlightChains()
+          this.highlightMatches()
         }
       })
     }
