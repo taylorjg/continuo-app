@@ -21,7 +21,7 @@ const NUM_MARGIN_CARDS = 1
 const WEDGE_INDICES = [0, 1, 2, 3, 4, 5]
 
 const CURRENT_CARD_DEPTH = 1
-const HIGHLIGHTS_DEPTH = 2
+const MATCH_HIGHLIGHTS_DEPTH = 2
 
 const COLOUR_MAP = new Map([
   [Colour.Red, 0xFF0000],
@@ -69,47 +69,35 @@ const NUMBERS_TO_DOTS = new Map([
   [HexagoNumber.Number6, [0, 2, 3, 5, 6, 8]]
 ])
 
-const drawWedgeNumber = (graphics: Phaser.GameObjects.Graphics, wedgeIndex: number, number: HexagoNumber): void => {
-
-  const cxCard = CARD_WIDTH / 2
-  const cyCard = CARD_HEIGHT / 2
+const calculateDiePoints = (
+  cxDie: number,
+  cyDie: number,
+  wedgeIndex: number): Map<number, Phaser.Geom.Point> => {
 
   const angleDegrees = rotationToAngle(allRotations[wedgeIndex]) - 60
-  const angleRadians = Phaser.Math.DegToRad(angleDegrees)
+  const dieRadius = CARD_HEIGHT / 9.25
+  const dotRadius = dieRadius / 6
+  const distanceBetweenDots = dotRadius * 3 * Math.sqrt(2)
 
-  const diceDistance = CARD_HEIGHT / 3.65
-  const cxDice = cxCard + diceDistance * Math.cos(angleRadians)
-  const cyDice = cyCard + diceDistance * Math.sin(angleRadians)
-
-  const diceRadius = CARD_HEIGHT / 9.25
-
-  graphics.fillStyle(0xFFFFFF)
-  graphics.fillCircle(cxDice, cyDice, diceRadius)
-
-  const dots = NUMBERS_TO_DOTS.get(number)
-  const dotRadius = diceRadius / 6
-
-  const d = dotRadius * 3 * Math.sqrt(2)
-
-  const calculateCorner = (additionalAngleDegrees: number) => {
+  const calculateDieCorner = (additionalAngleDegrees: number) => {
     const totalAngleDegrees = angleDegrees + additionalAngleDegrees
     const totalAngleRadians = Phaser.Math.DegToRad(totalAngleDegrees)
     return new Phaser.Geom.Point(
-      cxDice + d * Math.cos(totalAngleRadians),
-      cyDice + d * Math.sin(totalAngleRadians)
+      cxDie + distanceBetweenDots * Math.cos(totalAngleRadians),
+      cyDie + distanceBetweenDots * Math.sin(totalAngleRadians)
     )
   }
 
-  // centre
-  const p4 = new Phaser.Geom.Point(cxDice, cyDice)
+  // centre dot
+  const p4 = new Phaser.Geom.Point(cxDie, cyDie)
 
-  // corners
-  const p0 = calculateCorner(1 * 45)
-  const p2 = calculateCorner(7 * 45)
-  const p6 = calculateCorner(3 * 45)
-  const p8 = calculateCorner(5 * 45)
+  // corner dots
+  const p0 = calculateDieCorner(1 * 45)
+  const p2 = calculateDieCorner(7 * 45)
+  const p6 = calculateDieCorner(3 * 45)
+  const p8 = calculateDieCorner(5 * 45)
 
-  // midpoints
+  // midpoint dots
   const p3 = Phaser.Geom.Point.Interpolate(p0, p6, 0.5)
   const p5 = Phaser.Geom.Point.Interpolate(p2, p8, 0.5)
 
@@ -122,6 +110,29 @@ const drawWedgeNumber = (graphics: Phaser.GameObjects.Graphics, wedgeIndex: numb
     [6, p6],
     [8, p8]
   ])
+
+  return dotsToPoints
+}
+
+const drawWedgeNumber = (graphics: Phaser.GameObjects.Graphics, wedgeIndex: number, number: HexagoNumber): void => {
+
+  const angleDegrees = rotationToAngle(allRotations[wedgeIndex]) - 60
+  const angleRadians = Phaser.Math.DegToRad(angleDegrees)
+
+  const dieOffset = CARD_HEIGHT / 3.65
+  const cx = CARD_WIDTH / 2
+  const cy = CARD_HEIGHT / 2
+  const cxDie = cx + dieOffset * Math.cos(angleRadians)
+  const cyDie = cy + dieOffset * Math.sin(angleRadians)
+
+  const dieRadius = CARD_HEIGHT / 9.25
+  const dotRadius = dieRadius / 6
+
+  graphics.fillStyle(0xFFFFFF)
+  graphics.fillCircle(cxDie, cyDie, dieRadius)
+
+  const dots = NUMBERS_TO_DOTS.get(number)
+  const dotsToPoints = calculateDiePoints(cxDie, cyDie, wedgeIndex)
 
   for (const dot of dots) {
     const point = dotsToPoints.get(dot)
@@ -232,7 +243,7 @@ export class HexagoBoardScene extends Phaser.Scene {
   currentPossibleMove: PossibleMove
   currentCardContainer: Phaser.GameObjects.Container
   matchingColourHighlights: Phaser.GameObjects.Polygon[]
-  matchingNumberHighlights: Phaser.GameObjects.Ellipse[]
+  matchingNumberHighlights: Phaser.GameObjects.Arc[]
 
   constructor() {
     super({
@@ -263,7 +274,7 @@ export class HexagoBoardScene extends Phaser.Scene {
       polygon.setClosePath(true)
       polygon.setOrigin(0, 0)
       polygon.setStrokeStyle(4, HIGHLIGHT_COLOUR)
-      polygon.setDepth(HIGHLIGHTS_DEPTH)
+      polygon.setDepth(MATCH_HIGHLIGHTS_DEPTH)
       this.add.existing(polygon)
       this.matchingColourHighlights.push(polygon)
     }
@@ -274,11 +285,37 @@ export class HexagoBoardScene extends Phaser.Scene {
 
   private highlightMatchingNumbers(match: Match): void {
 
-    const helper = (placedCard: PlacedCard, wedgeIndex: number): void => {
+    const helper = (placedCard: PlacedCard, wedgeIndex: number, number: number): void => {
+      const { x: cx, y: cy } = this.getCardPosition(placedCard.row, placedCard.col)
+      const angleDegrees = rotationToAngle(allRotations[wedgeIndex]) - 60
+      const angleRadians = Phaser.Math.DegToRad(angleDegrees)
+      const dieOffset = CARD_HEIGHT / 3.65
+      const cxDie = cx + dieOffset * Math.cos(angleRadians)
+      const cyDie = cy + dieOffset * Math.sin(angleRadians)
+      const dieRadius = CARD_HEIGHT / 9.25
+      const dotRadius = dieRadius / 6
+
+      const arc = new Phaser.GameObjects.Arc(this, cxDie, cyDie, dieRadius)
+      arc.setFillStyle(HIGHLIGHT_COLOUR)
+      arc.setDepth(MATCH_HIGHLIGHTS_DEPTH)
+      this.add.existing(arc)
+      this.matchingNumberHighlights.push(arc)
+
+      const dots = NUMBERS_TO_DOTS.get(number)
+      const dotsToPoints = calculateDiePoints(cxDie, cyDie, wedgeIndex)
+
+      for (const dot of dots) {
+        const point = dotsToPoints.get(dot)
+        const arc = new Phaser.GameObjects.Arc(this, point.x, point.y, dotRadius)
+        arc.setFillStyle(0x000000)
+        arc.setDepth(MATCH_HIGHLIGHTS_DEPTH)
+        this.add.existing(arc)
+        this.matchingNumberHighlights.push(arc)
+      }
     }
 
-    helper(match.placedCard, match.wedgeIndex)
-    helper(match.otherPlacedCard, match.otherWedgeIndex)
+    helper(match.placedCard, match.wedgeIndex, match.wedge.number)
+    helper(match.otherPlacedCard, match.otherWedgeIndex, match.otherWedge.number)
   }
 
   private highlightMatches(): void {
