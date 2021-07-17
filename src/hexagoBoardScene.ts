@@ -47,6 +47,16 @@ const calculateHexagonPoints = (cx: number, cy: number, r: number): Phaser.Geom.
   ]
 }
 
+const calculateWedgePoints = (cx: number, cy: number, wedgeIndex: number): Phaser.Geom.Point[] => {
+  const innerPoints = calculateHexagonPoints(cx, cy, CARD_HEIGHT / 2 - 6)
+  const wedgePoints = [
+    innerPoints[wedgeIndex],
+    innerPoints[(wedgeIndex + 1) % innerPoints.length],
+    new Phaser.Geom.Point(cx, cy)
+  ]
+  return wedgePoints
+}
+
 // 0   2
 // 3 4 5
 // 6   8
@@ -129,15 +139,10 @@ const drawCard = (graphics: Phaser.GameObjects.Graphics, card: Card): void => {
   graphics.fillStyle(0x000000)
   graphics.fillPoints(outerPoints, true)
 
-  const innerPoints = calculateHexagonPoints(cx, cy, CARD_HEIGHT / 2 - 6)
-
   for (const wedgeIndex of WEDGE_INDICES) {
     const wedge = card.wedgeAt(wedgeIndex, Rotation.Rotation0)
     const colour = COLOUR_MAP.get(wedge.colour)
-    const wedgePoints = []
-    wedgePoints.push(innerPoints[wedgeIndex])
-    wedgePoints.push(innerPoints[(wedgeIndex + 1) % 6])
-    wedgePoints.push(new Phaser.Geom.Point(cx, cy))
+    const wedgePoints = calculateWedgePoints(cx, cy, wedgeIndex)
     graphics.fillStyle(colour)
     graphics.fillPoints(wedgePoints, true)
     graphics.lineStyle(2, 0x000000)
@@ -252,11 +257,7 @@ export class HexagoBoardScene extends Phaser.Scene {
 
     const helper = (placedCard: PlacedCard, wedgeIndex: number): void => {
       const { x: cx, y: cy } = this.getCardPosition(placedCard.row, placedCard.col)
-      const innerPoints = calculateHexagonPoints(cx, cy, CARD_HEIGHT / 2 - 6)
-      const wedgePoints = []
-      wedgePoints.push(innerPoints[wedgeIndex])
-      wedgePoints.push(innerPoints[(wedgeIndex + 1) % 6])
-      wedgePoints.push(new Phaser.Geom.Point(cx, cy))
+      const wedgePoints = calculateWedgePoints(cx, cy, wedgeIndex)
       const polygon = new Phaser.GameObjects.Polygon(this, 0, 0, wedgePoints)
       polygon.isFilled = false
       polygon.setClosePath(true)
