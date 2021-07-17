@@ -35,15 +35,15 @@ const COLOUR_MAP = new Map([
 const HIGHLIGHT_COLOUR = 0xFF00FF
 
 // https://www.quora.com/How-can-you-find-the-coordinates-in-a-hexagon
-const calculateHexagonPoints = (cx: number, cy: number, a: number): Phaser.Geom.Point[] => {
-  const triangleHeight = a / TAN_30
+const calculateHexagonPoints = (cx: number, cy: number, r: number): Phaser.Geom.Point[] => {
+  const triangleHeight = r / 2 / TAN_30
   return [
-    new Phaser.Geom.Point(cx, cy - (2 * a)),
-    new Phaser.Geom.Point(cx + triangleHeight, cy - a),
-    new Phaser.Geom.Point(cx + triangleHeight, cy + a),
-    new Phaser.Geom.Point(cx, cy + (2 * a)),
-    new Phaser.Geom.Point(cx - triangleHeight, cy + a),
-    new Phaser.Geom.Point(cx - triangleHeight, cy - a)
+    new Phaser.Geom.Point(cx, cy - r),
+    new Phaser.Geom.Point(cx + triangleHeight, cy - r / 2),
+    new Phaser.Geom.Point(cx + triangleHeight, cy + r / 2),
+    new Phaser.Geom.Point(cx, cy + r),
+    new Phaser.Geom.Point(cx - triangleHeight, cy + r / 2),
+    new Phaser.Geom.Point(cx - triangleHeight, cy - r / 2)
   ]
 }
 
@@ -125,21 +125,20 @@ const drawCard = (graphics: Phaser.GameObjects.Graphics, card: Card): void => {
   const cx = CARD_WIDTH / 2
   const cy = CARD_HEIGHT / 2
 
-  const outerPoints = calculateHexagonPoints(cx, cy, CARD_HEIGHT / 4)
+  const outerPoints = calculateHexagonPoints(cx, cy, CARD_HEIGHT / 2)
   graphics.fillStyle(0x000000)
   graphics.fillPoints(outerPoints, true)
 
-  const innerPoints = calculateHexagonPoints(cx, cy, CARD_HEIGHT / 4 - 3)
+  const innerPoints = calculateHexagonPoints(cx, cy, CARD_HEIGHT / 2 - 6)
 
   for (const wedgeIndex of WEDGE_INDICES) {
     const wedge = card.wedgeAt(wedgeIndex, Rotation.Rotation0)
     const colour = COLOUR_MAP.get(wedge.colour)
-    graphics.fillStyle(colour)
-    graphics.lineStyle(1, 0x000000)
     const wedgePoints = []
     wedgePoints.push(innerPoints[wedgeIndex])
     wedgePoints.push(innerPoints[(wedgeIndex + 1) % 6])
     wedgePoints.push(new Phaser.Geom.Point(cx, cy))
+    graphics.fillStyle(colour)
     graphics.fillPoints(wedgePoints, true)
     graphics.lineStyle(2, 0x000000)
     graphics.strokePoints(wedgePoints, true)
@@ -253,7 +252,7 @@ export class HexagoBoardScene extends Phaser.Scene {
 
     const helper = (placedCard: PlacedCard, wedgeIndex: number): void => {
       const { x: cx, y: cy } = this.getCardPosition(placedCard.row, placedCard.col)
-      const innerPoints = calculateHexagonPoints(cx, cy, CARD_HEIGHT / 4 - 3)
+      const innerPoints = calculateHexagonPoints(cx, cy, CARD_HEIGHT / 2 - 6)
       const wedgePoints = []
       wedgePoints.push(innerPoints[wedgeIndex])
       wedgePoints.push(innerPoints[(wedgeIndex + 1) % 6])
@@ -424,9 +423,9 @@ export class HexagoBoardScene extends Phaser.Scene {
 
     const cx = CARD_WIDTH / 2
     const cy = CARD_HEIGHT / 2
-    const points = calculateHexagonPoints(cx, cy, CARD_HEIGHT / 4)
+    const points = calculateHexagonPoints(cx, cy, CARD_HEIGHT / 2)
     const currentCardHighlight = new Phaser.GameObjects.Polygon(this, 0, 0, points)
-    currentCardHighlight.setStrokeStyle(6, HIGHLIGHT_COLOUR)
+    currentCardHighlight.setStrokeStyle(4, HIGHLIGHT_COLOUR)
     this.currentCardContainer = new Phaser.GameObjects.Container(this, 0, 0, [currentCardHighlight])
     this.currentCardContainer.setVisible(false)
     this.currentCardContainer.setDepth(CURRENT_CARD_DEPTH)
