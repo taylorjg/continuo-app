@@ -8,6 +8,7 @@ import { Colour, HexagoNumber, Rotation } from './hexago-lib/enums'
 import { evaluateCard } from './hexago-lib/evaluate'
 import { PlacedCard } from './hexago-lib/placedCard'
 import { PossibleMove } from './hexago-lib/possibleMove'
+import { Match } from './hexago-lib/match'
 import { Wedge } from './hexago-lib/wedge'
 
 const TAN_30 = Math.tan(Phaser.Math.DegToRad(30))
@@ -20,7 +21,7 @@ const NUM_MARGIN_CARDS = 1
 const WEDGE_INDICES = [0, 1, 2, 3, 4, 5]
 
 const CURRENT_CARD_DEPTH = 1
-// const CHAIN_HIGHLIGHTS_DEPTH = 2
+const HIGHLIGHTS_DEPTH = 2
 
 const COLOUR_MAP = new Map([
   [Colour.Red, 0xFF0000],
@@ -226,7 +227,7 @@ export class HexagoBoardScene extends Phaser.Scene {
   possibleMoves: PossibleMove[]
   currentPossibleMove: PossibleMove
   currentCardContainer: Phaser.GameObjects.Container
-  matchingColourHighlights: Phaser.GameObjects.Triangle[]
+  matchingColourHighlights: Phaser.GameObjects.Polygon[]
   matchingNumberHighlights: Phaser.GameObjects.Ellipse[]
 
   constructor() {
@@ -248,29 +249,43 @@ export class HexagoBoardScene extends Phaser.Scene {
     return new Phaser.Geom.Point(x, y)
   }
 
-  // private highlightChains(): void {
-  //   this.currentPossibleMove.chains.forEach(chain => {
-  //     const points = chain.cells.map(cell => this.getCellPosition(cell.row, cell.col))
-  //     const polygon = new Phaser.GameObjects.Polygon(this, 0, 0, points)
-  //     polygon.isFilled = false
-  //     polygon.setClosePath(chain.isCycle)
-  //     polygon.setOrigin(0, 0)
-  //     polygon.setStrokeStyle(CHAIN_HIGHLIGHTS_LINE_WIDTH, CHAIN_HIGHLIGHT_COLOUR)
-  //     polygon.setDepth(CHAIN_HIGHLIGHTS_DEPTH)
-  //     this.add.existing(polygon)
-  //     this.chainHighlights.push(polygon)
-  //   })
-  // }
+  private highlightMatchingColours(match: Match): void {
 
-  private highlightMatchingColours(): void {
+    const helper = (placedCard: PlacedCard, wedgeIndex: number): void => {
+      const { x: cx, y: cy } = this.getCardPosition(placedCard.row, placedCard.col)
+      const innerPoints = calculateHexagonPoints(cx, cy, CARD_HEIGHT / 4 - 3)
+      const wedgePoints = []
+      wedgePoints.push(innerPoints[wedgeIndex])
+      wedgePoints.push(innerPoints[(wedgeIndex + 1) % 6])
+      wedgePoints.push(new Phaser.Geom.Point(cx, cy))
+      const polygon = new Phaser.GameObjects.Polygon(this, 0, 0, wedgePoints)
+      polygon.isFilled = false
+      polygon.setClosePath(true)
+      polygon.setOrigin(0, 0)
+      polygon.setStrokeStyle(4, HIGHLIGHT_COLOUR)
+      polygon.setDepth(HIGHLIGHTS_DEPTH)
+      this.add.existing(polygon)
+      this.matchingColourHighlights.push(polygon)
+    }
+
+    helper(match.placedCard, match.wedgeIndex)
+    helper(match.otherPlacedCard, match.otherWedgeIndex)
   }
 
-  private highlightMatchingNumbers(): void {
+  private highlightMatchingNumbers(match: Match): void {
+
+    const helper = (placedCard: PlacedCard, wedgeIndex: number): void => {
+    }
+
+    helper(match.placedCard, match.wedgeIndex)
+    helper(match.otherPlacedCard, match.otherWedgeIndex)
   }
 
   private highlightMatches(): void {
-    this.highlightMatchingColours()
-    this.highlightMatchingNumbers()
+    this.currentPossibleMove.matches.forEach((match: Match) => {
+      match.coloursMatch && this.highlightMatchingColours(match)
+      match.numbersMatch && this.highlightMatchingNumbers(match)
+    })
   }
 
   private unhighlightMatchingColours(): void {
