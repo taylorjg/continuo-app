@@ -16,7 +16,12 @@ const TAN_30 = Math.tan(Phaser.Math.DegToRad(30))
 const CARD_HEIGHT = 200
 const CARD_WIDTH = CARD_HEIGHT / 2 / TAN_30
 
-const NUM_MARGIN_CARDS = 1
+const ROW_HEIGHT = CARD_HEIGHT * 0.75
+const COL_WIDTH = CARD_WIDTH * 0.5
+
+const DIE_OFFSET = CARD_HEIGHT / 3.65
+const DIE_RADIUS = CARD_HEIGHT / 9.25
+const DOT_RADIUS = DIE_RADIUS / 6
 
 const WEDGE_INDICES = [0, 1, 2, 3, 4, 5]
 
@@ -75,9 +80,7 @@ const calculateDiePoints = (
   wedgeIndex: number): Map<number, Phaser.Geom.Point> => {
 
   const angleDegrees = rotationToAngle(allRotations[wedgeIndex]) - 60
-  const dieRadius = CARD_HEIGHT / 9.25
-  const dotRadius = dieRadius / 6
-  const distanceBetweenDots = dotRadius * 3 * Math.sqrt(2)
+  const distanceBetweenDots = DOT_RADIUS * 3 * Math.sqrt(2)
 
   const calculateDieCorner = (additionalAngleDegrees: number) => {
     const totalAngleDegrees = angleDegrees + additionalAngleDegrees
@@ -119,17 +122,13 @@ const drawWedgeNumber = (graphics: Phaser.GameObjects.Graphics, wedgeIndex: numb
   const angleDegrees = rotationToAngle(allRotations[wedgeIndex]) - 60
   const angleRadians = Phaser.Math.DegToRad(angleDegrees)
 
-  const dieOffset = CARD_HEIGHT / 3.65
   const cx = CARD_WIDTH / 2
   const cy = CARD_HEIGHT / 2
-  const cxDie = cx + dieOffset * Math.cos(angleRadians)
-  const cyDie = cy + dieOffset * Math.sin(angleRadians)
-
-  const dieRadius = CARD_HEIGHT / 9.25
-  const dotRadius = dieRadius / 6
+  const cxDie = cx + DIE_OFFSET * Math.cos(angleRadians)
+  const cyDie = cy + DIE_OFFSET * Math.sin(angleRadians)
 
   graphics.fillStyle(0xFFFFFF)
-  graphics.fillCircle(cxDie, cyDie, dieRadius)
+  graphics.fillCircle(cxDie, cyDie, DIE_RADIUS)
 
   const dots = NUMBERS_TO_DOTS.get(number)
   const dotsToPoints = calculateDiePoints(cxDie, cyDie, wedgeIndex)
@@ -137,7 +136,7 @@ const drawWedgeNumber = (graphics: Phaser.GameObjects.Graphics, wedgeIndex: numb
   for (const dot of dots) {
     const point = dotsToPoints.get(dot)
     graphics.fillStyle(0x000000)
-    graphics.fillCircle(point.x, point.y, dotRadius)
+    graphics.fillCircle(point.x, point.y, DOT_RADIUS)
   }
 }
 
@@ -259,8 +258,8 @@ export class HexagoBoardScene extends Phaser.Scene {
   }
 
   private getCardPosition(row: number, col: number): Phaser.Geom.Point {
-    const x = col * (CARD_WIDTH / 2)
-    const y = row * (CARD_HEIGHT * 0.75)
+    const x = col * COL_WIDTH
+    const y = row * ROW_HEIGHT
     return new Phaser.Geom.Point(x, y)
   }
 
@@ -289,13 +288,10 @@ export class HexagoBoardScene extends Phaser.Scene {
       const { x: cx, y: cy } = this.getCardPosition(placedCard.row, placedCard.col)
       const angleDegrees = rotationToAngle(allRotations[wedgeIndex]) - 60
       const angleRadians = Phaser.Math.DegToRad(angleDegrees)
-      const dieOffset = CARD_HEIGHT / 3.65
-      const cxDie = cx + dieOffset * Math.cos(angleRadians)
-      const cyDie = cy + dieOffset * Math.sin(angleRadians)
-      const dieRadius = CARD_HEIGHT / 9.25
-      const dotRadius = dieRadius / 6
+      const cxDie = cx + DIE_OFFSET * Math.cos(angleRadians)
+      const cyDie = cy + DIE_OFFSET * Math.sin(angleRadians)
 
-      const arc = new Phaser.GameObjects.Arc(this, cxDie, cyDie, dieRadius)
+      const arc = new Phaser.GameObjects.Arc(this, cxDie, cyDie, DIE_RADIUS)
       arc.setFillStyle(HIGHLIGHT_COLOUR)
       arc.setDepth(MATCH_HIGHLIGHTS_DEPTH)
       this.add.existing(arc)
@@ -306,7 +302,7 @@ export class HexagoBoardScene extends Phaser.Scene {
 
       for (const dot of dots) {
         const point = dotsToPoints.get(dot)
-        const arc = new Phaser.GameObjects.Arc(this, point.x, point.y, dotRadius)
+        const arc = new Phaser.GameObjects.Arc(this, point.x, point.y, DOT_RADIUS)
         arc.setFillStyle(0x000000)
         arc.setDepth(MATCH_HIGHLIGHTS_DEPTH)
         this.add.existing(arc)
@@ -349,12 +345,11 @@ export class HexagoBoardScene extends Phaser.Scene {
     const boundaries = this.board.getBoundaries()
     const [leftMost, rightMost, topMost, bottomMost] = boundaries
 
-    // TODO: these need a bit of adjustment
-    const numColsWide = rightMost - leftMost + 2 + (4 * NUM_MARGIN_CARDS)
-    const numRowsHigh = bottomMost - topMost + 1 + (2 * NUM_MARGIN_CARDS)
+    const numColsWide = (rightMost - leftMost + 2) + 6
+    const numRowsHigh = (bottomMost - topMost + 1) + 3
 
-    const totalWidth = numColsWide * (CARD_WIDTH / 2)
-    const totalHeight = numRowsHigh * (CARD_HEIGHT * 0.75)
+    const totalWidth = numColsWide * COL_WIDTH
+    const totalHeight = numRowsHigh * ROW_HEIGHT
     const scaleX = width / totalWidth
     const scaleY = height / totalHeight
     const scale = Math.min(scaleX, scaleY)
@@ -383,9 +378,8 @@ export class HexagoBoardScene extends Phaser.Scene {
       })
     }
 
-    // TODO: these need a bit of adjustment
-    const centreX = (leftMost - NUM_MARGIN_CARDS) * (CARD_WIDTH / 1) + (totalWidth / 2)
-    const centreY = (topMost - NUM_MARGIN_CARDS) * CARD_HEIGHT + (totalHeight / 2)
+    const centreX = (leftMost - 4) * COL_WIDTH + (totalWidth / 2)
+    const centreY = (topMost - 2) * ROW_HEIGHT + (totalHeight / 2)
 
     this.cameras.main.centerOn(centreX, centreY)
   }
@@ -506,8 +500,8 @@ export class HexagoBoardScene extends Phaser.Scene {
   }
 
   private getSnapPosition(x: number, y: number): Cell {
-    const row = Math.round(y / (CARD_HEIGHT * 0.75))
-    const col = Math.round(x / (CARD_WIDTH / 2))
+    const row = Math.round(y / ROW_HEIGHT)
+    const col = Math.round(x / COL_WIDTH)
     return new Cell(row, col)
   }
 
