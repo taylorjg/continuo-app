@@ -78,17 +78,20 @@ export class HUDScene extends Phaser.Scene {
     this.scoreText.setOrigin(0, 0)
 
     this.eventEmitter.on('currentCardChange', this.onCurrentCardChange, this)
+
+    this.events.on('destroy', () => {
+      log.debug('[HUDScene on destroy]')
+      this.eventEmitter.off('currentCardChange', this.onCurrentCardChange)
+    })
   }
 
   private onCurrentCardChange(arg: any): void {
     log.debug('[HUDScene#onCurrentCardChange]', arg)
-    if (this.scoreText) {
-      const { score, bestScore, bestScoreLocationCount } = arg
-      if (bestScore !== undefined && bestScoreLocationCount !== undefined) {
-        this.scoreText.setText(`${score} (${bestScore}/${bestScoreLocationCount})`)
-      } else {
-        this.scoreText.setText('')
-      }
+    const { score, bestScore, bestScoreLocationCount } = arg
+    if (bestScore !== undefined && bestScoreLocationCount !== undefined) {
+      this.scoreText.setText(`${score} (${bestScore}/${bestScoreLocationCount})`)
+    } else {
+      this.scoreText.setText('')
     }
   }
 
