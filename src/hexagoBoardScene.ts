@@ -543,11 +543,11 @@ export class HexagoBoardScene extends Phaser.Scene {
     return null
   }
 
-  private chooseRandomBestScoreMove(possibleMoves: PossibleMove[]): PossibleMove {
-    const bestScore = possibleMoves[0].score
-    const bestScoreMoves = possibleMoves.filter(possibleMove => possibleMove.score == bestScore)
-    return Phaser.Utils.Array.GetRandom(bestScoreMoves)
-  }
+  // private chooseRandomBestScoreMove(possibleMoves: PossibleMove[]): PossibleMove {
+  //   const bestScore = possibleMoves[0].score
+  //   const bestScoreMoves = possibleMoves.filter(possibleMove => possibleMove.score == bestScore)
+  //   return Phaser.Utils.Array.GetRandom(bestScoreMoves)
+  // }
 
   private chooseRandomWorstScoreMove(possibleMoves: PossibleMove[]): PossibleMove {
     const worstScore = possibleMoves.slice(-1)[0].score
@@ -609,8 +609,8 @@ export class HexagoBoardScene extends Phaser.Scene {
     log.debug('[HexagoBoardScene#onNextCard]')
     const card = this.deck.nextCard()
     this.possibleMoves = evaluateCard(this.board, card)
-    // this.currentPossibleMove = this.chooseRandomWorstScoreMove(this.possibleMoves)
-    this.currentPossibleMove = this.chooseRandomBestScoreMove(this.possibleMoves)
+    this.currentPossibleMove = this.chooseRandomWorstScoreMove(this.possibleMoves)
+    // this.currentPossibleMove = this.chooseRandomBestScoreMove(this.possibleMoves)
     this.placeCard(this.currentPossibleMove, false /* addToBoard */, false /* noAnimation */, false /* noResize */)
   }
 

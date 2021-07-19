@@ -13,6 +13,7 @@ export class HUDScene extends Phaser.Scene {
   rotateCWElement: HTMLButtonElement
   rotateCCWElement: HTMLButtonElement
   toggleFullScreenButton: HTMLButtonElement
+  scoreText: Phaser.GameObjects.Text
 
   constructor(eventEmitter: Phaser.Events.EventEmitter) {
     super({
@@ -73,53 +74,58 @@ export class HUDScene extends Phaser.Scene {
       y += 30
     }
 
+    this.scoreText = this.add.text(10, y + 10, '')
+    this.scoreText.setOrigin(0, 0)
+
     this.eventEmitter.on('currentCardChange', this.onCurrentCardChange, this)
   }
 
   private onCurrentCardChange(arg: any): void {
     log.debug('[HUDScene#onCurrentCardChange]', arg)
+    const { score, bestScore, bestScoreLocationCount } = arg
+    this.scoreText.setText(`${score} (${bestScore}/${bestScoreLocationCount})`)
   }
 
   private onHome(): void {
-  log.debug('[HUDScene#onHome]')
+    log.debug('[HUDScene#onHome]')
     this.scene.remove('BoardScene')
     this.scene.remove('HUDScene')
-}
+  }
 
   private onRestart(): void {
-  log.debug('[HUDScene#onRestart]')
+    log.debug('[HUDScene#onRestart]')
     this.boardScene.onRestart()
     this.nextCardElement.disabled = false
     this.rotateCWElement.disabled = true
     this.rotateCCWElement.disabled = true
     this.placeCardElement.disabled = true
-}
+  }
 
   private onNextCard(): void {
-  log.debug('[HUDScene#onRestart]')
+    log.debug('[HUDScene#onRestart]')
     this.boardScene.onNextCard()
     this.nextCardElement.disabled = true
     this.rotateCWElement.disabled = false
     this.rotateCCWElement.disabled = false
     this.placeCardElement.disabled = false
-}
+  }
 
   private onRotateCW(): void {
-  log.debug('[HUDScene#onRestart]')
+    log.debug('[HUDScene#onRestart]')
     this.boardScene.onRotateCW()
-}
+  }
 
   private onRotateCCW(): void {
-  log.debug('[HUDScene#onRestart]')
+    log.debug('[HUDScene#onRestart]')
     this.boardScene.onRotateCCW()
-}
+  }
 
   private onPlaceCard(): void {
-  log.debug('[HUDScene#onRestart]')
+    log.debug('[HUDScene#onRestart]')
     const numCardsLeft = this.boardScene.onPlaceCard()
     this.nextCardElement.disabled = numCardsLeft == 0
     this.rotateCWElement.disabled = true
     this.rotateCCWElement.disabled = true
     this.placeCardElement.disabled = true
-}
+  }
 }
