@@ -6,6 +6,7 @@ import { HUDScene } from './hudScene'
 
 export class HomeScene extends Phaser.Scene {
 
+  eventEmitter: Phaser.Events.EventEmitter
   playContinuoElement: HTMLButtonElement
   playHexagoElement: HTMLButtonElement
 
@@ -31,6 +32,8 @@ export class HomeScene extends Phaser.Scene {
   }
 
   create() {
+    this.eventEmitter = new Phaser.Events.EventEmitter()
+
     let y = 0
 
     this.playContinuoElement = this.makeButton(y, 'Play Continuo', this.onPlayContinuo, false)
@@ -42,13 +45,13 @@ export class HomeScene extends Phaser.Scene {
 
   public onPlayContinuo(): void {
     log.debug('[HomeScene#onPlayContinuo]')
-    this.game.scene.add('BoardScene', new ContinuoBoardScene())
-    this.game.scene.add('HUDScene', new HUDScene())
+    this.game.scene.add('BoardScene', new ContinuoBoardScene(this.eventEmitter))
+    this.game.scene.add('HUDScene', new HUDScene(this.eventEmitter))
   }
 
   public onPlayHexago(): void {
     log.debug('[HomeScene#onPlayHexago]')
-    this.game.scene.add('BoardScene', new HexagoBoardScene())
-    this.game.scene.add('HUDScene', new HUDScene())
+    this.game.scene.add('BoardScene', new HexagoBoardScene(this.eventEmitter))
+    this.game.scene.add('HUDScene', new HUDScene(this.eventEmitter))
   }
 }

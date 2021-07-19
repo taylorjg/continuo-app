@@ -4,6 +4,7 @@ import { IBoardScene } from './types'
 
 export class HUDScene extends Phaser.Scene {
 
+  eventEmitter: Phaser.Events.EventEmitter
   boardScene: IBoardScene
   homeElement: HTMLButtonElement
   restartElement: HTMLButtonElement
@@ -13,12 +14,13 @@ export class HUDScene extends Phaser.Scene {
   rotateCCWElement: HTMLButtonElement
   toggleFullScreenButton: HTMLButtonElement
 
-  constructor() {
+  constructor(eventEmitter: Phaser.Events.EventEmitter) {
     super({
       active: true,
       visible: true,
       key: 'HUDScene'
     })
+    this.eventEmitter = eventEmitter
   }
 
   private makeButton(y: number, label: string, handler: Function, initiallyDisabled: boolean): HTMLButtonElement {
@@ -70,48 +72,54 @@ export class HUDScene extends Phaser.Scene {
       this.toggleFullScreenButton = this.makeButton(y, 'Enter Full Screen', onToggleFullScreenMode, false)
       y += 30
     }
+
+    this.eventEmitter.on('currentCardChange', this.onCurrentCardChange, this)
   }
 
-  public onHome(): void {
-    log.debug('[HUDScene#onHome]')
+  private onCurrentCardChange(arg: any): void {
+    log.debug('[HUDScene#onCurrentCardChange]', arg)
+  }
+
+  private onHome(): void {
+  log.debug('[HUDScene#onHome]')
     this.scene.remove('BoardScene')
     this.scene.remove('HUDScene')
-  }
+}
 
-  public onRestart(): void {
-    log.debug('[HUDScene#onRestart]')
+  private onRestart(): void {
+  log.debug('[HUDScene#onRestart]')
     this.boardScene.onRestart()
     this.nextCardElement.disabled = false
     this.rotateCWElement.disabled = true
     this.rotateCCWElement.disabled = true
     this.placeCardElement.disabled = true
-  }
+}
 
-  public onNextCard(): void {
-    log.debug('[HUDScene#onRestart]')
+  private onNextCard(): void {
+  log.debug('[HUDScene#onRestart]')
     this.boardScene.onNextCard()
     this.nextCardElement.disabled = true
     this.rotateCWElement.disabled = false
     this.rotateCCWElement.disabled = false
     this.placeCardElement.disabled = false
-  }
+}
 
-  public onRotateCW(): void {
-    log.debug('[HUDScene#onRestart]')
+  private onRotateCW(): void {
+  log.debug('[HUDScene#onRestart]')
     this.boardScene.onRotateCW()
-  }
+}
 
-  public onRotateCCW(): void {
-    log.debug('[HUDScene#onRestart]')
+  private onRotateCCW(): void {
+  log.debug('[HUDScene#onRestart]')
     this.boardScene.onRotateCCW()
-  }
+}
 
-  public onPlaceCard(): void {
-    log.debug('[HUDScene#onRestart]')
+  private onPlaceCard(): void {
+  log.debug('[HUDScene#onRestart]')
     const numCardsLeft = this.boardScene.onPlaceCard()
     this.nextCardElement.disabled = numCardsLeft == 0
     this.rotateCWElement.disabled = true
     this.rotateCCWElement.disabled = true
     this.placeCardElement.disabled = true
-  }
+}
 }

@@ -77,6 +77,7 @@ const orientationToAngle = (orientation: Orientation): number => {
 
 export class ContinuoBoardScene extends Phaser.Scene {
 
+  eventEmitter: Phaser.Events.EventEmitter
   deck: Deck
   board: Board
   cardSpritesMap: Map<Card, Phaser.GameObjects.Sprite>
@@ -86,12 +87,13 @@ export class ContinuoBoardScene extends Phaser.Scene {
   currentCardContainer: Phaser.GameObjects.Container
   chainHighlights: Phaser.GameObjects.Polygon[]
 
-  constructor() {
+  constructor(eventEmitter: Phaser.Events.EventEmitter) {
     super({
       active: true,
       visible: true,
       key: 'BoardScene'
     })
+    this.eventEmitter = eventEmitter
     this.deck = new Deck()
     this.board = Board.empty
     this.cardSpritesMap = new Map<Card, Phaser.GameObjects.Sprite>()
@@ -174,6 +176,19 @@ export class ContinuoBoardScene extends Phaser.Scene {
     this.cameras.main.centerOn(centreX, centreY)
   }
 
+  private emitCurrentCardChange(possibleMove: PossibleMove) {
+
+    const score = possibleMove.score
+
+    if (this.possibleMoves) {
+      const bestScore = this.possibleMoves[0].score
+      const bestScoreLocationCount = this.possibleMoves.filter(({ score }) => score == bestScore).length
+      this.eventEmitter.emit('currentCardChange', { score, bestScore, bestScoreLocationCount })
+    } else {
+      this.eventEmitter.emit('currentCardChange', { score })
+    }
+  }
+
   private placeCard(possibleMove: PossibleMove, addToBoard: boolean, noAnimation: boolean, noResize: boolean): void {
 
     const placedCard = possibleMove.placedCard
@@ -214,6 +229,8 @@ export class ContinuoBoardScene extends Phaser.Scene {
       this.currentCardContainer.setVisible(true)
       this.highlightChains()
     }
+
+    this.emitCurrentCardChange(possibleMove)
   }
 
   public create() {
@@ -294,11 +311,16 @@ export class ContinuoBoardScene extends Phaser.Scene {
 
   private findPossibleMove(row: number, col: number, orientation: Orientation): PossibleMove {
     log.debug('[ContinuoBoardScene#findPossibleMove]', { row, col, orientation })
-    log.debug('[ContinuoBoardScene#findPossibleMove] this.possibleMoves:')
-    this.possibleMoves.forEach(pm => {
-      const pc = pm.placedCard
-      log.debug('[ContinuoBoardScene#findPossibleMove]  ', { row: pc.row, col: pc.col, orientation: pc.orientation, score: pm.score })
+    const possibleMovesForLogging = this.possibleMoves.map(possibleMove => {
+      const placedCard = possibleMove.placedCard
+      return {
+        row: placedCard.row,
+        col: placedCard.col,
+        orientation: placedCard.orientation,
+        score: possibleMove.score
+      }
     })
+    log.debug('[ContinuoBoardScene#findPossibleMove] possibleMoves:', possibleMovesForLogging)
     const isRotated1 = isRotated(orientation)
     for (const possibleMove of this.possibleMoves) {
       const placedCard = possibleMove.placedCard
@@ -338,6 +360,7 @@ export class ContinuoBoardScene extends Phaser.Scene {
     this.unhighlightChains()
     this.deck.reset()
     this.board = Board.empty
+    this.possibleMoves = null
 
     const card1 = this.deck.nextCard()
     const orientation1 = this.chooseRandomOrientation()
@@ -367,6 +390,7 @@ export class ContinuoBoardScene extends Phaser.Scene {
         onComplete: () => {
           this.currentPossibleMove = possibleMove
           this.highlightChains()
+          this.emitCurrentCardChange(possibleMove)
         }
       })
     }

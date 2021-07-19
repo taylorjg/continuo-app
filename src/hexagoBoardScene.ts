@@ -234,6 +234,7 @@ const rotationToAngle = (rotation: Rotation): number => {
 
 export class HexagoBoardScene extends Phaser.Scene {
 
+  eventEmitter: Phaser.Events.EventEmitter
   deck: Deck
   board: Board
   cardSpritesMap: Map<Card, Phaser.GameObjects.Sprite>
@@ -244,12 +245,13 @@ export class HexagoBoardScene extends Phaser.Scene {
   matchingColourHighlights: Phaser.GameObjects.Polygon[]
   matchingNumberHighlights: Phaser.GameObjects.Arc[]
 
-  constructor() {
+  constructor(eventEmitter: Phaser.Events.EventEmitter) {
     super({
       active: true,
       visible: true,
       key: 'BoardScene'
     })
+    this.eventEmitter = eventEmitter
     this.deck = new Deck()
     this.board = Board.empty
     this.cardSpritesMap = new Map<Card, Phaser.GameObjects.Sprite>()
@@ -384,6 +386,19 @@ export class HexagoBoardScene extends Phaser.Scene {
     this.cameras.main.centerOn(centreX, centreY)
   }
 
+  private emitCurrentCardChange(possibleMove: PossibleMove) {
+
+    const score = possibleMove.score
+
+    if (this.possibleMoves) {
+      const bestScore = this.possibleMoves[0].score
+      const bestScoreLocationCount = this.possibleMoves.filter(({ score }) => score == bestScore).length
+      this.eventEmitter.emit('currentCardChange', { score, bestScore, bestScoreLocationCount })
+    } else {
+      this.eventEmitter.emit('currentCardChange', { score })
+    }
+  }
+
   private placeCard(possibleMove: PossibleMove, addToBoard: boolean, noAnimation: boolean, noResize: boolean): void {
 
     const placedCard = possibleMove.placedCard
@@ -424,6 +439,8 @@ export class HexagoBoardScene extends Phaser.Scene {
       this.currentCardContainer.setVisible(true)
       this.highlightMatches()
     }
+
+    this.emitCurrentCardChange(possibleMove)
   }
 
   public create() {
@@ -507,11 +524,16 @@ export class HexagoBoardScene extends Phaser.Scene {
 
   private findPossibleMove(row: number, col: number, rotation: Rotation): PossibleMove {
     log.debug('[HexagoBoardScene#findPossibleMove]', { row, col, rotation })
-    log.debug('[HexagoBoardScene#findPossibleMove] this.possibleMoves:')
-    this.possibleMoves.forEach(pm => {
-      const pc = pm.placedCard
-      log.debug('[HexagoBoardScene#findPossibleMove]  ', { row: pc.row, col: pc.col, rotation: pc.rotation, score: pm.score })
+    const possibleMovesForLogging = this.possibleMoves.map(possibleMove => {
+      const placedCard = possibleMove.placedCard
+      return {
+        row: placedCard.row,
+        col: placedCard.col,
+        rotation: placedCard.rotation,
+        score: possibleMove.score
+      }
     })
+    log.debug('[HexagoBoardScene#findPossibleMove] possibleMoves:', possibleMovesForLogging)
     for (const possibleMove of this.possibleMoves) {
       const placedCard = possibleMove.placedCard
       if (placedCard.row == row && placedCard.col == col && placedCard.rotation == rotation) {
@@ -540,6 +562,7 @@ export class HexagoBoardScene extends Phaser.Scene {
     this.unhighlightMatches()
     this.deck.reset()
     this.board = Board.empty
+    this.possibleMoves = null
 
     const card1 = this.deck.nextCard()
     const rotation1 = findRotationWhereSixIsAtWedgeIndex(card1, 1)
@@ -571,6 +594,7 @@ export class HexagoBoardScene extends Phaser.Scene {
         onComplete: () => {
           this.currentPossibleMove = possibleMove
           this.highlightMatches()
+          this.emitCurrentCardChange(possibleMove)
         }
       })
     }
