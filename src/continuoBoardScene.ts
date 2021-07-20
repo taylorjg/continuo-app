@@ -34,7 +34,7 @@ const drawCard = (graphics: Phaser.GameObjects.Graphics, card: Card): void => {
   graphics.fillRect(0, 0, CARD_SIZE, CARD_SIZE)
   for (const rowWithinCard of [0, 1, 2, 3]) {
     for (const colWithinCard of [0, 1, 2, 3]) {
-      const cellColour = card.colourAt(rowWithinCard, colWithinCard, Orientation.North)
+      const cellColour = card.colourAt(rowWithinCard, colWithinCard, Orientation.NorthSouth)
       const colour = COLOUR_MAP.get(cellColour)
       graphics.fillStyle(colour)
       const x = rowWithinCard * (CELL_SIZE + GAP_SIZE)
@@ -45,33 +45,20 @@ const drawCard = (graphics: Phaser.GameObjects.Graphics, card: Card): void => {
 }
 
 const isRotated = (orientation: Orientation): boolean => {
-  return (orientation == Orientation.East || orientation == Orientation.West)
+  return (orientation == Orientation.EastWest)
 }
 
-const orientationRotateCW = (orientation: Orientation): Orientation => {
+const rotateOrientation = (orientation: Orientation): Orientation => {
   switch (orientation) {
-    case Orientation.North: return Orientation.East
-    case Orientation.South: return Orientation.West
-    case Orientation.East: return Orientation.South
-    case Orientation.West: return Orientation.North
-  }
-}
-
-const orientationRotateCCW = (orientation: Orientation): Orientation => {
-  switch (orientation) {
-    case Orientation.North: return Orientation.West
-    case Orientation.South: return Orientation.East
-    case Orientation.East: return Orientation.North
-    case Orientation.West: return Orientation.South
+    case Orientation.NorthSouth: return Orientation.EastWest
+    case Orientation.EastWest: return Orientation.NorthSouth
   }
 }
 
 const orientationToAngle = (orientation: Orientation): number => {
   switch (orientation) {
-    case Orientation.North: return 0
-    case Orientation.South: return 180
-    case Orientation.East: return 90
-    case Orientation.West: return -90
+    case Orientation.NorthSouth: return 0
+    case Orientation.EastWest: return 90
   }
 }
 
@@ -334,10 +321,8 @@ export class ContinuoBoardScene extends Phaser.Scene {
 
   private chooseRandomOrientation(): Orientation {
     return Phaser.Utils.Array.GetRandom([
-      Orientation.North,
-      Orientation.South,
-      Orientation.East,
-      Orientation.West
+      Orientation.NorthSouth,
+      Orientation.EastWest
     ])
   }
 
@@ -375,9 +360,7 @@ export class ContinuoBoardScene extends Phaser.Scene {
 
   private rotateCommon(angleDelta: number): void {
     const placedCard = this.currentPossibleMove.placedCard
-    const newOrientation = angleDelta > 0
-      ? orientationRotateCW(placedCard.orientation)
-      : orientationRotateCCW(placedCard.orientation)
+    const newOrientation = rotateOrientation(placedCard.orientation)
     const possibleMove = this.findPossibleMove(placedCard.row, placedCard.col, newOrientation)
     if (possibleMove) {
       this.unhighlightChains()
