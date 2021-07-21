@@ -90,6 +90,9 @@ export class HUDScene extends Phaser.Scene {
     const { score, bestScore, bestScoreLocationCount } = arg
     if (bestScore !== undefined && bestScoreLocationCount !== undefined) {
       this.scoreText.setText(`${score} (${bestScore}/${bestScoreLocationCount})`)
+      // if (score == bestScore) {
+      //   this.sound.play('best-move')
+      // }
     } else {
       this.scoreText.setText('')
     }
@@ -122,11 +125,13 @@ export class HUDScene extends Phaser.Scene {
   private onRotateCW(): void {
     log.debug('[HUDScene#onRestart]')
     this.boardScene.onRotateCW()
+    this.sound.play('rotate-card')
   }
 
   private onRotateCCW(): void {
     log.debug('[HUDScene#onRestart]')
     this.boardScene.onRotateCCW()
+    this.sound.play('rotate-card')
   }
 
   private onPlaceCard(): void {

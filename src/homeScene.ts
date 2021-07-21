@@ -31,6 +31,12 @@ export class HomeScene extends Phaser.Scene {
     return element
   }
 
+  preload() {
+    this.load.audio('best-move', 'assets/sounds/best-move.wav')
+    this.load.audio('illegal-move', 'assets/sounds/illegal-move.wav')
+    this.load.audio('rotate-card', 'assets/sounds/rotate-card.wav')
+  }
+
   create() {
     this.eventEmitter = new Phaser.Events.EventEmitter()
 
