@@ -263,13 +263,11 @@ export class ContinuoBoardScene extends Phaser.Scene {
 
     window.addEventListener('resize', onResize)
     window.addEventListener('orientationchange', onOrientationChange)
-    // this.scale.on('orientationchange', onOrientationChange)
 
     this.events.on('destroy', () => {
-      log.debug('[ContinuoBoardScene on destroy]')
+      log.debug('[ContinuoBoardScene destroy]')
       window.removeEventListener('resize', onResize)
       window.removeEventListener('orientationchange', onOrientationChange)
-      // this.scale.off('orientationchange', onOrientationChange)
     })
 
     Deck.originalCards.forEach((card, index) => {

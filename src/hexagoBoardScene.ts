@@ -447,12 +447,12 @@ export class HexagoBoardScene extends Phaser.Scene {
     const onOrientationChange = () => this.resize()
 
     window.addEventListener('resize', onResize)
-    this.scale.on('orientationchange', onOrientationChange)
+    window.addEventListener('orientationchange', onOrientationChange)
 
     this.events.on('destroy', () => {
-      log.debug('[HexagoBoardScene on destroy]')
+      log.debug('[HexagoBoardScene destroy]')
       window.removeEventListener('resize', onResize)
-      this.scale.off('orientationchange', onOrientationChange)
+      window.removeEventListener('orientationchange', onOrientationChange)
     })
 
     Deck.originalCards.forEach((card, index) => {

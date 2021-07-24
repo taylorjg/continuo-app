@@ -80,7 +80,7 @@ export class HUDScene extends Phaser.Scene {
     this.eventEmitter.on('currentCardChange', this.onCurrentCardChange, this)
 
     this.events.on('destroy', () => {
-      log.debug('[HUDScene on destroy]')
+      log.debug('[HUDScene destroy]')
       this.eventEmitter.off('currentCardChange', this.onCurrentCardChange)
     })
   }

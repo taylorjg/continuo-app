@@ -1,6 +1,6 @@
 {
   "name": "continuo-app-phaser-poc",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Learning Phaser by creating a proof-of-concept Continuo app",
   "main": "index.js",
   "scripts": {
