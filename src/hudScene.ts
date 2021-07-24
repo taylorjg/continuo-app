@@ -125,13 +125,13 @@ export class HUDScene extends Phaser.Scene {
   private onRotateCW(): void {
     log.debug('[HUDScene#onRestart]')
     this.boardScene.onRotateCW()
-    this.sound.play('rotate-card')
+    // this.sound.play('rotate-card')
   }
 
   private onRotateCCW(): void {
     log.debug('[HUDScene#onRestart]')
     this.boardScene.onRotateCCW()
-    this.sound.play('rotate-card')
+    // this.sound.play('rotate-card')
   }
 
   private onPlaceCard(): void {

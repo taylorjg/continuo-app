@@ -68,7 +68,6 @@ export class ContinuoBoardScene extends Phaser.Scene {
   deck: Deck
   board: Board
   cardSpritesMap: Map<Card, Phaser.GameObjects.Sprite>
-  currentCard: PlacedCard
   possibleMoves: PossibleMove[]
   currentPossibleMove: PossibleMove
   currentCardContainer: Phaser.GameObjects.Container
@@ -118,7 +117,7 @@ export class ContinuoBoardScene extends Phaser.Scene {
     this.chainHighlights = []
   }
 
-  private resize(noAnimation: boolean = false): void {
+  private resize(): void {
 
     const width = window.innerWidth
     const height = window.innerHeight
@@ -147,25 +146,21 @@ export class ContinuoBoardScene extends Phaser.Scene {
       boundaries
     })
 
-    if (noAnimation) {
-      this.cameras.main.zoom = scale
-    } else {
-      this.tweens.add({
-        targets: this.cameras.main,
-        zoom: scale,
-        duration: 1000,
-        ease: 'Expo.Out'
-      })
-    }
+    this.tweens.add({
+      targets: this.cameras.main,
+      zoom: scale,
+      duration: 1000,
+      ease: 'Expo.Out'
+    })
 
     const centreX = (leftMost - NUM_MARGIN_CELLS) * QUARTER_CARD_SIZE + (totalWidth / 2)
     const centreY = (topMost - NUM_MARGIN_CELLS) * QUARTER_CARD_SIZE + (totalHeight / 2)
     this.cameras.main.centerOn(centreX, centreY)
   }
 
-  private emitCurrentCardChange(possibleMove: PossibleMove) {
+  private emitCurrentCardChange() {
 
-    const score = possibleMove.score
+    const score = this.currentPossibleMove.score
 
     if (this.possibleMoves) {
       const bestScore = this.possibleMoves[0].score
@@ -176,48 +171,89 @@ export class ContinuoBoardScene extends Phaser.Scene {
     }
   }
 
-  private placeCard(possibleMove: PossibleMove, addToBoard: boolean, noAnimation: boolean, noResize: boolean): void {
-
-    const placedCard = possibleMove.placedCard
-
-    if (addToBoard) {
-      this.board = this.board.placeCard(placedCard)
-      if (!noResize) {
-        this.resize(noAnimation)
-      }
-    } else {
-      if (!noResize) {
-        const savedBoard = this.board
-        this.board = this.board.placeCard(placedCard)
-        this.resize(noAnimation)
-        this.board = savedBoard
-      }
-    }
-
+  private placeInitialCard(placedCard: PlacedCard): void {
+    this.board = this.board.placeCard(placedCard)
     const cardSprite = this.cardSpritesMap.get(placedCard.card)
     const cardPosition = this.getCardPosition(placedCard.row, placedCard.col)
     const angle = orientationToAngle(placedCard.orientation)
+    cardSprite.setPosition(cardPosition.x, cardPosition.y)
+    cardSprite.setAngle(angle)
+    cardSprite.setVisible(true)
+    this.currentCardContainer.remove(cardSprite)
+  }
 
-    if (addToBoard) {
-      this.currentCardContainer.remove(cardSprite)
-      this.currentCardContainer.setVisible(false)
-      cardSprite.setPosition(cardPosition.x, cardPosition.y)
-      cardSprite.setAngle(angle)
-      cardSprite.setVisible(true)
+  private placeCurrentCardTentative(possibleMove: PossibleMove): void {
+    this.currentPossibleMove = possibleMove
+    const placedCard = this.currentPossibleMove.placedCard
+    const savedBoard = this.board
+    this.board = this.board.placeCard(placedCard)
+    this.resize()
+    this.board = savedBoard
+    const cardSprite = this.cardSpritesMap.get(placedCard.card)
+    const cardPosition = this.getCardPosition(placedCard.row, placedCard.col)
+    const angle = orientationToAngle(placedCard.orientation)
+    cardSprite.setPosition(0, 0)
+    cardSprite.setAngle(0)
+    cardSprite.setVisible(true)
+    this.currentCardContainer.addAt(cardSprite, 0)
+    this.currentCardContainer.setPosition(cardPosition.x, cardPosition.y)
+    this.currentCardContainer.setAngle(angle)
+    this.currentCardContainer.setVisible(true)
+    this.highlightChains()
+    this.emitCurrentCardChange()
+  }
+
+  private placeCurrentCardFinal(): void {
+    const placedCard = this.currentPossibleMove.placedCard
+    this.board = this.board.placeCard(placedCard)
+    const cardSprite = this.cardSpritesMap.get(placedCard.card)
+    const cardPosition = this.getCardPosition(placedCard.row, placedCard.col)
+    const angle = orientationToAngle(placedCard.orientation)
+    this.currentCardContainer.remove(cardSprite)
+    this.currentCardContainer.setVisible(false)
+    cardSprite.setPosition(cardPosition.x, cardPosition.y)
+    cardSprite.setAngle(angle)
+    cardSprite.setVisible(true)
+    this.unhighlightChains()
+    this.currentPossibleMove = null
+  }
+
+  private moveCurrentCard(possibleMove: PossibleMove): void {
+    this.currentPossibleMove = possibleMove
+    const placedCard = this.currentPossibleMove.placedCard
+    const cardPosition = this.getCardPosition(placedCard.row, placedCard.col)
+    this.currentCardContainer.setPosition(cardPosition.x, cardPosition.y)
+    this.highlightChains()
+    this.emitCurrentCardChange()
+  }
+
+  private rotateCurrentCard(angleDelta: number): void {
+    const placedCard = this.currentPossibleMove.placedCard
+    const newOrientation = rotateOrientation(placedCard.orientation)
+    const possibleMove = this.findPossibleMove(placedCard.row, placedCard.col, newOrientation)
+    if (possibleMove) {
       this.unhighlightChains()
-    } else {
-      cardSprite.setPosition(0, 0)
-      cardSprite.setAngle(0)
-      cardSprite.setVisible(true)
-      this.currentCardContainer.add(cardSprite)
-      this.currentCardContainer.moveTo(cardSprite, 0)
-      this.currentCardContainer.setPosition(cardPosition.x, cardPosition.y)
-      this.currentCardContainer.setAngle(angle)
-      this.currentCardContainer.setVisible(true)
-      this.highlightChains()
+      const toAngle = (this.currentCardContainer.angle + angleDelta) % 360
+      this.tweens.add({
+        targets: this.currentCardContainer,
+        angle: toAngle,
+        duration: 300,
+        ease: 'Sine.InOut',
+        onComplete: () => {
+          this.currentPossibleMove = possibleMove
+          this.highlightChains()
+          this.emitCurrentCardChange()
+        }
+      })
     }
+  }
 
-    this.emitCurrentCardChange(possibleMove)
+  private snapBackCurrentCard(): void {
+    const placedCard = this.currentPossibleMove.placedCard
+    const cardPosition = this.getCardPosition(placedCard.row, placedCard.col)
+    // TODO: animate the position change ?
+    this.currentCardContainer.setPosition(cardPosition.x, cardPosition.y)
+    this.highlightChains()
   }
 
   public create() {
@@ -226,12 +262,14 @@ export class ContinuoBoardScene extends Phaser.Scene {
     const onOrientationChange = () => this.resize()
 
     window.addEventListener('resize', onResize)
-    this.scale.on('orientationchange', onOrientationChange)
+    window.addEventListener('orientationchange', onOrientationChange)
+    // this.scale.on('orientationchange', onOrientationChange)
 
     this.events.on('destroy', () => {
       log.debug('[ContinuoBoardScene on destroy]')
       window.removeEventListener('resize', onResize)
-      this.scale.off('orientationchange', onOrientationChange)
+      window.removeEventListener('orientationchange', onOrientationChange)
+      // this.scale.off('orientationchange', onOrientationChange)
     })
 
     Deck.originalCards.forEach((card, index) => {
@@ -277,13 +315,12 @@ export class ContinuoBoardScene extends Phaser.Scene {
       _pointer: Phaser.Input.Pointer,
       _gameObject: Phaser.GameObjects.GameObject) => {
       const { row, col } = this.getSnapPosition(this.currentCardContainer.x, this.currentCardContainer.y)
-      const placedCard = this.currentPossibleMove
-      const possibleMove = this.findPossibleMove(row, col, placedCard.placedCard.orientation)
+      const orientation = this.currentPossibleMove.placedCard.orientation
+      const possibleMove = this.findPossibleMove(row, col, orientation)
       if (possibleMove) {
-        this.currentPossibleMove = possibleMove
-        this.placeCard(possibleMove, false, false, true)
+        this.moveCurrentCard(possibleMove)
       } else {
-        this.placeCard(this.currentPossibleMove, false, false, true)
+        this.snapBackCurrentCard()
       }
     })
 
@@ -350,33 +387,13 @@ export class ContinuoBoardScene extends Phaser.Scene {
     const card1 = this.deck.nextCard()
     const orientation1 = this.chooseRandomOrientation()
     const placedCard1 = new PlacedCard(card1, 0, 0, orientation1)
-    const move1 = new PossibleMove(placedCard1, [])
-    this.placeCard(move1, true /* addToBoard */, true /* noAnimation */, false /* noResize */)
+    this.placeInitialCard(placedCard1)
 
     const card2 = this.deck.nextCard()
     const move2 = this.chooseRandomBestScoreMove(evaluateCard(this.board, card2))
-    this.placeCard(move2, true /* addToBoard */, true /* noAnimation */, false /* noResize */)
-  }
+    this.placeInitialCard(move2.placedCard)
 
-  private rotateCommon(angleDelta: number): void {
-    const placedCard = this.currentPossibleMove.placedCard
-    const newOrientation = rotateOrientation(placedCard.orientation)
-    const possibleMove = this.findPossibleMove(placedCard.row, placedCard.col, newOrientation)
-    if (possibleMove) {
-      this.unhighlightChains()
-      const toAngle = (this.currentCardContainer.angle + angleDelta) % 360
-      this.tweens.add({
-        targets: this.currentCardContainer,
-        angle: toAngle,
-        duration: 300,
-        ease: 'Sine.InOut',
-        onComplete: () => {
-          this.currentPossibleMove = possibleMove
-          this.highlightChains()
-          this.emitCurrentCardChange(possibleMove)
-        }
-      })
-    }
+    this.resize()
   }
 
   public onRestart(): void {
@@ -388,23 +405,23 @@ export class ContinuoBoardScene extends Phaser.Scene {
     log.debug('[ContinuoBoardScene#onNextCard]')
     const card = this.deck.nextCard()
     this.possibleMoves = evaluateCard(this.board, card)
-    this.currentPossibleMove = this.chooseRandomWorstScoreMove(this.possibleMoves)
-    this.placeCard(this.currentPossibleMove, false /* addToBoard */, false /* noAnimation */, false /* noResize */)
+    const possibleMove = this.chooseRandomWorstScoreMove(this.possibleMoves)
+    this.placeCurrentCardTentative(possibleMove)
   }
 
   public onRotateCW(): void {
     log.debug('[ContinuoBoardScene#onRotateCW]')
-    this.rotateCommon(+90)
+    this.rotateCurrentCard(+90)
   }
 
   public onRotateCCW(): void {
     log.debug('[ContinuoBoardScene#onRotateCCW]')
-    this.rotateCommon(-90)
+    this.rotateCurrentCard(-90)
   }
 
   public onPlaceCard(): number {
     log.debug('[ContinuoBoardScene#onPlaceCard]')
-    this.placeCard(this.currentPossibleMove, true /* addToBoard */, false /* noAnimation */, true /* noResize */)
+    this.placeCurrentCardFinal()
     return this.deck.numCardsLeft
   }
 }

@@ -238,7 +238,6 @@ export class HexagoBoardScene extends Phaser.Scene {
   deck: Deck
   board: Board
   cardSpritesMap: Map<Card, Phaser.GameObjects.Sprite>
-  currentCard: PlacedCard
   possibleMoves: PossibleMove[]
   currentPossibleMove: PossibleMove
   currentCardContainer: Phaser.GameObjects.Container
@@ -432,8 +431,7 @@ export class HexagoBoardScene extends Phaser.Scene {
       cardSprite.setPosition(0, 0)
       cardSprite.setAngle(0)
       cardSprite.setVisible(true)
-      this.currentCardContainer.add(cardSprite)
-      this.currentCardContainer.moveTo(cardSprite, 0)
+      this.currentCardContainer.addAt(cardSprite, 0)
       this.currentCardContainer.setPosition(cardPosition.x, cardPosition.y)
       this.currentCardContainer.setAngle(angle)
       this.currentCardContainer.setVisible(true)
