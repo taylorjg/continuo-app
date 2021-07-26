@@ -4,7 +4,7 @@ import { Board } from './continuo-lib/board'
 import { Card } from './continuo-lib/card'
 import { Cell } from './continuo-lib/cell'
 import { Deck } from './continuo-lib/deck'
-import { Colour, Orientation } from './continuo-lib/enums'
+import { Colour, Orientation, isRotated, switchOrientation } from './continuo-lib/enums'
 import { evaluateCard } from './continuo-lib/evaluate'
 import { PlacedCard } from './continuo-lib/placedCard'
 import { PossibleMove } from './continuo-lib/possibleMove'
@@ -41,17 +41,6 @@ const drawCard = (graphics: Phaser.GameObjects.Graphics, card: Card): void => {
       const y = colWithinCard * (CELL_SIZE + GAP_SIZE)
       graphics.fillRect(x, y, CELL_SIZE, CELL_SIZE)
     }
-  }
-}
-
-const isRotated = (orientation: Orientation): boolean => {
-  return (orientation == Orientation.EastWest)
-}
-
-const rotateOrientation = (orientation: Orientation): Orientation => {
-  switch (orientation) {
-    case Orientation.NorthSouth: return Orientation.EastWest
-    case Orientation.EastWest: return Orientation.NorthSouth
   }
 }
 
@@ -229,7 +218,7 @@ export class ContinuoBoardScene extends Phaser.Scene {
 
   private rotateCurrentCard(angleDelta: number): void {
     const placedCard = this.currentPossibleMove.placedCard
-    const newOrientation = rotateOrientation(placedCard.orientation)
+    const newOrientation = switchOrientation(placedCard.orientation)
     const possibleMove = this.findPossibleMove(placedCard.row, placedCard.col, newOrientation)
     if (possibleMove) {
       this.unhighlightChains()

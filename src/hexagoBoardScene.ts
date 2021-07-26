@@ -4,12 +4,11 @@ import { Board } from './hexago-lib/board'
 import { Card } from './hexago-lib/card'
 import { Cell } from './hexago-lib/cell'
 import { Deck } from './hexago-lib/deck'
-import { Colour, HexagoNumber, Rotation } from './hexago-lib/enums'
+import { Colour, HexagoNumber, Rotation, allRotations, rotationRotateCW, rotationRotateCCW } from './hexago-lib/enums'
 import { evaluateCard } from './hexago-lib/evaluate'
 import { PlacedCard } from './hexago-lib/placedCard'
 import { PossibleMove } from './hexago-lib/possibleMove'
 import { Match } from './hexago-lib/match'
-import { Wedge } from './hexago-lib/wedge'
 
 const TAN_30 = Math.tan(Phaser.Math.DegToRad(30))
 
@@ -161,64 +160,14 @@ const drawCard = (graphics: Phaser.GameObjects.Graphics, card: Card): void => {
   }
 }
 
-const allRotations = [
-  Rotation.Rotation0,
-  Rotation.Rotation60,
-  Rotation.Rotation120,
-  Rotation.Rotation180,
-  Rotation.Rotation240,
-  Rotation.Rotation300
-]
-
-const findRotation = (
-  card: Card,
-  predicate: (card: Card, rotation: Rotation) => boolean): Rotation => {
+const findRotationWhereSixIsAtWedgeIndex = (card: Card, wedgeIndex: number): Rotation => {
   for (const rotation of allRotations) {
-    if (predicate(card, rotation)) {
+    const wedge = card.wedgeAt(wedgeIndex, rotation)
+    if (wedge.number == HexagoNumber.Number6) {
       return rotation
     }
   }
-  throw new Error('[findRotation] predicate returned false for all rotations')
-}
-
-const findWedgeIndex = (
-  card: Card,
-  rotation: Rotation,
-  predicate: (card: Card, wedge: Wedge) => boolean): number => {
-  for (const wedgeIndex of WEDGE_INDICES) {
-    const wedge = card.wedgeAt(wedgeIndex, rotation)
-    if (predicate(card, wedge)) {
-      return wedgeIndex
-    }
-  }
-  throw new Error('[findWedgeIndex] predicate returned false for all wedges')
-}
-
-const findRotationWhereSixIsAtWedgeIndex = (card: Card, wedgeIndex: number): Rotation =>
-  findRotation(card, (_: Card, rotation: Rotation) =>
-    findWedgeIndex(card, rotation, (_: Card, wedge: Wedge) =>
-      wedge.number == HexagoNumber.Number6) == wedgeIndex)
-
-const rotationRotateCW = (rotation: Rotation): Rotation => {
-  switch (rotation) {
-    case Rotation.Rotation0: return Rotation.Rotation60
-    case Rotation.Rotation60: return Rotation.Rotation120
-    case Rotation.Rotation120: return Rotation.Rotation180
-    case Rotation.Rotation180: return Rotation.Rotation240
-    case Rotation.Rotation240: return Rotation.Rotation300
-    case Rotation.Rotation300: return Rotation.Rotation0
-  }
-}
-
-const rotationRotateCCW = (rotation: Rotation): Rotation => {
-  switch (rotation) {
-    case Rotation.Rotation0: return Rotation.Rotation300
-    case Rotation.Rotation60: return Rotation.Rotation0
-    case Rotation.Rotation120: return Rotation.Rotation60
-    case Rotation.Rotation180: return Rotation.Rotation120
-    case Rotation.Rotation240: return Rotation.Rotation180
-    case Rotation.Rotation300: return Rotation.Rotation240
-  }
+  throw new Error(`[findRotationWhereSixIsAtWedgeIndex] failed to find a 6 at wedgeIndex ${wedgeIndex}`)
 }
 
 const rotationToAngle = (rotation: Rotation): number => {
