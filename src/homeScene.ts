@@ -3,6 +3,8 @@ import log from 'loglevel'
 import { ContinuoBoardScene } from './continuoBoardScene'
 import { HexagoBoardScene } from './hexagoBoardScene'
 import { HUDScene } from './hudScene'
+import { continuoTile } from './continuoTile'
+import { hexagoTile } from './hexagoTile'
 
 export class HomeScene extends Phaser.Scene {
 
@@ -18,17 +20,33 @@ export class HomeScene extends Phaser.Scene {
     })
   }
 
-  private makeButton(y: number, label: string, handler: Function, initiallyDisabled: boolean): HTMLButtonElement {
-    const element = document.createElement('button')
-    element.style.margin = '10px'
-    element.style.width = '120px'
-    element.innerText = label
-    element.disabled = initiallyDisabled
-    const button = this.add.dom(0, y, element)
+  private makeButton(y: number, label: string, srcDataURL: string, handler: Function, dims: [number, number]): HTMLButtonElement {
+
+    const buttonElement = document.createElement('button')
+    buttonElement.style.margin = '10px'
+    buttonElement.style.width = '120px'
+    buttonElement.style.backgroundColor = 'white'
+    buttonElement.style.padding = '.5rem'
+    buttonElement.style.cursor = 'pointer'
+
+    const textElement = document.createElement('text')
+    textElement.innerText = label
+
+    const imgElement = document.createElement('img')
+    imgElement.src = srcDataURL
+    const [width, height] = dims
+    imgElement.width = width
+    imgElement.height = height
+
+    buttonElement.appendChild(imgElement)
+    buttonElement.appendChild(textElement)
+
+    const button = this.add.dom(0, y, buttonElement)
     button.setOrigin(0, 0)
     button.addListener('click')
     button.on('click', handler, this)
-    return element
+
+    return buttonElement
   }
 
   preload() {
@@ -42,21 +60,23 @@ export class HomeScene extends Phaser.Scene {
 
     let y = 0
 
-    this.playContinuoElement = this.makeButton(y, 'Play Continuo', this.onPlayContinuo, false)
-    y += 30
+    this.playContinuoElement = this.makeButton(y, 'Play Continuo', continuoTile, this.onPlayContinuo, [100, 100])
+    y += 150
 
-    this.playHexagoElement = this.makeButton(y, 'Play Hexago', this.onPlayHexago, false)
-    y += 30
+    this.playHexagoElement = this.makeButton(y, 'Play Hexago', hexagoTile, this.onPlayHexago, [173 / 2, 100])
+    y += 150
   }
 
   public onPlayContinuo(): void {
     log.debug('[HomeScene#onPlayContinuo]')
+    this.scene.sleep()
     this.game.scene.add('BoardScene', new ContinuoBoardScene(this.eventEmitter))
     this.game.scene.add('HUDScene', new HUDScene(this.eventEmitter))
   }
 
   public onPlayHexago(): void {
     log.debug('[HomeScene#onPlayHexago]')
+    this.scene.sleep()
     this.game.scene.add('BoardScene', new HexagoBoardScene(this.eventEmitter))
     this.game.scene.add('HUDScene', new HUDScene(this.eventEmitter))
   }

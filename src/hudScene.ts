@@ -102,6 +102,7 @@ export class HUDScene extends Phaser.Scene {
     log.debug('[HUDScene#onHome]')
     this.scene.remove('BoardScene')
     this.scene.remove('HUDScene')
+    this.game.scene.getScene('HomeScene').scene.wake()
   }
 
   private onRestart(): void {
