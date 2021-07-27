@@ -3,8 +3,8 @@ import log from 'loglevel'
 import { ContinuoBoardScene } from './continuoBoardScene'
 import { HexagoBoardScene } from './hexagoBoardScene'
 import { HUDScene } from './hudScene'
-import { continuoTile } from './continuoTile'
-import { hexagoTile } from './hexagoTile'
+import { continuoCardImage } from './continuoCardImage'
+import { hexagoCardImage } from './hexagoCardImage'
 
 export class HomeScene extends Phaser.Scene {
 
@@ -20,7 +20,7 @@ export class HomeScene extends Phaser.Scene {
     })
   }
 
-  private makeButton(y: number, label: string, srcDataURL: string, handler: Function, dims: [number, number]): HTMLButtonElement {
+  private makeButton(y: number, label: string, cardImage: string, handler: Function, dims: [number, number]): HTMLButtonElement {
 
     const buttonElement = document.createElement('button')
     buttonElement.style.margin = '10px'
@@ -33,7 +33,7 @@ export class HomeScene extends Phaser.Scene {
     textElement.innerText = label
 
     const imgElement = document.createElement('img')
-    imgElement.src = srcDataURL
+    imgElement.src = cardImage
     const [width, height] = dims
     imgElement.width = width
     imgElement.height = height
@@ -60,10 +60,10 @@ export class HomeScene extends Phaser.Scene {
 
     let y = 0
 
-    this.playContinuoElement = this.makeButton(y, 'Play Continuo', continuoTile, this.onPlayContinuo, [100, 100])
+    this.playContinuoElement = this.makeButton(y, 'Play Continuo', continuoCardImage, this.onPlayContinuo, [100, 100])
     y += 150
 
-    this.playHexagoElement = this.makeButton(y, 'Play Hexago', hexagoTile, this.onPlayHexago, [173 / 2, 100])
+    this.playHexagoElement = this.makeButton(y, 'Play Hexago', hexagoCardImage, this.onPlayHexago, [173 / 2, 100])
     y += 150
   }
 
