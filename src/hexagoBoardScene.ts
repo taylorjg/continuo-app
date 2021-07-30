@@ -334,60 +334,103 @@ export class HexagoBoardScene extends Phaser.Scene {
     this.cameras.main.centerOn(centreX, centreY)
   }
 
-  private emitCurrentCardChange(possibleMove: PossibleMove) {
-
-    const score = possibleMove.score
-
+  private emitCurrentCardChange(eventName: string): void {
     if (this.possibleMoves) {
+      const numCardsLeft = this.deck.numCardsLeft
+      const score = this.currentPossibleMove.score
       const bestScore = this.possibleMoves[0].score
       const bestScoreLocationCount = this.possibleMoves.filter(({ score }) => score == bestScore).length
-      this.eventEmitter.emit('currentCardChange', { score, bestScore, bestScoreLocationCount })
-    } else {
-      this.eventEmitter.emit('currentCardChange', { score })
+      this.eventEmitter.emit(eventName, { numCardsLeft, score, bestScore, bestScoreLocationCount })
     }
   }
 
-  private placeCard(possibleMove: PossibleMove, addToBoard: boolean, noAnimation: boolean, noResize: boolean): void {
-
-    const placedCard = possibleMove.placedCard
-
-    if (addToBoard) {
-      this.board = this.board.placeCard(placedCard)
-      if (!noResize) {
-        this.resize(noAnimation)
-      }
-    } else {
-      if (!noResize) {
-        const savedBoard = this.board
-        this.board = this.board.placeCard(placedCard)
-        this.resize(noAnimation)
-        this.board = savedBoard
-      }
-    }
-
+  private placeInitialCard(placedCard: PlacedCard): void {
+    this.board = this.board.placeCard(placedCard)
     const cardSprite = this.cardSpritesMap.get(placedCard.card)
     const cardPosition = this.getCardPosition(placedCard.row, placedCard.col)
     const angle = rotationToAngle(placedCard.rotation)
+    cardSprite.setPosition(cardPosition.x, cardPosition.y)
+    cardSprite.setAngle(angle)
+    cardSprite.setVisible(true)
+    this.currentCardContainer.remove(cardSprite)
+  }
 
-    if (addToBoard) {
-      this.currentCardContainer.remove(cardSprite)
-      this.currentCardContainer.setVisible(false)
-      cardSprite.setPosition(cardPosition.x, cardPosition.y)
-      cardSprite.setAngle(angle)
-      cardSprite.setVisible(true)
+  private placeCurrentCardTentative(possibleMove: PossibleMove): void {
+    this.currentPossibleMove = possibleMove
+    const placedCard = this.currentPossibleMove.placedCard
+    const savedBoard = this.board
+    this.board = this.board.placeCard(placedCard)
+    this.resize()
+    this.board = savedBoard
+    const cardSprite = this.cardSpritesMap.get(placedCard.card)
+    const cardPosition = this.getCardPosition(placedCard.row, placedCard.col)
+    const angle = rotationToAngle(placedCard.rotation)
+    cardSprite.setPosition(0, 0)
+    cardSprite.setAngle(0)
+    cardSprite.setVisible(true)
+    this.currentCardContainer.addAt(cardSprite, 0)
+    this.currentCardContainer.setPosition(cardPosition.x, cardPosition.y)
+    this.currentCardContainer.setAngle(angle)
+    this.currentCardContainer.setVisible(true)
+    this.highlightMatches()
+    this.emitCurrentCardChange('nextCard')
+  }
+
+  private placeCurrentCardFinal(): void {
+    const placedCard = this.currentPossibleMove.placedCard
+    this.board = this.board.placeCard(placedCard)
+    const cardSprite = this.cardSpritesMap.get(placedCard.card)
+    const cardPosition = this.getCardPosition(placedCard.row, placedCard.col)
+    const angle = rotationToAngle(placedCard.rotation)
+    this.currentCardContainer.remove(cardSprite)
+    this.currentCardContainer.setVisible(false)
+    cardSprite.setPosition(cardPosition.x, cardPosition.y)
+    cardSprite.setAngle(angle)
+    cardSprite.setVisible(true)
+    this.unhighlightMatches()
+    this.emitCurrentCardChange('placeCard')
+    this.currentPossibleMove = null
+  }
+
+  private moveCurrentCard(possibleMove: PossibleMove): void {
+    this.currentPossibleMove = possibleMove
+    const placedCard = this.currentPossibleMove.placedCard
+    const cardPosition = this.getCardPosition(placedCard.row, placedCard.col)
+    this.currentCardContainer.setPosition(cardPosition.x, cardPosition.y)
+    this.highlightMatches()
+    this.emitCurrentCardChange('moveCard')
+  }
+
+  private rotateCurrentCard(angleDelta: number): void {
+    const placedCard = this.currentPossibleMove.placedCard
+    const newOrientation = angleDelta > 0
+      ? rotationRotateCW(placedCard.rotation)
+      : rotationRotateCCW(placedCard.rotation)
+    const possibleMove = this.findPossibleMove(placedCard.row, placedCard.col, newOrientation)
+    if (possibleMove) {
+      this.eventEmitter.emit('startRotateCard')
       this.unhighlightMatches()
-    } else {
-      cardSprite.setPosition(0, 0)
-      cardSprite.setAngle(0)
-      cardSprite.setVisible(true)
-      this.currentCardContainer.addAt(cardSprite, 0)
-      this.currentCardContainer.setPosition(cardPosition.x, cardPosition.y)
-      this.currentCardContainer.setAngle(angle)
-      this.currentCardContainer.setVisible(true)
-      this.highlightMatches()
+      const toAngle = (this.currentCardContainer.angle + angleDelta) % 360
+      this.tweens.add({
+        targets: this.currentCardContainer,
+        angle: toAngle,
+        duration: 300,
+        ease: 'Sine.InOut',
+        onComplete: () => {
+          this.currentPossibleMove = possibleMove
+          this.highlightMatches()
+          this.emitCurrentCardChange('endRotateCard')
+        }
+      })
     }
+  }
 
-    this.emitCurrentCardChange(possibleMove)
+  private snapBackCurrentCard(): void {
+    const placedCard = this.currentPossibleMove.placedCard
+    const cardPosition = this.getCardPosition(placedCard.row, placedCard.col)
+    // TODO: animate the position change ?
+    this.currentCardContainer.setPosition(cardPosition.x, cardPosition.y)
+    this.highlightMatches()
   }
 
   public create() {
@@ -453,10 +496,9 @@ export class HexagoBoardScene extends Phaser.Scene {
       const placedCard = this.currentPossibleMove
       const possibleMove = this.findPossibleMove(row, col, placedCard.placedCard.rotation)
       if (possibleMove) {
-        this.currentPossibleMove = possibleMove
-        this.placeCard(possibleMove, false, false, true)
+        this.moveCurrentCard(possibleMove)
       } else {
-        this.placeCard(this.currentPossibleMove, false, false, true)
+        this.snapBackCurrentCard()
       }
     })
 
@@ -514,37 +556,14 @@ export class HexagoBoardScene extends Phaser.Scene {
     const card1 = this.deck.nextCard()
     const rotation1 = findRotationWhereSixIsAtWedgeIndex(card1, 1)
     const placedCard1 = new PlacedCard(card1, 0, 0, rotation1)
-    const move1 = new PossibleMove(placedCard1, [])
-    this.placeCard(move1, true /* addToBoard */, true /* noAnimation */, false /* noResize */)
+    this.placeInitialCard(placedCard1)
 
     const card2 = this.deck.nextCard()
     const rotation2 = findRotationWhereSixIsAtWedgeIndex(card2, 4)
     const placedCard2 = new PlacedCard(card2, 0, 2, rotation2)
-    const move2 = new PossibleMove(placedCard2, [])
-    this.placeCard(move2, true /* addToBoard */, true /* noAnimation */, false /* noResize */)
-  }
+    this.placeInitialCard(placedCard2)
 
-  private rotateCommon(angleDelta: number): void {
-    const placedCard = this.currentPossibleMove.placedCard
-    const newOrientation = angleDelta > 0
-      ? rotationRotateCW(placedCard.rotation)
-      : rotationRotateCCW(placedCard.rotation)
-    const possibleMove = this.findPossibleMove(placedCard.row, placedCard.col, newOrientation)
-    if (possibleMove) {
-      this.unhighlightMatches()
-      const toAngle = (this.currentCardContainer.angle + angleDelta) % 360
-      this.tweens.add({
-        targets: this.currentCardContainer,
-        angle: toAngle,
-        duration: 300,
-        ease: 'Sine.InOut',
-        onComplete: () => {
-          this.currentPossibleMove = possibleMove
-          this.highlightMatches()
-          this.emitCurrentCardChange(possibleMove)
-        }
-      })
-    }
+    this.resize()
   }
 
   public onRestart(): void {
@@ -556,24 +575,22 @@ export class HexagoBoardScene extends Phaser.Scene {
     log.debug('[HexagoBoardScene#onNextCard]')
     const card = this.deck.nextCard()
     this.possibleMoves = evaluateCard(this.board, card)
-    this.currentPossibleMove = this.chooseRandomWorstScoreMove(this.possibleMoves)
-    // this.currentPossibleMove = this.chooseRandomBestScoreMove(this.possibleMoves)
-    this.placeCard(this.currentPossibleMove, false /* addToBoard */, false /* noAnimation */, false /* noResize */)
+    const possibleMove = this.chooseRandomWorstScoreMove(this.possibleMoves)
+    this.placeCurrentCardTentative(possibleMove)
   }
 
   public onRotateCW(): void {
     log.debug('[HexagoBoardScene#onRotateCW]')
-    this.rotateCommon(+60)
+    this.rotateCurrentCard(+60)
   }
 
   public onRotateCCW(): void {
     log.debug('[HexagoBoardScene#onRotateCCW]')
-    this.rotateCommon(-60)
+    this.rotateCurrentCard(-60)
   }
 
-  public onPlaceCard(): number {
+  public onPlaceCard(): void {
     log.debug('[HexagoBoardScene#onPlaceCard]')
-    this.placeCard(this.currentPossibleMove, true /* addToBoard */, false /* noAnimation */, true /* noResize */)
-    return this.deck.numCardsLeft
+    this.placeCurrentCardFinal()
   }
 }

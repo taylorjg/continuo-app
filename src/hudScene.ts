@@ -42,22 +42,22 @@ export class HUDScene extends Phaser.Scene {
 
     let y = 0
 
-    this.homeElement = this.makeButton(y, 'Home', this.onHome, false)
+    this.homeElement = this.makeButton(y, 'Home', this.onHomeClick, false)
     y += 30
 
-    this.restartElement = this.makeButton(y, 'Restart', this.onRestart, false)
+    this.restartElement = this.makeButton(y, 'Restart', this.onRestartClick, false)
     y += 30
 
-    this.nextCardElement = this.makeButton(y, 'Next Card', this.onNextCard, false)
+    this.nextCardElement = this.makeButton(y, 'Next Card', this.onNextCardClick, false)
     y += 30
 
-    this.rotateCWElement = this.makeButton(y, 'Rotate CW', this.onRotateCW, true)
+    this.rotateCWElement = this.makeButton(y, 'Rotate CW', this.onRotateCWClick, true)
     y += 30
 
-    this.rotateCCWElement = this.makeButton(y, 'Rotate CCW', this.onRotateCCW, true)
+    this.rotateCCWElement = this.makeButton(y, 'Rotate CCW', this.onRotateCCWClick, true)
     y += 30
 
-    this.placeCardElement = this.makeButton(y, 'Place Card', this.onPlaceCard, true)
+    this.placeCardElement = this.makeButton(y, 'Place Card', this.onPlaceCardClick, true)
     y += 30
 
     if (this.sys.game.device.fullscreen.available) {
@@ -77,70 +77,96 @@ export class HUDScene extends Phaser.Scene {
     this.scoreText = this.add.text(10, y + 10, '')
     this.scoreText.setOrigin(0, 0)
 
-    this.eventEmitter.on('currentCardChange', this.onCurrentCardChange, this)
+    this.eventEmitter.on('nextCard', this.onNextCard, this)
+    this.eventEmitter.on('moveCard', this.onMoveCard, this)
+    this.eventEmitter.on('placeCard', this.onPlaceCard, this)
+    this.eventEmitter.on('startRotateCard', this.onStartRotateCard, this)
+    this.eventEmitter.on('endRotateCard', this.onEndRotateCard, this)
 
     this.events.on('destroy', () => {
       log.debug('[HUDScene destroy]')
-      this.eventEmitter.off('currentCardChange', this.onCurrentCardChange)
-    })
+      this.eventEmitter.off('nextCard', this.onNextCard)
+      this.eventEmitter.off('moveCard', this.onMoveCard)
+      this.eventEmitter.off('placeCard', this.onPlaceCard)
+      this.eventEmitter.off('startRotateCard', this.onStartRotateCard)
+      this.eventEmitter.off('endRotateCard', this.onEndRotateCard)
+      })
   }
 
-  private onCurrentCardChange(arg: any): void {
-    log.debug('[HUDScene#onCurrentCardChange]', arg)
-    const { score, bestScore, bestScoreLocationCount } = arg
-    if (bestScore !== undefined && bestScoreLocationCount !== undefined) {
-      this.scoreText.setText(`${score} (${bestScore}/${bestScoreLocationCount})`)
-      // if (score == bestScore) {
-      //   this.sound.play('best-move')
-      // }
-    } else {
-      this.scoreText.setText('')
-    }
-  }
-
-  private onHome(): void {
-    log.debug('[HUDScene#onHome]')
+  private onHomeClick(): void {
+    log.debug('[HUDScene#onHomeClick]')
     this.scene.remove('BoardScene')
     this.scene.remove('HUDScene')
-    this.game.scene.getScene('HomeScene').scene.wake()
+    this.game.scene.wake('HomeScene', { name: 'Jon' })
   }
 
-  private onRestart(): void {
-    log.debug('[HUDScene#onRestart]')
+  private onRestartClick(): void {
+    log.debug('[HUDScene#onRestartClick]')
     this.boardScene.onRestart()
+    this.scoreText.setText('')
     this.nextCardElement.disabled = false
     this.rotateCWElement.disabled = true
     this.rotateCCWElement.disabled = true
     this.placeCardElement.disabled = true
   }
 
-  private onNextCard(): void {
-    log.debug('[HUDScene#onRestart]')
+  private onNextCardClick(): void {
+    log.debug('[HUDScene#onNextCardClick]')
     this.boardScene.onNextCard()
+  }
+
+  private onRotateCWClick(): void {
+    log.debug('[HUDScene#onRotateCWClick]')
+    this.boardScene.onRotateCW()
+  }
+
+  private onRotateCCWClick(): void {
+    log.debug('[HUDScene#onRotateCCWClick]')
+    this.boardScene.onRotateCCW()
+  }
+
+  private onPlaceCardClick(): void {
+    log.debug('[HUDScene#onPlaceCardClick]')
+    this.boardScene.onPlaceCard()
+  }
+
+  private onNextCard(arg: any): void {
+    log.debug('[HUDScene#onNextCard]', arg)
+    const { score, bestScore, bestScoreLocationCount } = arg
+    this.scoreText.setText(`${score} (${bestScore}/${bestScoreLocationCount})`)
     this.nextCardElement.disabled = true
     this.rotateCWElement.disabled = false
     this.rotateCCWElement.disabled = false
     this.placeCardElement.disabled = false
   }
 
-  private onRotateCW(): void {
-    log.debug('[HUDScene#onRestart]')
-    this.boardScene.onRotateCW()
-    // this.sound.play('rotate-card')
+  private onMoveCard(arg: any): void {
+    log.debug('[HUDScene#onMoveCard]', arg)
+    const { score, bestScore, bestScoreLocationCount } = arg
+    this.scoreText.setText(`${score} (${bestScore}/${bestScoreLocationCount})`)
   }
 
-  private onRotateCCW(): void {
-    log.debug('[HUDScene#onRestart]')
-    this.boardScene.onRotateCCW()
-    // this.sound.play('rotate-card')
-  }
-
-  private onPlaceCard(): void {
-    log.debug('[HUDScene#onRestart]')
-    const numCardsLeft = this.boardScene.onPlaceCard()
-    this.nextCardElement.disabled = numCardsLeft == 0
+  private onPlaceCard(arg: any): void {
+    log.debug('[HUDScene#onPlaceCard]', arg)
+    this.nextCardElement.disabled = arg.numCardsLeft == 0
     this.rotateCWElement.disabled = true
     this.rotateCCWElement.disabled = true
     this.placeCardElement.disabled = true
+  }
+
+  private onStartRotateCard(arg: any): void {
+    log.debug('[HUDScene#onStartRotateCard]', arg)
+    this.rotateCWElement.disabled = true
+    this.rotateCCWElement.disabled = true
+    this.placeCardElement.disabled = true
+  }
+
+  private onEndRotateCard(arg: any): void {
+    log.debug('[HUDScene#onEndRotateCard]', arg)
+    const { score, bestScore, bestScoreLocationCount } = arg
+    this.scoreText.setText(`${score} (${bestScore}/${bestScoreLocationCount})`)
+    this.rotateCWElement.disabled = false
+    this.rotateCCWElement.disabled = false
+    this.placeCardElement.disabled = false
   }
 }

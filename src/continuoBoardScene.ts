@@ -147,16 +147,13 @@ export class ContinuoBoardScene extends Phaser.Scene {
     this.cameras.main.centerOn(centreX, centreY)
   }
 
-  private emitCurrentCardChange() {
-
-    const score = this.currentPossibleMove.score
-
+  private emitCurrentCardChange(eventName: string): void {
     if (this.possibleMoves) {
+      const numCardsLeft = this.deck.numCardsLeft
+      const score = this.currentPossibleMove.score
       const bestScore = this.possibleMoves[0].score
       const bestScoreLocationCount = this.possibleMoves.filter(({ score }) => score == bestScore).length
-      this.eventEmitter.emit('currentCardChange', { score, bestScore, bestScoreLocationCount })
-    } else {
-      this.eventEmitter.emit('currentCardChange', { score })
+      this.eventEmitter.emit(eventName, { numCardsLeft, score, bestScore, bestScoreLocationCount })
     }
   }
 
@@ -189,7 +186,7 @@ export class ContinuoBoardScene extends Phaser.Scene {
     this.currentCardContainer.setAngle(angle)
     this.currentCardContainer.setVisible(true)
     this.highlightChains()
-    this.emitCurrentCardChange()
+    this.emitCurrentCardChange('nextCard')
   }
 
   private placeCurrentCardFinal(): void {
@@ -204,6 +201,7 @@ export class ContinuoBoardScene extends Phaser.Scene {
     cardSprite.setAngle(angle)
     cardSprite.setVisible(true)
     this.unhighlightChains()
+    this.emitCurrentCardChange('placeCard')
     this.currentPossibleMove = null
   }
 
@@ -213,7 +211,7 @@ export class ContinuoBoardScene extends Phaser.Scene {
     const cardPosition = this.getCardPosition(placedCard.row, placedCard.col)
     this.currentCardContainer.setPosition(cardPosition.x, cardPosition.y)
     this.highlightChains()
-    this.emitCurrentCardChange()
+    this.emitCurrentCardChange('moveCard')
   }
 
   private rotateCurrentCard(angleDelta: number): void {
@@ -221,6 +219,7 @@ export class ContinuoBoardScene extends Phaser.Scene {
     const newOrientation = switchOrientation(placedCard.orientation)
     const possibleMove = this.findPossibleMove(placedCard.row, placedCard.col, newOrientation)
     if (possibleMove) {
+      this.eventEmitter.emit('startRotateCard')
       this.unhighlightChains()
       const toAngle = (this.currentCardContainer.angle + angleDelta) % 360
       this.tweens.add({
@@ -231,7 +230,7 @@ export class ContinuoBoardScene extends Phaser.Scene {
         onComplete: () => {
           this.currentPossibleMove = possibleMove
           this.highlightChains()
-          this.emitCurrentCardChange()
+          this.emitCurrentCardChange('endRotateCard')
         }
       })
     }
@@ -406,9 +405,8 @@ export class ContinuoBoardScene extends Phaser.Scene {
     this.rotateCurrentCard(-90)
   }
 
-  public onPlaceCard(): number {
+  public onPlaceCard(): void {
     log.debug('[ContinuoBoardScene#onPlaceCard]')
     this.placeCurrentCardFinal()
-    return this.deck.numCardsLeft
   }
 }

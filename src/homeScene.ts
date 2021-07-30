@@ -55,7 +55,25 @@ export class HomeScene extends Phaser.Scene {
     this.load.audio('rotate-card', 'assets/sounds/rotate-card.wav')
   }
 
+  resize() {
+    const width = window.innerWidth
+    const height = window.innerHeight
+    this.scale.resize(width, height)
+  }
+
   create() {
+    const onResize = () => this.resize()
+    const onOrientationChange = () => this.resize()
+
+    window.addEventListener('resize', onResize)
+    window.addEventListener('orientationchange', onOrientationChange)
+
+    this.events.on('destroy', () => {
+      log.debug('[HomeScene destroy]')
+      window.removeEventListener('resize', onResize)
+      window.removeEventListener('orientationchange', onOrientationChange)
+    })
+
     this.eventEmitter = new Phaser.Events.EventEmitter()
 
     let y = 0
@@ -65,6 +83,11 @@ export class HomeScene extends Phaser.Scene {
 
     this.playHexagoElement = this.makeButton(y, 'Play Hexago', hexagoCardImage, this.onPlayHexago, [173 / 2, 100])
     y += 150
+
+    this.events.on('wake', function () {
+      console.log('HomeScene#onWake')
+      console.dir(arguments)
+    })
   }
 
   public onPlayContinuo(): void {
