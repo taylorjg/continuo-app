@@ -168,7 +168,7 @@ export class ContinuoBoardScene extends Phaser.Scene {
     this.currentCardContainer.remove(cardSprite)
   }
 
-  private placeCurrentCardTentative(possibleMove: PossibleMove): void {
+  private placeCurrentCardTentative(possibleMove: PossibleMove, isComputerMove: boolean = false): void {
     this.currentPossibleMove = possibleMove
     const placedCard = this.currentPossibleMove.placedCard
     const savedBoard = this.board
@@ -186,10 +186,10 @@ export class ContinuoBoardScene extends Phaser.Scene {
     this.currentCardContainer.setAngle(angle)
     this.currentCardContainer.setVisible(true)
     this.highlightChains()
-    this.emitCurrentCardChange('nextCard')
+    this.emitCurrentCardChange(isComputerMove ? 'startComputerMove' : 'nextCard')
   }
 
-  private placeCurrentCardFinal(): void {
+  private placeCurrentCardFinal(isComputerMove: boolean = false): void {
     const placedCard = this.currentPossibleMove.placedCard
     this.board = this.board.placeCard(placedCard)
     const cardSprite = this.cardSpritesMap.get(placedCard.card)
@@ -201,7 +201,7 @@ export class ContinuoBoardScene extends Phaser.Scene {
     cardSprite.setAngle(angle)
     cardSprite.setVisible(true)
     this.unhighlightChains()
-    this.emitCurrentCardChange('placeCard')
+    this.emitCurrentCardChange(isComputerMove ? 'endComputerMove' : 'placeCard')
     this.currentPossibleMove = null
   }
 
@@ -393,6 +393,16 @@ export class ContinuoBoardScene extends Phaser.Scene {
     this.possibleMoves = evaluateCard(this.board, card)
     const possibleMove = this.chooseRandomWorstScoreMove(this.possibleMoves)
     this.placeCurrentCardTentative(possibleMove)
+  }
+
+  public async onComputerMove(): Promise<void> {
+    log.debug('[ContinuoBoardScene#onComputerMove]')
+    const card = this.deck.nextCard()
+    this.possibleMoves = evaluateCard(this.board, card)
+    const possibleMove = this.chooseRandomBestScoreMove(this.possibleMoves)
+    this.placeCurrentCardTentative(possibleMove, true)
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    this.placeCurrentCardFinal(true)
   }
 
   public onRotateCW(): void {

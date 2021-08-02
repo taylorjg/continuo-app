@@ -92,6 +92,8 @@ export class HUDScene extends Phaser.Scene {
     this.eventEmitter.on('placeCard', this.onPlaceCard, this)
     this.eventEmitter.on('startRotateCard', this.onStartRotateCard, this)
     this.eventEmitter.on('endRotateCard', this.onEndRotateCard, this)
+    this.eventEmitter.on('startComputerMove', this.onStartComputerMove, this)
+    this.eventEmitter.on('endComputerMove', this.onEndComputerMove, this)
 
     this.events.on('destroy', () => {
       log.debug('[HUDScene destroy]')
@@ -100,6 +102,8 @@ export class HUDScene extends Phaser.Scene {
       this.eventEmitter.off('placeCard', this.onPlaceCard)
       this.eventEmitter.off('startRotateCard', this.onStartRotateCard)
       this.eventEmitter.off('endRotateCard', this.onEndRotateCard)
+      this.eventEmitter.off('startComputerMove', this.onStartComputerMove)
+      this.eventEmitter.off('endComputerMove', this.onEndComputerMove)
     })
 
     this.totalScore = 0
@@ -189,5 +193,28 @@ export class HUDScene extends Phaser.Scene {
     this.rotateCWElement.disabled = false
     this.rotateCCWElement.disabled = false
     this.placeCardElement.disabled = false
+  }
+
+  private onStartComputerMove(arg: any): void {
+    log.debug('[HUDScene#onStartComputerMove]', arg)
+    const { score, bestScore, bestScoreLocationCount } = arg
+    this.currentCardScoreText.setText(`${score} (${bestScore}/${bestScoreLocationCount})`)
+    this.remainingCardsText.setText(`Remaining cards: ${arg.numCardsLeft}`)
+    this.nextCardElement.disabled = true
+    this.rotateCWElement.disabled = true
+    this.rotateCCWElement.disabled = true
+    this.placeCardElement.disabled = true
+  }
+
+  private onEndComputerMove(arg: any): void {
+    log.debug('[HUDScene#onEndComputerMove]', arg)
+    this.nextCardElement.disabled = arg.numCardsLeft == 0
+    this.totalScore += arg.score
+    this.totalBestScore += arg.bestScore
+    this.currentCardScoreText.setText(`score: ${this.totalScore} (${this.totalBestScore})`)
+    this.nextCardElement.disabled = false
+    this.rotateCWElement.disabled = true
+    this.rotateCCWElement.disabled = true
+    this.placeCardElement.disabled = true
   }
 }
