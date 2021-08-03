@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser'
 import log from 'loglevel'
 import { IBoardScene } from './types'
+import { TurnManager, PlayerScore, PlayerType } from './turnManager'
 
 export class HUDScene extends Phaser.Scene {
 
@@ -8,7 +9,6 @@ export class HUDScene extends Phaser.Scene {
   boardScene: IBoardScene
   homeElement: HTMLButtonElement
   restartElement: HTMLButtonElement
-  nextCardElement: HTMLButtonElement
   placeCardElement: HTMLButtonElement
   rotateCWElement: HTMLButtonElement
   rotateCCWElement: HTMLButtonElement
@@ -16,8 +16,9 @@ export class HUDScene extends Phaser.Scene {
   currentCardScoreText: Phaser.GameObjects.Text
   totalScoreText: Phaser.GameObjects.Text
   remainingCardsText: Phaser.GameObjects.Text
-  totalScore: number
-  totalBestScore: number
+  currentPlayerNameText: Phaser.GameObjects.Text
+  turnManager: TurnManager
+  currentPlayerScore: PlayerScore
 
   constructor(eventEmitter: Phaser.Events.EventEmitter) {
     super({
@@ -26,6 +27,7 @@ export class HUDScene extends Phaser.Scene {
       key: 'HUDScene'
     })
     this.eventEmitter = eventEmitter
+    this.turnManager = new TurnManager(this.eventEmitter)
   }
 
   private makeButton(y: number, label: string, handler: Function, initiallyDisabled: boolean): HTMLButtonElement {
@@ -50,9 +52,6 @@ export class HUDScene extends Phaser.Scene {
     y += 30
 
     this.restartElement = this.makeButton(y, 'Restart', this.onRestartClick, false)
-    y += 30
-
-    this.nextCardElement = this.makeButton(y, 'Next Card', this.onNextCardClick, false)
     y += 30
 
     this.rotateCWElement = this.makeButton(y, 'Rotate CW', this.onRotateCWClick, true)
@@ -86,7 +85,17 @@ export class HUDScene extends Phaser.Scene {
 
     this.remainingCardsText = this.add.text(10, y, '')
     this.remainingCardsText.setOrigin(0, 0)
+    y += 30
 
+    this.totalScoreText = this.add.text(10, y, '')
+    this.totalScoreText.setOrigin(0, 0)
+    y += 30
+
+    this.currentPlayerNameText = this.add.text(10, y, '')
+    this.currentPlayerNameText.setOrigin(0, 0)
+    y += 30
+
+    this.eventEmitter.on('nextTurn', this.onNextTurn, this)
     this.eventEmitter.on('nextCard', this.onNextCard, this)
     this.eventEmitter.on('moveCard', this.onMoveCard, this)
     this.eventEmitter.on('placeCard', this.onPlaceCard, this)
@@ -97,6 +106,7 @@ export class HUDScene extends Phaser.Scene {
 
     this.events.on('destroy', () => {
       log.debug('[HUDScene destroy]')
+      this.eventEmitter.off('nextTurn', this.onNextTurn)
       this.eventEmitter.off('nextCard', this.onNextCard)
       this.eventEmitter.off('moveCard', this.onMoveCard)
       this.eventEmitter.off('placeCard', this.onPlaceCard)
@@ -106,8 +116,8 @@ export class HUDScene extends Phaser.Scene {
       this.eventEmitter.off('endComputerMove', this.onEndComputerMove)
     })
 
-    this.totalScore = 0
-    this.totalBestScore = 0
+    this.turnManager.reset()
+    this.turnManager.step()
   }
 
   private onHomeClick(): void {
@@ -123,17 +133,11 @@ export class HUDScene extends Phaser.Scene {
     this.currentCardScoreText.setText('')
     this.totalScoreText.setText('')
     this.remainingCardsText.setText('')
-    this.totalScore = 0
-    this.totalBestScore = 0
-    this.nextCardElement.disabled = false
     this.rotateCWElement.disabled = true
     this.rotateCCWElement.disabled = true
     this.placeCardElement.disabled = true
-  }
-
-  private onNextCardClick(): void {
-    log.debug('[HUDScene#onNextCardClick]')
-    this.boardScene.onNextCard()
+    this.turnManager.reset()
+    this.turnManager.step()
   }
 
   private onRotateCWClick(): void {
@@ -151,12 +155,26 @@ export class HUDScene extends Phaser.Scene {
     this.boardScene.onPlaceCard()
   }
 
+  private onNextTurn(arg: any): void {
+    log.debug('[HUDScene#onNextTurn]', arg)
+    this.currentPlayerScore = <PlayerScore>arg.playerScore
+    this.currentPlayerNameText.setText(`Turn: ${this.currentPlayerScore.player.name}`)
+    this.totalScoreText.setText(`score: ${this.currentPlayerScore.score} (${this.currentPlayerScore.bestScore})`)
+    switch (this.currentPlayerScore.player.type) {
+      case PlayerType.Human:
+        this.boardScene.onNextCard()
+        break
+      case PlayerType.Computer:
+        this.boardScene.onComputerMove()
+        break
+    }
+  }
+
   private onNextCard(arg: any): void {
     log.debug('[HUDScene#onNextCard]', arg)
     const { score, bestScore, bestScoreLocationCount } = arg
     this.currentCardScoreText.setText(`${score} (${bestScore}/${bestScoreLocationCount})`)
     this.remainingCardsText.setText(`Remaining cards: ${arg.numCardsLeft}`)
-    this.nextCardElement.disabled = true
     this.rotateCWElement.disabled = false
     this.rotateCCWElement.disabled = false
     this.placeCardElement.disabled = false
@@ -170,13 +188,13 @@ export class HUDScene extends Phaser.Scene {
 
   private onPlaceCard(arg: any): void {
     log.debug('[HUDScene#onPlaceCard]', arg)
-    this.nextCardElement.disabled = arg.numCardsLeft == 0
-    this.totalScore += arg.score
-    this.totalBestScore += arg.bestScore
-    this.currentCardScoreText.setText(`score: ${this.totalScore} (${this.totalBestScore})`)
+    const score = <number>arg.score
+    const bestScore = <number>arg.bestScore
+    this.turnManager.addTurnScore(this.currentPlayerScore, score, bestScore)
     this.rotateCWElement.disabled = true
     this.rotateCCWElement.disabled = true
     this.placeCardElement.disabled = true
+    setTimeout(() => { this.turnManager.step() }, 0)
   }
 
   private onStartRotateCard(arg: any): void {
@@ -200,7 +218,6 @@ export class HUDScene extends Phaser.Scene {
     const { score, bestScore, bestScoreLocationCount } = arg
     this.currentCardScoreText.setText(`${score} (${bestScore}/${bestScoreLocationCount})`)
     this.remainingCardsText.setText(`Remaining cards: ${arg.numCardsLeft}`)
-    this.nextCardElement.disabled = true
     this.rotateCWElement.disabled = true
     this.rotateCCWElement.disabled = true
     this.placeCardElement.disabled = true
@@ -208,13 +225,12 @@ export class HUDScene extends Phaser.Scene {
 
   private onEndComputerMove(arg: any): void {
     log.debug('[HUDScene#onEndComputerMove]', arg)
-    this.nextCardElement.disabled = arg.numCardsLeft == 0
-    this.totalScore += arg.score
-    this.totalBestScore += arg.bestScore
-    this.currentCardScoreText.setText(`score: ${this.totalScore} (${this.totalBestScore})`)
-    this.nextCardElement.disabled = false
+    const score = <number>arg.score
+    const bestScore = <number>arg.bestScore
+    this.turnManager.addTurnScore(this.currentPlayerScore, score, bestScore)
     this.rotateCWElement.disabled = true
     this.rotateCCWElement.disabled = true
     this.placeCardElement.disabled = true
+    setTimeout(() => { this.turnManager.step() }, 0)
   }
 }
