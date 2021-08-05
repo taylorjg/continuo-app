@@ -9,6 +9,7 @@ import { evaluateCard } from './hexago-lib/evaluate'
 import { PlacedCard } from './hexago-lib/placedCard'
 import { PossibleMove } from './hexago-lib/possibleMove'
 import { Match } from './hexago-lib/match'
+import { PlayerType } from './turnManager'
 
 const TAN_30 = Math.tan(Phaser.Math.DegToRad(30))
 
@@ -355,7 +356,7 @@ export class HexagoBoardScene extends Phaser.Scene {
     this.currentCardContainer.remove(cardSprite)
   }
 
-  private placeCurrentCardTentative(possibleMove: PossibleMove, isComputerMove: boolean = false): void {
+  private placeCurrentCardTentative(possibleMove: PossibleMove, playerType: PlayerType): void {
     this.currentPossibleMove = possibleMove
     const placedCard = this.currentPossibleMove.placedCard
     const savedBoard = this.board
@@ -372,11 +373,16 @@ export class HexagoBoardScene extends Phaser.Scene {
     this.currentCardContainer.setPosition(cardPosition.x, cardPosition.y)
     this.currentCardContainer.setAngle(angle)
     this.currentCardContainer.setVisible(true)
+    if (playerType == PlayerType.Human) {
+      this.currentCardContainer.setInteractive()
+    } else {
+      this.currentCardContainer.disableInteractive()
+    }
     this.highlightMatches()
-    this.emitCurrentCardChange(isComputerMove ? 'startComputerMove' : 'nextCard')
+    this.emitCurrentCardChange(playerType == PlayerType.Computer ? 'startComputerMove' : 'nextCard')
   }
 
-  private placeCurrentCardFinal(isComputerMove: boolean = false): void {
+  private placeCurrentCardFinal(playerType: PlayerType): void {
     const placedCard = this.currentPossibleMove.placedCard
     this.board = this.board.placeCard(placedCard)
     const cardSprite = this.cardSpritesMap.get(placedCard.card)
@@ -388,7 +394,7 @@ export class HexagoBoardScene extends Phaser.Scene {
     cardSprite.setAngle(angle)
     cardSprite.setVisible(true)
     this.unhighlightMatches()
-    this.emitCurrentCardChange(isComputerMove ? 'endComputerMove' : 'placeCard')
+    this.emitCurrentCardChange(playerType == PlayerType.Computer ? 'endComputerMove' : 'placeCard')
     this.currentPossibleMove = null
   }
 
@@ -576,7 +582,7 @@ export class HexagoBoardScene extends Phaser.Scene {
     const card = this.deck.nextCard()
     this.possibleMoves = evaluateCard(this.board, card)
     const possibleMove = this.chooseRandomWorstScoreMove(this.possibleMoves)
-    this.placeCurrentCardTentative(possibleMove)
+    this.placeCurrentCardTentative(possibleMove, PlayerType.Human)
   }
 
   public async onComputerMove(): Promise<void> {
@@ -584,9 +590,9 @@ export class HexagoBoardScene extends Phaser.Scene {
     const card = this.deck.nextCard()
     this.possibleMoves = evaluateCard(this.board, card)
     const possibleMove = this.chooseRandomBestScoreMove(this.possibleMoves)
-    this.placeCurrentCardTentative(possibleMove, true)
+    this.placeCurrentCardTentative(possibleMove, PlayerType.Computer)
     await new Promise(resolve => setTimeout(resolve, 2000))
-    this.placeCurrentCardFinal(true)
+    this.placeCurrentCardFinal(PlayerType.Computer)
   }
 
   public onRotateCW(): void {
@@ -601,6 +607,6 @@ export class HexagoBoardScene extends Phaser.Scene {
 
   public onPlaceCard(): void {
     log.debug('[HexagoBoardScene#onPlaceCard]')
-    this.placeCurrentCardFinal()
+    this.placeCurrentCardFinal(PlayerType.Human)
   }
 }

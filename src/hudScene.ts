@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser'
 import log from 'loglevel'
 import { IBoardScene } from './types'
-import { TurnManager, PlayerScore, PlayerType } from './turnManager'
+import { TurnManager, PlayerScore, Scoreboard, PlayerType, ScoreboardEntry } from './turnManager'
 
 export class HUDScene extends Phaser.Scene {
 
@@ -79,16 +79,16 @@ export class HUDScene extends Phaser.Scene {
 
     y += 10
 
-    this.currentCardScoreText = this.add.text(10, y, '')
-    this.currentCardScoreText.setOrigin(0, 0)
-    y += 30
-
     this.remainingCardsText = this.add.text(10, y, '')
     this.remainingCardsText.setOrigin(0, 0)
     y += 30
 
     this.totalScoreText = this.add.text(10, y, '')
     this.totalScoreText.setOrigin(0, 0)
+    y += 30
+
+    this.currentCardScoreText = this.add.text(10, y, '')
+    this.currentCardScoreText.setOrigin(0, 0)
     y += 30
 
     this.currentPlayerNameText = this.add.text(10, y, '')
@@ -155,11 +155,16 @@ export class HUDScene extends Phaser.Scene {
     this.boardScene.onPlaceCard()
   }
 
+  private makeScoresText(scoreboard: Scoreboard): string {
+    return 'scores: ' + scoreboard.map(entry => `${entry.score} (${entry.bestScore})`).join(' / ')
+  }
+
   private onNextTurn(arg: any): void {
     log.debug('[HUDScene#onNextTurn]', arg)
-    this.currentPlayerScore = <PlayerScore>arg.playerScore
+    this.currentPlayerScore = <PlayerScore>arg.currentPlayerScore
+    const scoreboard: Scoreboard = <Scoreboard>arg.scoreboard
     this.currentPlayerNameText.setText(`Turn: ${this.currentPlayerScore.player.name}`)
-    this.totalScoreText.setText(`score: ${this.currentPlayerScore.score} (${this.currentPlayerScore.bestScore})`)
+    this.totalScoreText.setText(this.makeScoresText(scoreboard))
     switch (this.currentPlayerScore.player.type) {
       case PlayerType.Human:
         this.boardScene.onNextCard()
@@ -194,7 +199,7 @@ export class HUDScene extends Phaser.Scene {
     this.rotateCWElement.disabled = true
     this.rotateCCWElement.disabled = true
     this.placeCardElement.disabled = true
-    setTimeout(() => { this.turnManager.step() }, 0)
+    setTimeout(() => { this.turnManager.step() }, 1000)
   }
 
   private onStartRotateCard(arg: any): void {
@@ -231,6 +236,6 @@ export class HUDScene extends Phaser.Scene {
     this.rotateCWElement.disabled = true
     this.rotateCCWElement.disabled = true
     this.placeCardElement.disabled = true
-    setTimeout(() => { this.turnManager.step() }, 0)
+    setTimeout(() => { this.turnManager.step() }, 1000)
   }
 }

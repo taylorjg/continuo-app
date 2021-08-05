@@ -42,30 +42,68 @@ export class PlayerScore {
   }
 }
 
+export class ScoreboardEntry {
+  constructor(
+    public playerName: string,
+    public score: number,
+    public bestScore: number,
+    public isCurrentPlayer: boolean
+  ) {
+  }
+}
+
+export type Scoreboard = ScoreboardEntry[]
+
 export class TurnManager {
 
   private readonly playerScores: PlayerScore[]
   private nextPlayerIndex: number
+  private currentPlayerScore: PlayerScore
 
   constructor(
     private eventEmitter: Phaser.Events.EventEmitter,
     public readonly players: readonly Player[] = DEFAULT_PLAYERS) {
+
     this.playerScores = this.players.map(player => new PlayerScore(player))
     this.nextPlayerIndex = 0
+    this.currentPlayerScore = null
   }
 
   public step(): void {
-    const playerScore = this.playerScores[this.nextPlayerIndex]
-    this.nextPlayerIndex = (this.nextPlayerIndex + 1) % this.players.length
-    this.eventEmitter.emit('nextTurn', { playerScore })
+    this.currentPlayerScore = this.playerScores[this.nextPlayerIndex]
+    this.nextPlayerIndex = (this.nextPlayerIndex + 1) % this.playerScores.length
+    this.eventEmitter.emit('nextTurn', {
+      currentPlayerScore: this.currentPlayerScore,
+      scoreboard: this.makeScoreboard()
+    })
   }
 
   public reset(): void {
     this.playerScores.forEach(playerScore => playerScore.reset())
     this.nextPlayerIndex = 0
+    this.currentPlayerScore = null
   }
 
   public addTurnScore(playerScore: PlayerScore, score: number, bestScore: number): void {
     playerScore.addTurnScore(score, bestScore)
+  }
+
+  public done() {
+    this.currentPlayerScore = null
+  }
+
+  public get scoreboard() {
+    return this.makeScoreboard()
+  }
+
+  private makeScoreboard(): Scoreboard {
+    return this.playerScores.map(playerScore =>
+      new ScoreboardEntry(
+        playerScore.player.name,
+        playerScore.score,
+        playerScore.bestScore,
+        playerScore == this.currentPlayerScore
+      )
+    )
   }
 }

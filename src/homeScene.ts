@@ -84,10 +84,10 @@ export class HomeScene extends Phaser.Scene {
     this.playHexagoElement = this.makeButton(y, 'Play Hexago', hexagoCardImage, this.onPlayHexago, [173 / 2, 100])
     y += 150
 
-    this.events.on('wake', function () {
-      console.log('HomeScene#onWake')
-      console.dir(arguments)
-    })
+    // this.events.on('wake', function () {
+    //   console.log('HomeScene#onWake')
+    //   console.dir(arguments)
+    // })
   }
 
   public onPlayContinuo(): void {

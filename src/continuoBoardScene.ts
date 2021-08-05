@@ -8,6 +8,7 @@ import { Colour, Orientation, isRotated, switchOrientation } from './continuo-li
 import { evaluateCard } from './continuo-lib/evaluate'
 import { PlacedCard } from './continuo-lib/placedCard'
 import { PossibleMove } from './continuo-lib/possibleMove'
+import { PlayerType } from './turnManager'
 
 const CELL_SIZE = 28 * 2
 const GAP_SIZE = 2
@@ -168,7 +169,7 @@ export class ContinuoBoardScene extends Phaser.Scene {
     this.currentCardContainer.remove(cardSprite)
   }
 
-  private placeCurrentCardTentative(possibleMove: PossibleMove, isComputerMove: boolean = false): void {
+  private placeCurrentCardTentative(possibleMove: PossibleMove, playerType: PlayerType): void {
     this.currentPossibleMove = possibleMove
     const placedCard = this.currentPossibleMove.placedCard
     const savedBoard = this.board
@@ -185,11 +186,16 @@ export class ContinuoBoardScene extends Phaser.Scene {
     this.currentCardContainer.setPosition(cardPosition.x, cardPosition.y)
     this.currentCardContainer.setAngle(angle)
     this.currentCardContainer.setVisible(true)
+    if (playerType == PlayerType.Human) {
+      this.currentCardContainer.setInteractive()
+    } else {
+      this.currentCardContainer.disableInteractive()
+    }
     this.highlightChains()
-    this.emitCurrentCardChange(isComputerMove ? 'startComputerMove' : 'nextCard')
+    this.emitCurrentCardChange(playerType == PlayerType.Computer ? 'startComputerMove' : 'nextCard')
   }
 
-  private placeCurrentCardFinal(isComputerMove: boolean = false): void {
+  private placeCurrentCardFinal(playerType: PlayerType): void {
     const placedCard = this.currentPossibleMove.placedCard
     this.board = this.board.placeCard(placedCard)
     const cardSprite = this.cardSpritesMap.get(placedCard.card)
@@ -201,7 +207,7 @@ export class ContinuoBoardScene extends Phaser.Scene {
     cardSprite.setAngle(angle)
     cardSprite.setVisible(true)
     this.unhighlightChains()
-    this.emitCurrentCardChange(isComputerMove ? 'endComputerMove' : 'placeCard')
+    this.emitCurrentCardChange(playerType == PlayerType.Computer ? 'endComputerMove' : 'placeCard')
     this.currentPossibleMove = null
   }
 
@@ -392,7 +398,7 @@ export class ContinuoBoardScene extends Phaser.Scene {
     const card = this.deck.nextCard()
     this.possibleMoves = evaluateCard(this.board, card)
     const possibleMove = this.chooseRandomWorstScoreMove(this.possibleMoves)
-    this.placeCurrentCardTentative(possibleMove)
+    this.placeCurrentCardTentative(possibleMove, PlayerType.Human)
   }
 
   public async onComputerMove(): Promise<void> {
@@ -400,9 +406,9 @@ export class ContinuoBoardScene extends Phaser.Scene {
     const card = this.deck.nextCard()
     this.possibleMoves = evaluateCard(this.board, card)
     const possibleMove = this.chooseRandomBestScoreMove(this.possibleMoves)
-    this.placeCurrentCardTentative(possibleMove, true)
+    this.placeCurrentCardTentative(possibleMove, PlayerType.Computer)
     await new Promise(resolve => setTimeout(resolve, 2000))
-    this.placeCurrentCardFinal(true)
+    this.placeCurrentCardFinal(PlayerType.Computer)
   }
 
   public onRotateCW(): void {
@@ -417,6 +423,6 @@ export class ContinuoBoardScene extends Phaser.Scene {
 
   public onPlaceCard(): void {
     log.debug('[ContinuoBoardScene#onPlaceCard]')
-    this.placeCurrentCardFinal()
+    this.placeCurrentCardFinal(PlayerType.Human)
   }
 }
