@@ -9,44 +9,46 @@ import { hexagoCardImage } from './hexagoCardImage'
 export class HomeScene extends Phaser.Scene {
 
   eventEmitter: Phaser.Events.EventEmitter
-  playContinuoElement: HTMLButtonElement
-  playHexagoElement: HTMLButtonElement
+  playContinuoButton: Phaser.GameObjects.DOMElement
+  playHexagoButton: Phaser.GameObjects.DOMElement
 
   constructor() {
-    super({
-      active: true,
-      visible: true,
-      key: 'HomeScene'
-    })
+    super('HomeScene')
   }
 
-  private makeButton(y: number, label: string, cardImage: string, handler: Function, dims: [number, number]): HTMLButtonElement {
+  private makeButton(
+    label: string,
+    cardImage: string,
+    handler: Function,
+    dims: [number, number]): Phaser.GameObjects.DOMElement {
 
-    const buttonElement = document.createElement('button')
-    buttonElement.style.margin = '10px'
-    buttonElement.style.width = '120px'
-    buttonElement.style.backgroundColor = 'white'
-    buttonElement.style.padding = '.5rem'
-    buttonElement.style.cursor = 'pointer'
-
-    const textElement = document.createElement('text')
-    textElement.innerText = label
-
-    const imgElement = document.createElement('img')
-    imgElement.src = cardImage
     const [width, height] = dims
-    imgElement.width = width
-    imgElement.height = height
 
-    buttonElement.appendChild(imgElement)
-    buttonElement.appendChild(textElement)
+    const html = `
+      <div style="display: flex; align-items: center;">
+        <div style="flex: 1;">
+          <img src="${cardImage}" width="${width}" height="${height}">
+        </div>
+        <div style="flex: 1;">
+          <text>${label}</text>
+        </div>
+      </div>
+    `
 
-    const button = this.add.dom(0, y, buttonElement)
-    button.setOrigin(0, 0)
+    const style = `
+      margin: 10px;
+      width: 250px;
+      backgroundColor: white;
+      padding: .5rem;
+      cursor: pointer;
+    `
+
+    const button = this.add.dom(0, 0, 'button', style)
+    button.setHTML(html)
     button.addListener('click')
     button.on('click', handler, this)
 
-    return buttonElement
+    return button
   }
 
   preload() {
@@ -55,10 +57,20 @@ export class HomeScene extends Phaser.Scene {
     this.load.audio('rotate-card', 'assets/sounds/rotate-card.wav')
   }
 
-  resize() {
+  repositionButtons(): void {
+    const width = window.innerWidth
+    const height = window.innerHeight
+    const centreX = width / 2
+    const centreY = height / 2
+    this.playContinuoButton.setPosition(centreX, centreY - 75)
+    this.playHexagoButton.setPosition(centreX, centreY + 75)
+  }
+
+  resize(): void {
     const width = window.innerWidth
     const height = window.innerHeight
     this.scale.resize(width, height)
+    this.repositionButtons()
   }
 
   create() {
@@ -76,18 +88,9 @@ export class HomeScene extends Phaser.Scene {
 
     this.eventEmitter = new Phaser.Events.EventEmitter()
 
-    let y = 0
-
-    this.playContinuoElement = this.makeButton(y, 'Play Continuo', continuoCardImage, this.onPlayContinuo, [100, 100])
-    y += 150
-
-    this.playHexagoElement = this.makeButton(y, 'Play Hexago', hexagoCardImage, this.onPlayHexago, [173 / 2, 100])
-    y += 150
-
-    // this.events.on('wake', function () {
-    //   console.log('HomeScene#onWake')
-    //   console.dir(arguments)
-    // })
+    this.playContinuoButton = this.makeButton('Play Continuo', continuoCardImage, this.onPlayContinuo, [100, 100])
+    this.playHexagoButton = this.makeButton('Play Hexago', hexagoCardImage, this.onPlayHexago, [173 / 2, 100])
+    this.repositionButtons()
   }
 
   public onPlayContinuo(): void {
