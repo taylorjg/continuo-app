@@ -27,6 +27,7 @@ export class HUDScene extends Phaser.Scene {
     })
     this.eventEmitter = eventEmitter
     this.turnManager = new TurnManager(this.eventEmitter)
+    this.currentPlayerScore = null
   }
 
   private makeButton(y: number, label: string, handler: Function, initiallyDisabled: boolean): HTMLButtonElement {
@@ -163,6 +164,32 @@ export class HUDScene extends Phaser.Scene {
     })
   }
 
+  private updateButtonState(): void {
+    const humanMoveNotInProgress = (
+      this.currentPlayerScore == null ||
+      this.currentPlayerScore.player.type == PlayerType.Computer
+    )
+    this.rotateCWElement.disabled = humanMoveNotInProgress
+    this.rotateCCWElement.disabled = humanMoveNotInProgress
+    this.placeCardElement.disabled = humanMoveNotInProgress
+  }
+
+  private turnOver(arg: any): void {
+    const score = <number>arg.score
+    const bestScore = <number>arg.bestScore
+    this.turnManager.addTurnScore(this.currentPlayerScore, score, bestScore)
+    this.currentPlayerScore = null
+    this.updateButtonState()
+    setTimeout(() => {
+      const numCardsLeft = <number>arg.numCardsLeft
+      if (numCardsLeft == 0) {
+        this.turnManager.gameOver()
+      } else {
+        this.turnManager.step()
+      }
+    }, 1000)
+  }
+
   private onRotateCWClick(): void {
     log.debug('[HUDScene#onRotateCWClick]')
     this.boardScene.onRotateCW()
@@ -180,8 +207,9 @@ export class HUDScene extends Phaser.Scene {
 
   private onNextTurn(arg: any): void {
     log.debug('[HUDScene#onNextTurn]', arg)
-    this.updateScoreboardTexts(arg)
     this.currentPlayerScore = <PlayerScore>arg.currentPlayerScore
+    this.updateScoreboardTexts(arg)
+    this.updateButtonState()
     switch (this.currentPlayerScore.player.type) {
       case PlayerType.Human:
         this.boardScene.onNextCard()
@@ -194,16 +222,16 @@ export class HUDScene extends Phaser.Scene {
 
   private onFinalScores(arg: any): void {
     log.debug('[HUDScene#onFinalScores]', arg)
+    this.currentPlayerScore = null
     this.updateScoreboardTexts(arg)
+    this.updateButtonState()
   }
 
   private onNextCard(arg: any): void {
     log.debug('[HUDScene#onNextCard]', arg)
     this.updateRemainingCards(arg)
     this.updateCurrentCardScore(arg)
-    this.rotateCWElement.disabled = false
-    this.rotateCCWElement.disabled = false
-    this.placeCardElement.disabled = false
+    this.updateButtonState()
   }
 
   private onMoveCard(arg: any): void {
@@ -213,61 +241,29 @@ export class HUDScene extends Phaser.Scene {
 
   private onPlaceCard(arg: any): void {
     log.debug('[HUDScene#onPlaceCard]', arg)
-    const score = <number>arg.score
-    const bestScore = <number>arg.bestScore
-    this.turnManager.addTurnScore(this.currentPlayerScore, score, bestScore)
-    this.rotateCWElement.disabled = true
-    this.rotateCCWElement.disabled = true
-    this.placeCardElement.disabled = true
-    setTimeout(() => {
-      const numCardsLeft = <number>arg.numCardsLeft
-      if (numCardsLeft == 0) {
-        this.turnManager.gameOver()
-      } else {
-        this.turnManager.step()
-      }
-    }, 1000)
+    this.turnOver(arg)
   }
 
   private onStartRotateCard(arg: any): void {
     log.debug('[HUDScene#onStartRotateCard]', arg)
-    this.rotateCWElement.disabled = true
-    this.rotateCCWElement.disabled = true
-    this.placeCardElement.disabled = true
+    this.updateButtonState()
   }
 
   private onEndRotateCard(arg: any): void {
     log.debug('[HUDScene#onEndRotateCard]', arg)
     this.updateCurrentCardScore(arg)
-    this.rotateCWElement.disabled = false
-    this.rotateCCWElement.disabled = false
-    this.placeCardElement.disabled = false
+    this.updateButtonState()
   }
 
   private onStartComputerMove(arg: any): void {
     log.debug('[HUDScene#onStartComputerMove]', arg)
     this.updateRemainingCards(arg)
     this.updateCurrentCardScore(arg)
-    this.rotateCWElement.disabled = true
-    this.rotateCCWElement.disabled = true
-    this.placeCardElement.disabled = true
+    this.updateButtonState()
   }
 
   private onEndComputerMove(arg: any): void {
     log.debug('[HUDScene#onEndComputerMove]', arg)
-    const score = <number>arg.score
-    const bestScore = <number>arg.bestScore
-    this.turnManager.addTurnScore(this.currentPlayerScore, score, bestScore)
-    this.rotateCWElement.disabled = true
-    this.rotateCCWElement.disabled = true
-    this.placeCardElement.disabled = true
-    setTimeout(() => {
-      const numCardsLeft = <number>arg.numCardsLeft
-      if (numCardsLeft == 0) {
-        this.turnManager.gameOver()
-      } else {
-        this.turnManager.step()
-      }
-    }, 1000)
+    this.turnOver(arg)
   }
 }
