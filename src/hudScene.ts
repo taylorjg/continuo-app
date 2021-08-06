@@ -159,8 +159,11 @@ export class HUDScene extends Phaser.Scene {
   private updateScoreboardTexts(arg: any): void {
     const scoreboard: Scoreboard = <Scoreboard>arg.scoreboard
     scoreboard.forEach((entry, index) => {
-      const value = `${entry.playerName}${entry.isCurrentPlayer ? '*' : ''}: ${entry.score} (${entry.bestScore})`
-      this.scoreboardTexts[index].setText(value)
+      const value = `${entry.playerName}: ${entry.score} (${entry.bestScore})`
+      const scoreboardText = this.scoreboardTexts[index]
+      scoreboardText.setText(value)
+      scoreboardText.setColor(entry.isCurrentPlayer ? 'red' : 'white')
+      scoreboardText.setFontStyle(entry.isCurrentPlayer ? 'bold' : '')
     })
   }
 
