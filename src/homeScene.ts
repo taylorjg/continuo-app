@@ -1,8 +1,8 @@
 import * as Phaser from 'phaser'
 import log from 'loglevel'
+import { HUDScene } from './hudScene'
 import { ContinuoBoardScene } from './continuoBoardScene'
 import { HexagoBoardScene } from './hexagoBoardScene'
-import { HUDScene } from './hudScene'
 import { continuoCardImage } from './continuoCardImage'
 import { hexagoCardImage } from './hexagoCardImage'
 
@@ -11,9 +11,12 @@ export class HomeScene extends Phaser.Scene {
   eventEmitter: Phaser.Events.EventEmitter
   playContinuoButton: Phaser.GameObjects.DOMElement
   playHexagoButton: Phaser.GameObjects.DOMElement
+  hudScene: Phaser.Scene
+  continuoBoardScene: Phaser.Scene
+  hexagoBoardScene: Phaser.Scene
 
   constructor() {
-    super('HomeScene')
+    super({ key: 'HomeScene', active: true, visible: true })
   }
 
   private makeButton(
@@ -91,19 +94,37 @@ export class HomeScene extends Phaser.Scene {
     this.playContinuoButton = this.makeButton('Play Continuo', continuoCardImage, this.onPlayContinuo, [100, 100])
     this.playHexagoButton = this.makeButton('Play Hexago', hexagoCardImage, this.onPlayHexago, [173 / 2, 100])
     this.repositionButtons()
+
+    this.hudScene = this.game.scene.add('HUDScene', new HUDScene(this.eventEmitter))
+    this.hudScene.scene.sleep()
+
+    this.continuoBoardScene = this.game.scene.add('ContinuoBoardScene', new ContinuoBoardScene(this.eventEmitter))
+    this.continuoBoardScene.scene.sleep()
+
+    this.hexagoBoardScene = this.game.scene.add('HexagoBoardScene', new HexagoBoardScene(this.eventEmitter))
+    this.hexagoBoardScene.scene.sleep()
+
+    this.events.on('wake', this.onWake, this)
+  }
+
+  private onWake() {
+    log.debug('[HomeScene#onWake]')
+    this.hudScene.scene.sleep()
+    this.continuoBoardScene.scene.sleep()
+    this.hexagoBoardScene.scene.sleep()
   }
 
   public onPlayContinuo(): void {
     log.debug('[HomeScene#onPlayContinuo]')
     this.scene.sleep()
-    this.game.scene.add('BoardScene', new ContinuoBoardScene(this.eventEmitter))
-    this.game.scene.add('HUDScene', new HUDScene(this.eventEmitter))
+    this.continuoBoardScene.scene.wake()
+    this.hudScene.scene.wake(undefined, this.continuoBoardScene)
   }
 
   public onPlayHexago(): void {
     log.debug('[HomeScene#onPlayHexago]')
     this.scene.sleep()
-    this.game.scene.add('BoardScene', new HexagoBoardScene(this.eventEmitter))
-    this.game.scene.add('HUDScene', new HUDScene(this.eventEmitter))
+    this.hexagoBoardScene.scene.wake()
+    this.hudScene.scene.wake(undefined, this.hexagoBoardScene)
   }
 }

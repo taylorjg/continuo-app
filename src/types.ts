@@ -4,5 +4,5 @@ export interface IBoardScene {
   onComputerMove(): Promise<void>
   onRotateCW(): void
   onRotateCCW(): void
-  onPlaceCard(): number
+  onPlaceCard(): void
 }

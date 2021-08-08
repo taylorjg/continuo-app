@@ -1,30 +1,28 @@
 import * as Phaser from 'phaser'
 import log from 'loglevel'
 import { IBoardScene } from './types'
-import { TurnManager, PlayerScore, Scoreboard, PlayerType, ScoreboardEntry } from './turnManager'
+import { TurnManager, PlayerScore, Scoreboard, PlayerType } from './turnManager'
 
 export class HUDScene extends Phaser.Scene {
 
   eventEmitter: Phaser.Events.EventEmitter
   boardScene: IBoardScene
-  homeElement: HTMLButtonElement
-  restartElement: HTMLButtonElement
-  placeCardElement: HTMLButtonElement
-  rotateCWElement: HTMLButtonElement
-  rotateCCWElement: HTMLButtonElement
-  toggleFullScreenButton: HTMLButtonElement
-  remainingCardsText: Phaser.GameObjects.Text
-  currentCardScoreText: Phaser.GameObjects.Text
-  scoreboardTexts: Phaser.GameObjects.Text[]
   turnManager: TurnManager
   currentPlayerScore: PlayerScore
 
+  homeElement: HTMLButtonElement
+  restartElement: HTMLButtonElement
+  rotateCWElement: HTMLButtonElement
+  rotateCCWElement: HTMLButtonElement
+  placeCardElement: HTMLButtonElement
+  toggleFullScreenButton: HTMLButtonElement
+
+  remainingCardsText: Phaser.GameObjects.Text
+  currentCardScoreText: Phaser.GameObjects.Text
+  scoreboardTexts: Phaser.GameObjects.Text[]
+
   constructor(eventEmitter: Phaser.Events.EventEmitter) {
-    super({
-      active: true,
-      visible: true,
-      key: 'HUDScene'
-    })
+    super({ key: 'HUDScene', active: true, visible: true })
     this.eventEmitter = eventEmitter
     this.turnManager = new TurnManager(this.eventEmitter)
     this.currentPlayerScore = null
@@ -44,8 +42,6 @@ export class HUDScene extends Phaser.Scene {
   }
 
   create() {
-    this.boardScene = <IBoardScene><unknown>this.scene.get('BoardScene')
-
     const GAP_Y = 30
 
     let y = 0
@@ -107,28 +103,19 @@ export class HUDScene extends Phaser.Scene {
     this.eventEmitter.on('startComputerMove', this.onStartComputerMove, this)
     this.eventEmitter.on('endComputerMove', this.onEndComputerMove, this)
 
-    this.events.on('destroy', () => {
-      log.debug('[HUDScene destroy]')
-      this.eventEmitter.off('nextTurn', this.onNextTurn)
-      this.eventEmitter.off('finalScores', this.onFinalScores)
-      this.eventEmitter.off('nextCard', this.onNextCard)
-      this.eventEmitter.off('moveCard', this.onMoveCard)
-      this.eventEmitter.off('placeCard', this.onPlaceCard)
-      this.eventEmitter.off('startRotateCard', this.onStartRotateCard)
-      this.eventEmitter.off('endRotateCard', this.onEndRotateCard)
-      this.eventEmitter.off('startComputerMove', this.onStartComputerMove)
-      this.eventEmitter.off('endComputerMove', this.onEndComputerMove)
-    })
+    this.events.on('wake', this.onWake, this)
+  }
 
+  private onWake(_thisScene: Phaser.Scene, boardScene: IBoardScene) {
+    log.debug('[HUDScene#onWake]')
+    this.boardScene = boardScene
     this.turnManager.reset()
     this.turnManager.step()
   }
 
   private onHomeClick(): void {
     log.debug('[HUDScene#onHomeClick]')
-    this.scene.remove('BoardScene')
-    this.scene.remove('HUDScene')
-    this.game.scene.wake('HomeScene', { name: 'Jon' })
+    this.game.scene.wake('HomeScene')
   }
 
   private onRestartClick(): void {
@@ -177,7 +164,7 @@ export class HUDScene extends Phaser.Scene {
     this.placeCardElement.disabled = humanMoveNotInProgress
   }
 
-  private turnOver(arg: any): void {
+  private endOfTurn(arg: any): void {
     const score = <number>arg.score
     const bestScore = <number>arg.bestScore
     this.turnManager.addTurnScore(this.currentPlayerScore, score, bestScore)
@@ -244,7 +231,7 @@ export class HUDScene extends Phaser.Scene {
 
   private onPlaceCard(arg: any): void {
     log.debug('[HUDScene#onPlaceCard]', arg)
-    this.turnOver(arg)
+    this.endOfTurn(arg)
   }
 
   private onStartRotateCard(arg: any): void {
@@ -267,6 +254,6 @@ export class HUDScene extends Phaser.Scene {
 
   private onEndComputerMove(arg: any): void {
     log.debug('[HUDScene#onEndComputerMove]', arg)
-    this.turnOver(arg)
+    this.endOfTurn(arg)
   }
 }

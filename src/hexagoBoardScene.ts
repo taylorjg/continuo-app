@@ -187,19 +187,15 @@ export class HexagoBoardScene extends Phaser.Scene {
   eventEmitter: Phaser.Events.EventEmitter
   deck: Deck
   board: Board
-  cardSpritesMap: Map<Card, Phaser.GameObjects.Sprite>
   possibleMoves: PossibleMove[]
   currentPossibleMove: PossibleMove
+  cardSpritesMap: Map<Card, Phaser.GameObjects.Sprite>
   currentCardContainer: Phaser.GameObjects.Container
   matchingColourHighlights: Phaser.GameObjects.Polygon[]
   matchingNumberHighlights: Phaser.GameObjects.Arc[]
 
   constructor(eventEmitter: Phaser.Events.EventEmitter) {
-    super({
-      active: true,
-      visible: true,
-      key: 'BoardScene'
-    })
+    super({ key: 'HexagoBoardScene', active: true, visible: true })
     this.eventEmitter = eventEmitter
     this.deck = new Deck()
     this.board = Board.empty
@@ -446,12 +442,6 @@ export class HexagoBoardScene extends Phaser.Scene {
 
     window.addEventListener('resize', onResize)
     window.addEventListener('orientationchange', onOrientationChange)
-
-    this.events.on('destroy', () => {
-      log.debug('[HexagoBoardScene destroy]')
-      window.removeEventListener('resize', onResize)
-      window.removeEventListener('orientationchange', onOrientationChange)
-    })
 
     Deck.originalCards.forEach((card, index) => {
       const graphics = new Phaser.GameObjects.Graphics(this)

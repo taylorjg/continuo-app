@@ -57,18 +57,14 @@ export class ContinuoBoardScene extends Phaser.Scene {
   eventEmitter: Phaser.Events.EventEmitter
   deck: Deck
   board: Board
-  cardSpritesMap: Map<Card, Phaser.GameObjects.Sprite>
   possibleMoves: PossibleMove[]
   currentPossibleMove: PossibleMove
+  cardSpritesMap: Map<Card, Phaser.GameObjects.Sprite>
   currentCardContainer: Phaser.GameObjects.Container
   chainHighlights: Phaser.GameObjects.Polygon[]
 
   constructor(eventEmitter: Phaser.Events.EventEmitter) {
-    super({
-      active: true,
-      visible: true,
-      key: 'BoardScene'
-    })
+    super({ key: 'ContinuoBoardScene', active: true, visible: true })
     this.eventEmitter = eventEmitter
     this.deck = new Deck()
     this.board = Board.empty
@@ -257,12 +253,6 @@ export class ContinuoBoardScene extends Phaser.Scene {
 
     window.addEventListener('resize', onResize)
     window.addEventListener('orientationchange', onOrientationChange)
-
-    this.events.on('destroy', () => {
-      log.debug('[ContinuoBoardScene destroy]')
-      window.removeEventListener('resize', onResize)
-      window.removeEventListener('orientationchange', onOrientationChange)
-    })
 
     Deck.originalCards.forEach((card, index) => {
       const graphics = new Phaser.GameObjects.Graphics(this)
