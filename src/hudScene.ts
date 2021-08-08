@@ -22,7 +22,7 @@ export class HUDScene extends Phaser.Scene {
   scoreboardTexts: Phaser.GameObjects.Text[]
 
   constructor(eventEmitter: Phaser.Events.EventEmitter) {
-    super({ key: 'HUDScene', active: true, visible: true })
+    super('HUDScene')
     this.eventEmitter = eventEmitter
     this.turnManager = new TurnManager(this.eventEmitter)
     this.currentPlayerScore = null
@@ -41,7 +41,13 @@ export class HUDScene extends Phaser.Scene {
     return element
   }
 
-  create() {
+  public init() {
+    log.debug('[HUDScene#init]')
+  }
+
+  public create() {
+    log.debug('[HUDScene#create]')
+
     const GAP_Y = 30
 
     let y = 0
@@ -121,12 +127,6 @@ export class HUDScene extends Phaser.Scene {
   private onRestartClick(): void {
     log.debug('[HUDScene#onRestartClick]')
     this.boardScene.onRestart()
-    this.remainingCardsText.setText('')
-    this.currentCardScoreText.setText('')
-    this.scoreboardTexts.forEach(scoreboardText => scoreboardText.setText(''))
-    this.rotateCWElement.disabled = true
-    this.rotateCCWElement.disabled = true
-    this.placeCardElement.disabled = true
     this.turnManager.reset()
     this.turnManager.step()
   }
@@ -141,6 +141,10 @@ export class HUDScene extends Phaser.Scene {
     const bestScore: number = <number>arg.bestScore
     const bestScoreLocationCount: number = <number>arg.bestScoreLocationCount
     this.currentCardScoreText.setText(`${score} (${bestScore}/${bestScoreLocationCount})`)
+  }
+
+  private clearCurrentCardScore(): void {
+    this.currentCardScoreText.setText('')
   }
 
   private updateScoreboardTexts(arg: any): void {
@@ -159,6 +163,7 @@ export class HUDScene extends Phaser.Scene {
       this.currentPlayerScore == null ||
       this.currentPlayerScore.player.type == PlayerType.Computer
     )
+    this.restartElement.disabled = this.currentPlayerScore?.player.type == PlayerType.Computer
     this.rotateCWElement.disabled = humanMoveNotInProgress
     this.rotateCCWElement.disabled = humanMoveNotInProgress
     this.placeCardElement.disabled = humanMoveNotInProgress
@@ -169,6 +174,7 @@ export class HUDScene extends Phaser.Scene {
     const bestScore = <number>arg.bestScore
     this.turnManager.addTurnScore(this.currentPlayerScore, score, bestScore)
     this.currentPlayerScore = null
+    this.clearCurrentCardScore()
     this.updateButtonState()
     setTimeout(() => {
       const numCardsLeft = <number>arg.numCardsLeft

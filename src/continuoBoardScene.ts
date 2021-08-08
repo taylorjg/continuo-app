@@ -64,7 +64,7 @@ export class ContinuoBoardScene extends Phaser.Scene {
   chainHighlights: Phaser.GameObjects.Polygon[]
 
   constructor(eventEmitter: Phaser.Events.EventEmitter) {
-    super({ key: 'ContinuoBoardScene', active: true, visible: true })
+    super('ContinuoBoardScene')
     this.eventEmitter = eventEmitter
     this.deck = new Deck()
     this.board = Board.empty
@@ -246,7 +246,12 @@ export class ContinuoBoardScene extends Phaser.Scene {
     this.highlightChains()
   }
 
+  public init() {
+    log.debug('[ContinuoBoardScene#init]')
+  }
+
   public create() {
+    log.debug('[ContinuoBoardScene#create]')
 
     const onResize = () => this.resize()
     const onOrientationChange = () => this.resize()

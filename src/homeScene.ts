@@ -16,7 +16,7 @@ export class HomeScene extends Phaser.Scene {
   hexagoBoardScene: Phaser.Scene
 
   constructor() {
-    super({ key: 'HomeScene', active: true, visible: true })
+    super('HomeScene')
   }
 
   private makeButton(
@@ -60,7 +60,27 @@ export class HomeScene extends Phaser.Scene {
     this.load.audio('rotate-card', 'assets/sounds/rotate-card.wav')
   }
 
-  repositionButtons(): void {
+  create() {
+    const onResize = () => this.resize()
+    const onOrientationChange = () => this.resize()
+
+    window.addEventListener('resize', onResize)
+    window.addEventListener('orientationchange', onOrientationChange)
+
+    this.eventEmitter = new Phaser.Events.EventEmitter()
+
+    this.hudScene = this.game.scene.add('HUDScene', new HUDScene(this.eventEmitter))
+    this.continuoBoardScene = this.game.scene.add('ContinuoBoardScene', new ContinuoBoardScene(this.eventEmitter))
+    this.hexagoBoardScene = this.game.scene.add('HexagoBoardScene', new HexagoBoardScene(this.eventEmitter))
+
+    this.events.on('wake', this.onWake, this)
+
+    this.playContinuoButton = this.makeButton('Play Continuo', continuoCardImage, this.onPlayContinuo, [100, 100])
+    this.playHexagoButton = this.makeButton('Play Hexago', hexagoCardImage, this.onPlayHexago, [173 / 2, 100])
+    this.repositionButtons()
+  }
+
+  private repositionButtons(): void {
     const width = window.innerWidth
     const height = window.innerHeight
     const centreX = width / 2
@@ -69,62 +89,47 @@ export class HomeScene extends Phaser.Scene {
     this.playHexagoButton.setPosition(centreX, centreY + 75)
   }
 
-  resize(): void {
+  private resize(): void {
     const width = window.innerWidth
     const height = window.innerHeight
     this.scale.resize(width, height)
     this.repositionButtons()
   }
 
-  create() {
-    const onResize = () => this.resize()
-    const onOrientationChange = () => this.resize()
-
-    window.addEventListener('resize', onResize)
-    window.addEventListener('orientationchange', onOrientationChange)
-
-    this.events.on('destroy', () => {
-      log.debug('[HomeScene destroy]')
-      window.removeEventListener('resize', onResize)
-      window.removeEventListener('orientationchange', onOrientationChange)
-    })
-
-    this.eventEmitter = new Phaser.Events.EventEmitter()
-
-    this.playContinuoButton = this.makeButton('Play Continuo', continuoCardImage, this.onPlayContinuo, [100, 100])
-    this.playHexagoButton = this.makeButton('Play Hexago', hexagoCardImage, this.onPlayHexago, [173 / 2, 100])
-    this.repositionButtons()
-
-    this.hudScene = this.game.scene.add('HUDScene', new HUDScene(this.eventEmitter))
-    this.hudScene.scene.sleep()
-
-    this.continuoBoardScene = this.game.scene.add('ContinuoBoardScene', new ContinuoBoardScene(this.eventEmitter))
-    this.continuoBoardScene.scene.sleep()
-
-    this.hexagoBoardScene = this.game.scene.add('HexagoBoardScene', new HexagoBoardScene(this.eventEmitter))
-    this.hexagoBoardScene.scene.sleep()
-
-    this.events.on('wake', this.onWake, this)
-  }
-
-  private onWake() {
-    log.debug('[HomeScene#onWake]')
-    this.hudScene.scene.sleep()
-    this.continuoBoardScene.scene.sleep()
-    this.hexagoBoardScene.scene.sleep()
-  }
-
-  public onPlayContinuo(): void {
+  private onPlayContinuo(): void {
     log.debug('[HomeScene#onPlayContinuo]')
-    this.scene.sleep()
-    this.continuoBoardScene.scene.wake()
-    this.hudScene.scene.wake(undefined, this.continuoBoardScene)
+    this.play(this.continuoBoardScene)
   }
 
-  public onPlayHexago(): void {
+  private onPlayHexago(): void {
     log.debug('[HomeScene#onPlayHexago]')
+    this.play(this.hexagoBoardScene)
+  }
+
+  private onWake(): void {
+    log.debug('[HomeScene#onWake]')
+    this.sleepIfActive(this.hudScene)
+    this.sleepIfActive(this.continuoBoardScene)
+    this.sleepIfActive(this.hexagoBoardScene)
+  }
+
+  private play(boardScene: Phaser.Scene): void {
     this.scene.sleep()
-    this.hexagoBoardScene.scene.wake()
-    this.hudScene.scene.wake(undefined, this.hexagoBoardScene)
+    this.launchIfNotSleeping(boardScene)
+    this.launchIfNotSleeping(this.hudScene)
+    this.scene.wake(boardScene)
+    this.scene.wake(this.hudScene, boardScene)
+  }
+
+  private sleepIfActive(scene: Phaser.Scene): void {
+    if (this.scene.isActive(scene)) {
+      this.scene.sleep(scene)
+    }
+  }
+
+  private launchIfNotSleeping(scene: Phaser.Scene): void {
+    if (!this.scene.isSleeping(scene)) {
+      this.scene.launch(scene)
+    }
   }
 }

@@ -195,7 +195,7 @@ export class HexagoBoardScene extends Phaser.Scene {
   matchingNumberHighlights: Phaser.GameObjects.Arc[]
 
   constructor(eventEmitter: Phaser.Events.EventEmitter) {
-    super({ key: 'HexagoBoardScene', active: true, visible: true })
+    super('HexagoBoardScene')
     this.eventEmitter = eventEmitter
     this.deck = new Deck()
     this.board = Board.empty
@@ -435,7 +435,12 @@ export class HexagoBoardScene extends Phaser.Scene {
     this.highlightMatches()
   }
 
+  public init() {
+    log.debug('[HexagoBoardScene#init]')
+  }
+
   public create() {
+    log.debug('[HexagoBoardScene#create]')
 
     const onResize = () => this.resize()
     const onOrientationChange = () => this.resize()
