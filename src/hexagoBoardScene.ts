@@ -498,7 +498,7 @@ export class HexagoBoardScene extends Phaser.Scene {
       }
     })
 
-    this.startNewGame()
+    this.events.on('wake', this.onWake, this)
   }
 
   private getSnapPosition(x: number, y: number): Cell {
@@ -547,7 +547,8 @@ export class HexagoBoardScene extends Phaser.Scene {
     this.unhighlightMatches()
     this.deck.reset()
     this.board = Board.empty
-    this.possibleMoves = null
+    this.possibleMoves = []
+    this.currentPossibleMove = null
 
     const card1 = this.deck.nextCard()
     const rotation1 = findRotationWhereSixIsAtWedgeIndex(card1, 1)
@@ -560,6 +561,11 @@ export class HexagoBoardScene extends Phaser.Scene {
     this.placeInitialCard(placedCard2)
 
     this.resize()
+  }
+
+  private onWake() {
+    log.debug('[HexagoBoardScene#onWake]')
+    this.startNewGame()
   }
 
   public onRestart(): void {

@@ -306,7 +306,7 @@ export class ContinuoBoardScene extends Phaser.Scene {
       }
     })
 
-    this.startNewGame()
+    this.events.on('wake', this.onWake, this)
   }
 
   private getSnapPosition(x: number, y: number): Cell {
@@ -364,7 +364,8 @@ export class ContinuoBoardScene extends Phaser.Scene {
     this.unhighlightChains()
     this.deck.reset()
     this.board = Board.empty
-    this.possibleMoves = null
+    this.possibleMoves = []
+    this.currentPossibleMove = null
 
     const card1 = this.deck.nextCard()
     const orientation1 = this.chooseRandomOrientation()
@@ -376,6 +377,11 @@ export class ContinuoBoardScene extends Phaser.Scene {
     this.placeInitialCard(move2.placedCard)
 
     this.resize()
+  }
+
+  private onWake() {
+    log.debug('[ContinuoBoardScene#onWake]')
+    this.startNewGame()
   }
 
   public onRestart(): void {
