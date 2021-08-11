@@ -191,8 +191,8 @@ export class HexagoBoardScene extends Phaser.Scene {
   currentPossibleMove: PossibleMove
   cardSpritesMap: Map<Card, Phaser.GameObjects.Sprite>
   currentCardContainer: Phaser.GameObjects.Container
-  matchingColourHighlights: Phaser.GameObjects.Polygon[]
-  matchingNumberHighlights: Phaser.GameObjects.Arc[]
+  matchingColourHighlights: Phaser.GameObjects.Shape[]
+  matchingNumberHighlights: Phaser.GameObjects.Shape[]
 
   constructor(eventEmitter: Phaser.Events.EventEmitter) {
     super('HexagoBoardScene')

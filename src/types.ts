@@ -12,11 +12,23 @@ export type CommonAdapter = {
   emptyBoard: CommonBoard
   createDeck(): CommonDeck
   evaluateCard: (board: CommonBoard, card: CommonCard) => CommonPossibleMove[]
+  placedCardRotateCW(placedCard: CommonPlacedCard): CommonPlacedCard
+  placedCardRotateCCW(placedCard: CommonPlacedCard): CommonPlacedCard
+  placedCardMoveTo(placedCard: CommonPlacedCard, row: number, col: number): CommonPlacedCard
+  placedCardsHaveSamePlacement(placedCard1: CommonPlacedCard, placedCard2: CommonPlacedCard): boolean
+}
+
+export type CommonBoardRange = {
+  width: number,
+  height: number,
+  centreX: number,
+  centreY: number
 }
 
 export interface CommonBoard {
   placeCard(placedCard: CommonPlacedCard): CommonBoard
   findAvailableCardPositions(): CommonCell[]
+  getBoundaries(): [number, number, number, number]
 }
 
 export interface CommonCard {
@@ -37,10 +49,6 @@ export interface CommonPlacedCard {
   card: CommonCard
   row: number
   col: number
-  rotateCW(): CommonPlacedCard
-  rotateCCW(): CommonPlacedCard
-  moveTo(row: number, col: number): CommonPlacedCard
-  equals(other: CommonPlacedCard): boolean
 }
 
 export interface CommonPossibleMove {
