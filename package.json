@@ -1,10 +1,11 @@
 {
   "name": "continuo-app-phaser-poc",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "description": "Learning Phaser 3 by making a Continuo app",
   "main": "index.js",
   "scripts": {
     "build": "webpack",
+    "build:prod": "NODE_ENV=production webpack",
     "dev": "webpack serve",
     "deploy": "gh-pages -d dist"
   },

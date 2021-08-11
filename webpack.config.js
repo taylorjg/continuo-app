@@ -3,11 +3,7 @@ const webpack = require('webpack')
 const CopyPlugin = require('copy-webpack-plugin')
 
 module.exports = {
-  entry: {
-    app: './src/main.ts',
-    vendors: ['phaser']
-  },
-
+  entry: './src/main.ts',
   module: {
     rules: [
       {
@@ -17,23 +13,19 @@ module.exports = {
       }
     ]
   },
-
   resolve: {
     extensions: ['.ts', '.tsx', '.js']
   },
-
   output: {
     filename: '[name].bundle.js',
     path: path.resolve(__dirname, 'dist')
   },
-
   mode: process.env.NODE_ENV == 'production' ? 'production' : 'development',
-
+  devtool: 'source-map',
   devServer: {
     contentBase: path.resolve(__dirname, 'dist'),
     port: 3400
   },
-
   plugins: [
     new CopyPlugin({
       patterns: [
@@ -49,18 +41,5 @@ module.exports = {
       'typeof CANVAS_RENDERER': JSON.stringify(true),
       'typeof WEBGL_RENDERER': JSON.stringify(true)
     })
-  ],
-
-  // optimization: {
-  //   splitChunks: {
-  //     cacheGroups: {
-  //       commons: {
-  //         test: /[\\/]node_modules[\\/]/,
-  //         name: 'vendors',
-  //         chunks: 'all',
-  //         filename: '[name].app.bundle.js'
-  //       }
-  //     }
-  //   }
-  // }
+  ]
 }
