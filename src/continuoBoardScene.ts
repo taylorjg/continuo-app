@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser'
 
 import { BoardScene, BoardSceneConfig, HIGHLIGHT_DEPTH } from './boardScene'
-import { CommonAdapter, CommonBoardRange, CommonPlacedCard } from './types'
+import { CommonAdapter, CommonBoardRange } from './types'
 
 import { Board } from './continuo-lib/board'
 import { Card } from './continuo-lib/card'
@@ -114,12 +114,6 @@ export class ContinuoBoardScene extends BoardScene {
     drawCard(graphics, card)
   }
 
-  protected getCellPosition(row: number, col: number): Phaser.Geom.Point {
-    const x = col * QUARTER_CARD_SIZE + EIGHTH_CARD_SIZE
-    const y = row * QUARTER_CARD_SIZE + EIGHTH_CARD_SIZE
-    return new Phaser.Geom.Point(x, y)
-  }
-
   protected getPlacedCardRotationAngle(placedCard: PlacedCard): number {
     switch (placedCard.orientation) {
       case Orientation.NorthSouth: return 0
@@ -160,6 +154,12 @@ export class ContinuoBoardScene extends BoardScene {
       centreX,
       centreY
     }
+  }
+
+  private getCellPosition(row: number, col: number): Phaser.Geom.Point {
+    const x = col * QUARTER_CARD_SIZE + EIGHTH_CARD_SIZE
+    const y = row * QUARTER_CARD_SIZE + EIGHTH_CARD_SIZE
+    return new Phaser.Geom.Point(x, y)
   }
 
   private chooseRandomOrientation(): Orientation {

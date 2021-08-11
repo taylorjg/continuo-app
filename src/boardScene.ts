@@ -185,7 +185,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.adapter.originalCards.forEach((card, index) => {
       const graphics = new Phaser.GameObjects.Graphics(this)
       this.drawCard(graphics, card)
-      const key = `card-${index}`
+      const key = `${this.scene.key}-card-${index}`
       graphics.generateTexture(key, CARD_WIDTH, CARD_HEIGHT)
       const sprite = new Phaser.GameObjects.Sprite(this, 0, 0, key)
       sprite.visible = false
