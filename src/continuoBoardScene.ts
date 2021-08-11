@@ -141,19 +141,14 @@ export class ContinuoBoardScene extends BoardScene {
   }
 
   protected getBoardRange(board: Board): CommonBoardRange {
-    const [leftMost, rightMost, topMost, bottomMost] = board.getBoundaries()
-    const numCellsWide = rightMost - leftMost + 1 + (2 * NUM_MARGIN_CELLS)
-    const numCellsHigh = bottomMost - topMost + 1 + (2 * NUM_MARGIN_CELLS)
+    const { left, right, top, bottom } = board.getBounds()
+    const numCellsWide = right - left + 1 + (2 * NUM_MARGIN_CELLS)
+    const numCellsHigh = bottom - top + 1 + (2 * NUM_MARGIN_CELLS)
     const width = numCellsWide * QUARTER_CARD_SIZE
     const height = numCellsHigh * QUARTER_CARD_SIZE
-    const centreX = (leftMost - NUM_MARGIN_CELLS) * QUARTER_CARD_SIZE + (width / 2)
-    const centreY = (topMost - NUM_MARGIN_CELLS) * QUARTER_CARD_SIZE + (height / 2)
-    return {
-      width: width,
-      height: height,
-      centreX,
-      centreY
-    }
+    const centreX = (left - NUM_MARGIN_CELLS) * QUARTER_CARD_SIZE + (width / 2)
+    const centreY = (top - NUM_MARGIN_CELLS) * QUARTER_CARD_SIZE + (height / 2)
+    return { width, height, centreX, centreY }
   }
 
   private getCellPosition(row: number, col: number): Phaser.Geom.Point {

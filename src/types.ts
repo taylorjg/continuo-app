@@ -18,6 +18,13 @@ export type CommonAdapter = {
   placedCardsHaveSamePlacement(placedCard1: CommonPlacedCard, placedCard2: CommonPlacedCard): boolean
 }
 
+export type CommonBoardBounds = {
+  left: number,
+  right: number,
+  top: number,
+  bottom: number
+}
+
 export type CommonBoardRange = {
   width: number,
   height: number,
@@ -28,7 +35,7 @@ export type CommonBoardRange = {
 export interface CommonBoard {
   placeCard(placedCard: CommonPlacedCard): CommonBoard
   findAvailableCardPositions(): CommonCell[]
-  getBoundaries(): [number, number, number, number]
+  getBounds(): CommonBoardBounds
 }
 
 export interface CommonCard {

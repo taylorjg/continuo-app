@@ -275,19 +275,14 @@ export class HexagoBoardScene extends BoardScene {
   }
 
   protected getBoardRange(board: Board): CommonBoardRange {
-    const [leftMost, rightMost, topMost, bottomMost] = board.getBoundaries()
-    const numColsWide = (rightMost - leftMost + 2) + 6
-    const numRowsHigh = (bottomMost - topMost + 1) + 3
+    const { left, right, top, bottom } = board.getBounds()
+    const numColsWide = (right - left + 2) + 6
+    const numRowsHigh = (bottom - top + 1) + 3
     const width = numColsWide * COL_WIDTH
     const height = numRowsHigh * ROW_HEIGHT
-    const centreX = (leftMost - 4) * COL_WIDTH + (width / 2)
-    const centreY = (topMost - 2) * ROW_HEIGHT + (height / 2)
-    return {
-      width: width,
-      height: height,
-      centreX,
-      centreY
-    }
+    const centreX = (left - 4) * COL_WIDTH + (width / 2)
+    const centreY = (top - 2) * ROW_HEIGHT + (height / 2)
+    return { width, height, centreX, centreY }
   }
 
   private highlightMatchingColours(match: Match, shapes: Phaser.GameObjects.Shape[]): void {
