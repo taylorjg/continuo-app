@@ -46,9 +46,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.scoringComponentHighlights = []
   }
 
-  // TODO: make this a generator
-  protected abstract getInitialPlacedCards(deck: CommonDeck, board: CommonBoard): CommonPlacedCard[]
-
+  protected abstract getInitialPlacedCards(deck: CommonDeck, board: CommonBoard): Generator<CommonPlacedCard, void, CommonBoard>
   protected abstract getCardPosition(row: number, col: number): Phaser.Geom.Point
   protected abstract getSnapPosition(x: number, y: number): CommonCell
   protected abstract drawCard(graphics: Phaser.GameObjects.Graphics, card: CommonCard): void
@@ -147,11 +145,9 @@ export abstract class BoardScene extends Phaser.Scene {
     if (possibleMove) {
       this.boardSceneConfig.eventEmitter.emit('startRotateCard')
       this.unhighlightScoringComponents()
-      // TODO: use Phaser.Math.Wrap ?
-      const toAngle = (this.currentCardContainer.angle + rotationAngle) % 360
       this.tweens.add({
         targets: this.currentCardContainer,
-        angle: toAngle,
+        angle: this.currentCardContainer.angle + rotationAngle,
         duration: 300,
         ease: 'Sine.InOut',
         onComplete: () => {
@@ -274,9 +270,11 @@ export abstract class BoardScene extends Phaser.Scene {
     this.possibleMoves = []
     this.currentPossibleMove = null
 
-    const initialPlacedCards = this.getInitialPlacedCards(this.deck, this.board)
-    console.dir(initialPlacedCards)
-    initialPlacedCards.forEach(initialPlacedCard => this.placeInitialCard(initialPlacedCard))
+    const iter = this.getInitialPlacedCards(this.deck, this.board)
+
+    for (let curr = iter.next(); curr.value; curr = iter.next(this.board)) {
+      this.placeInitialCard(curr.value)
+    }
 
     this.resize()
   }

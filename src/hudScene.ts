@@ -159,14 +159,13 @@ export class HUDScene extends Phaser.Scene {
   }
 
   private updateButtonState(): void {
-    const humanMoveNotInProgress = (
-      this.currentPlayerScore == null ||
-      this.currentPlayerScore.player.type == PlayerType.Computer
-    )
-    this.restartElement.disabled = this.currentPlayerScore?.player.type == PlayerType.Computer
-    this.rotateCWElement.disabled = humanMoveNotInProgress
-    this.rotateCCWElement.disabled = humanMoveNotInProgress
-    this.placeCardElement.disabled = humanMoveNotInProgress
+    const isNoMove = this.currentPlayerScore == null
+    const isComputerMove = this.currentPlayerScore?.player.type == PlayerType.Computer
+    this.homeElement.disabled = isComputerMove
+    this.restartElement.disabled = isComputerMove
+    this.rotateCWElement.disabled = isComputerMove || isNoMove
+    this.rotateCCWElement.disabled = isComputerMove || isNoMove
+    this.placeCardElement.disabled = isComputerMove || isNoMove
   }
 
   private endOfTurn(arg: any): void {
@@ -242,7 +241,11 @@ export class HUDScene extends Phaser.Scene {
 
   private onStartRotateCard(arg: any): void {
     log.debug('[HUDScene#onStartRotateCard]', arg)
-    this.updateButtonState()
+    this.homeElement.disabled = true
+    this.restartElement.disabled = true
+    this.rotateCWElement.disabled = true
+    this.rotateCCWElement.disabled = true
+    this.placeCardElement.disabled = true
   }
 
   private onEndRotateCard(arg: any): void {

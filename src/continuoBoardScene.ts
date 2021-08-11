@@ -85,16 +85,16 @@ export class ContinuoBoardScene extends BoardScene {
     super('ContinuoBoardScene', boardSceneConfig, adapter)
   }
 
-  protected getInitialPlacedCards(deck: Deck, board: Board): CommonPlacedCard[] {
+  protected *getInitialPlacedCards(deck: Deck, board: Board) {
 
     const card1 = deck.nextCard()
     const orientation1 = this.chooseRandomOrientation()
     const placedCard1 = new PlacedCard(card1, 0, 0, orientation1)
+    board = yield placedCard1
 
     const card2 = deck.nextCard()
     const placedCard2 = this.chooseRandomBestScoreMove(evaluateCard(board, card2)).placedCard
-
-    return [placedCard1, placedCard2]
+    board = yield placedCard2
   }
 
   protected getCardPosition(row: number, col: number): Phaser.Geom.Point {
