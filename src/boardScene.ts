@@ -16,6 +16,7 @@ import { PlayerType } from './turnManager'
 
 export const CURRENT_CARD_DEPTH = 1
 export const HIGHLIGHT_DEPTH = 2
+export const HIGHLIGHT_COLOUR = 0xFF00FF
 
 export type BoardSceneConfig = {
   eventEmitter: Phaser.Events.EventEmitter,
@@ -132,9 +133,30 @@ export abstract class BoardScene extends Phaser.Scene {
     this.currentPossibleMove = possibleMove
     const placedCard = this.currentPossibleMove.placedCard
     const cardPosition = this.getCardPosition(placedCard.row, placedCard.col)
-    this.currentCardContainer.setPosition(cardPosition.x, cardPosition.y)
-    this.highlightScoringComponents(this.currentPossibleMove)
-    this.emitCurrentCardChange('moveCard')
+    this.tweens.add({
+      targets: this.currentCardContainer,
+      duration: 75,
+      x: cardPosition.x,
+      y: cardPosition.y,
+      onComplete: () => {
+        this.highlightScoringComponents(this.currentPossibleMove)
+        this.emitCurrentCardChange('moveCard')
+      }
+    })
+  }
+
+  private snapBackCurrentCard(): void {
+    const placedCard = this.currentPossibleMove.placedCard
+    const cardPosition = this.getCardPosition(placedCard.row, placedCard.col)
+    this.tweens.add({
+      targets: this.currentCardContainer,
+      duration: 300,
+      x: cardPosition.x,
+      y: cardPosition.y,
+      onComplete: () => {
+        this.highlightScoringComponents(this.currentPossibleMove)
+      }
+    })
   }
 
   private rotateCurrentCard(rotationAngle: number): void {
@@ -157,14 +179,6 @@ export abstract class BoardScene extends Phaser.Scene {
         }
       })
     }
-  }
-
-  private snapBackCurrentCard(): void {
-    const placedCard = this.currentPossibleMove.placedCard
-    const cardPosition = this.getCardPosition(placedCard.row, placedCard.col)
-    // TODO: animate the position change ?
-    this.currentCardContainer.setPosition(cardPosition.x, cardPosition.y)
-    this.highlightScoringComponents(this.currentPossibleMove)
   }
 
   public init() {
@@ -287,6 +301,8 @@ export abstract class BoardScene extends Phaser.Scene {
 
     const boardRange = this.getBoardRange(this.board)
 
+    this.cameras.main.centerOn(boardRange.centreX, boardRange.centreY)
+
     const scaleX = width / boardRange.width
     const scaleY = height / boardRange.height
     const scale = Math.min(scaleX, scaleY)
@@ -297,9 +313,6 @@ export abstract class BoardScene extends Phaser.Scene {
       duration: 1000,
       ease: 'Expo.Out'
     })
-
-    // TODO: do this when the tween is complete ?
-    this.cameras.main.centerOn(boardRange.centreX, boardRange.centreY)
   }
 
   private onWake() {

@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser'
 
-import { BoardScene, BoardSceneConfig, HIGHLIGHT_DEPTH } from './boardScene'
+import { BoardScene, BoardSceneConfig, HIGHLIGHT_DEPTH, HIGHLIGHT_COLOUR } from './boardScene'
 import { CommonAdapter, CommonBoardRange } from './types'
 
 import { Board } from './hexago-lib/board'
@@ -35,9 +35,6 @@ const COLOUR_MAP = new Map([
   [Colour.Orange, 0xFF8C00],
   [Colour.Purple, 0x800080]
 ])
-
-// TODO: move to BoardScene ?
-const HIGHLIGHT_COLOUR = 0xFF00FF
 
 // https://www.quora.com/How-can-you-find-the-coordinates-in-a-hexagon
 const calculateHexagonPoints = (cx: number, cy: number, r: number): Phaser.Geom.Point[] => {
@@ -243,8 +240,8 @@ export class HexagoBoardScene extends BoardScene {
   }
 
   protected getSnapPosition(x: number, y: number): Cell {
-    const row = Math.round(y / ROW_HEIGHT)
-    const col = Math.round(x / COL_WIDTH)
+    const row = Phaser.Math.Snap.To(y, ROW_HEIGHT, 0, true)
+    const col = Phaser.Math.Snap.To(x, COL_WIDTH, 0, true)
     return new Cell(row, col)
   }
 

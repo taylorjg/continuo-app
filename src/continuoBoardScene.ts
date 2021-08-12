@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser'
 
-import { BoardScene, BoardSceneConfig, HIGHLIGHT_DEPTH } from './boardScene'
+import { BoardScene, BoardSceneConfig, HIGHLIGHT_DEPTH, HIGHLIGHT_COLOUR } from './boardScene'
 import { CommonAdapter, CommonBoardRange } from './types'
 
 import { Board } from './continuo-lib/board'
@@ -20,7 +20,6 @@ const EIGHTH_CARD_SIZE = CARD_SIZE / 8
 const NUM_MARGIN_CELLS = 5
 
 const HIGHLIGHT_LINE_WIDTH = CELL_SIZE / 5
-const HIGHLIGHT_COLOUR = 0xFF00FF
 
 const COLOUR_MAP = new Map([
   [Colour.Red, 0xFF0000],
@@ -104,9 +103,8 @@ export class ContinuoBoardScene extends BoardScene {
   }
 
   protected getSnapPosition(x: number, y: number): Cell {
-    // TODO: use Phaser.Math.Snap.To ?
-    const row = Math.round(y / QUARTER_CARD_SIZE)
-    const col = Math.round(x / QUARTER_CARD_SIZE)
+    const row = Phaser.Math.Snap.To(y, QUARTER_CARD_SIZE, 0, true)
+    const col = Phaser.Math.Snap.To(x, QUARTER_CARD_SIZE, 0, true)
     return new Cell(row - 2, col - 2)
   }
 
