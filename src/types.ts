@@ -8,9 +8,9 @@ export interface IBoardScene {
 }
 
 export type CommonAdapter = {
+  deck: CommonDeck
   originalCards: readonly CommonCard[]
   emptyBoard: CommonBoard
-  createDeck(): CommonDeck
   evaluateCard: (board: CommonBoard, card: CommonCard) => CommonPossibleMove[]
   placedCardRotateCW(placedCard: CommonPlacedCard): CommonPlacedCard
   placedCardRotateCCW(placedCard: CommonPlacedCard): CommonPlacedCard

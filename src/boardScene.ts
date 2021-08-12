@@ -41,7 +41,7 @@ export abstract class BoardScene extends Phaser.Scene {
     super(sceneName)
     this.boardSceneConfig = boardSceneConfig
     this.adapter = adapter
-    this.deck = this.adapter.createDeck()
+    this.deck = this.adapter.deck
     this.board = this.adapter.emptyBoard
     this.cardSpritesMap = new Map<CommonCard, Phaser.GameObjects.Sprite>()
     this.scoringComponentHighlights = []

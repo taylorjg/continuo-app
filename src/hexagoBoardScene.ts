@@ -180,11 +180,9 @@ const rotationToAngle = (rotation: Rotation): number => {
 }
 
 const adapter: CommonAdapter = {
+  deck: new Deck(),
   originalCards: Deck.originalCards,
   emptyBoard: Board.empty,
-  createDeck(): Deck {
-    return new Deck()
-  },
   evaluateCard(board: Board, card: Card): PossibleMove[] {
     return evaluateCard(board, card)
   },

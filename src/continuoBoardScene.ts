@@ -44,11 +44,9 @@ const drawCard = (graphics: Phaser.GameObjects.Graphics, card: Card): void => {
 }
 
 const adapter: CommonAdapter = {
+  deck: new Deck(),
   originalCards: Deck.originalCards,
   emptyBoard: Board.empty,
-  createDeck(): Deck {
-    return new Deck()
-  },
   evaluateCard(board: Board, card: Card): PossibleMove[] {
     return evaluateCard(board, card)
   },
