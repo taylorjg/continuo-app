@@ -260,7 +260,7 @@ export class HexagoBoardScene extends BoardScene {
     return currentCardHighlight
   }
 
-  protected createScoringComponentHighlights(currentPossibleMove: PossibleMove): Phaser.GameObjects.Shape[] {
+  protected createScoringHighlights(currentPossibleMove: PossibleMove): Phaser.GameObjects.Shape[] {
     const shapes: Phaser.GameObjects.Shape[] = []
     currentPossibleMove.matches.forEach((match: Match) => {
       match.coloursMatch && this.highlightMatchingColours(match, shapes)

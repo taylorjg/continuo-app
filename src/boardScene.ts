@@ -35,7 +35,7 @@ export abstract class BoardScene extends Phaser.Scene {
   private currentPossibleMove: CommonPossibleMove
   private cardSpritesMap: Map<CommonCard, Phaser.GameObjects.Sprite>
   private currentCardContainer: Phaser.GameObjects.Container
-  private scoringComponentHighlights: Phaser.GameObjects.Shape[]
+  private scoringHighlights: Phaser.GameObjects.Shape[]
 
   constructor(sceneName: string, boardSceneConfig: BoardSceneConfig, adapter: CommonAdapter) {
     super(sceneName)
@@ -44,7 +44,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.deck = this.adapter.deck
     this.board = this.adapter.emptyBoard
     this.cardSpritesMap = new Map<CommonCard, Phaser.GameObjects.Sprite>()
-    this.scoringComponentHighlights = []
+    this.scoringHighlights = []
   }
 
   protected abstract getInitialPlacedCards(deck: CommonDeck, board: CommonBoard): Generator<CommonPlacedCard, void, CommonBoard>
@@ -53,17 +53,17 @@ export abstract class BoardScene extends Phaser.Scene {
   protected abstract drawCard(graphics: Phaser.GameObjects.Graphics, card: CommonCard): void
   protected abstract getPlacedCardRotationAngle(placedCard: CommonPlacedCard): number
   protected abstract createCurrentCardHighlight(): Phaser.GameObjects.GameObject
-  protected abstract createScoringComponentHighlights(currentPossibleMove: CommonPossibleMove): Phaser.GameObjects.Shape[]
+  protected abstract createScoringHighlights(currentPossibleMove: CommonPossibleMove): Phaser.GameObjects.Shape[]
   protected abstract getBoardRange(board: CommonBoard): CommonBoardRange
 
-  private highlightScoringComponents(currentPossibleMove: CommonPossibleMove): void {
-    this.scoringComponentHighlights = this.createScoringComponentHighlights(currentPossibleMove)
-    this.scoringComponentHighlights.forEach(highlight => this.add.existing(highlight))
+  private highlightScoring(currentPossibleMove: CommonPossibleMove): void {
+    this.scoringHighlights = this.createScoringHighlights(currentPossibleMove)
+    this.scoringHighlights.forEach(highlight => this.add.existing(highlight))
   }
 
-  private unhighlightScoringComponents(): void {
-    this.scoringComponentHighlights.forEach(highlight => highlight.destroy())
-    this.scoringComponentHighlights = []
+  private unhighlightScoring(): void {
+    this.scoringHighlights.forEach(highlight => highlight.destroy())
+    this.scoringHighlights = []
   }
 
   private emitCurrentCardChange(eventName: string): void {
@@ -76,97 +76,96 @@ export abstract class BoardScene extends Phaser.Scene {
     }
   }
 
-  private placeInitialCard(placedCard: CommonPlacedCard): void {
-    this.board = this.board.placeCard(placedCard)
+  private showCardSpriteDirectly(placedCard: CommonPlacedCard) {
+
     const cardSprite = this.cardSpritesMap.get(placedCard.card)
     const cardPosition = this.getCardPosition(placedCard.row, placedCard.col)
     const angle = this.getPlacedCardRotationAngle(placedCard)
+
     cardSprite.setPosition(cardPosition.x, cardPosition.y)
     cardSprite.setAngle(angle)
     cardSprite.setVisible(true)
+
     this.currentCardContainer.remove(cardSprite)
+    this.currentCardContainer.setVisible(false)
   }
 
-  private placeCurrentCardTentative(possibleMove: CommonPossibleMove, playerType: PlayerType): void {
-    this.currentPossibleMove = possibleMove
-    const placedCard = this.currentPossibleMove.placedCard
-    const savedBoard = this.board
-    this.board = this.board.placeCard(placedCard)
-    this.resize()
-    this.board = savedBoard
+  private showCardSpriteInContainer(placedCard: CommonPlacedCard, playerType: PlayerType) {
+
     const cardSprite = this.cardSpritesMap.get(placedCard.card)
     const cardPosition = this.getCardPosition(placedCard.row, placedCard.col)
     const angle = this.getPlacedCardRotationAngle(placedCard)
+
     cardSprite.setPosition(0, 0)
     cardSprite.setAngle(0)
     cardSprite.setVisible(true)
+
     this.currentCardContainer.addAt(cardSprite, 0)
     this.currentCardContainer.setPosition(cardPosition.x, cardPosition.y)
     this.currentCardContainer.setAngle(angle)
     this.currentCardContainer.setVisible(true)
+
     if (playerType == PlayerType.Human) {
       this.currentCardContainer.setInteractive()
     } else {
       this.currentCardContainer.disableInteractive()
     }
-    this.highlightScoringComponents(this.currentPossibleMove)
+  }
+
+  private placeInitialCard(placedCard: CommonPlacedCard): void {
+    this.board = this.board.placeCard(placedCard)
+    this.showCardSpriteDirectly(placedCard)
+  }
+
+  private placeCurrentCardTentative(possibleMove: CommonPossibleMove, playerType: PlayerType): void {
+    this.currentPossibleMove = possibleMove
+    const placedCard = this.currentPossibleMove.placedCard
+    this.rescale(this.board.placeCard(placedCard))
+    this.showCardSpriteInContainer(placedCard, playerType)
+    this.highlightScoring(this.currentPossibleMove)
     this.emitCurrentCardChange(playerType == PlayerType.Computer ? 'startComputerMove' : 'nextCard')
   }
 
   private placeCurrentCardFinal(playerType: PlayerType): void {
     const placedCard = this.currentPossibleMove.placedCard
     this.board = this.board.placeCard(placedCard)
-    const cardSprite = this.cardSpritesMap.get(placedCard.card)
-    const cardPosition = this.getCardPosition(placedCard.row, placedCard.col)
-    const angle = this.getPlacedCardRotationAngle(placedCard)
-    this.currentCardContainer.remove(cardSprite)
-    this.currentCardContainer.setVisible(false)
-    cardSprite.setPosition(cardPosition.x, cardPosition.y)
-    cardSprite.setAngle(angle)
-    cardSprite.setVisible(true)
-    this.unhighlightScoringComponents()
+    this.showCardSpriteDirectly(placedCard)
+    this.unhighlightScoring()
     this.emitCurrentCardChange(playerType == PlayerType.Computer ? 'endComputerMove' : 'placeCard')
     this.currentPossibleMove = null
   }
 
-  private moveCurrentCard(possibleMove: CommonPossibleMove): void {
-    this.currentPossibleMove = possibleMove
+  private repositionCurrentCardContainer(possibleMove?: CommonPossibleMove): void {
+
+    if (possibleMove) {
+      this.currentPossibleMove = possibleMove
+    }
+
     const placedCard = this.currentPossibleMove.placedCard
     const cardPosition = this.getCardPosition(placedCard.row, placedCard.col)
+
+    const duration = possibleMove ? 75 : 300
+
     this.tweens.add({
       targets: this.currentCardContainer,
-      duration: 75,
+      duration,
       x: cardPosition.x,
       y: cardPosition.y,
       onComplete: () => {
-        this.highlightScoringComponents(this.currentPossibleMove)
+        this.highlightScoring(this.currentPossibleMove)
         this.emitCurrentCardChange('moveCard')
       }
     })
   }
 
-  private snapBackCurrentCard(): void {
-    const placedCard = this.currentPossibleMove.placedCard
-    const cardPosition = this.getCardPosition(placedCard.row, placedCard.col)
-    this.tweens.add({
-      targets: this.currentCardContainer,
-      duration: 300,
-      x: cardPosition.x,
-      y: cardPosition.y,
-      onComplete: () => {
-        this.highlightScoringComponents(this.currentPossibleMove)
-      }
-    })
-  }
-
-  private rotateCurrentCard(rotationAngle: number): void {
+  private rotateCurrentCardContainer(rotationAngle: number): void {
     const newPlacedCard = rotationAngle > 0
       ? this.adapter.placedCardRotateCW(this.currentPossibleMove.placedCard)
       : this.adapter.placedCardRotateCCW(this.currentPossibleMove.placedCard)
     const possibleMove = this.findPossibleMove(newPlacedCard)
     if (possibleMove) {
       this.boardSceneConfig.eventEmitter.emit('startRotateCard')
-      this.unhighlightScoringComponents()
+      this.unhighlightScoring()
       this.tweens.add({
         targets: this.currentCardContainer,
         angle: this.currentCardContainer.angle + rotationAngle,
@@ -174,7 +173,7 @@ export abstract class BoardScene extends Phaser.Scene {
         ease: 'Sine.InOut',
         onComplete: () => {
           this.currentPossibleMove = possibleMove
-          this.highlightScoringComponents(this.currentPossibleMove)
+          this.highlightScoring(this.currentPossibleMove)
           this.emitCurrentCardChange('endRotateCard')
         }
       })
@@ -223,7 +222,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.input.on('dragstart', (
       _pointer: Phaser.Input.Pointer,
       _gameObject: Phaser.GameObjects.GameObject) => {
-      this.unhighlightScoringComponents()
+      this.unhighlightScoring()
     })
 
     this.input.on('drag', (
@@ -241,11 +240,7 @@ export abstract class BoardScene extends Phaser.Scene {
       const { row, col } = this.getSnapPosition(this.currentCardContainer.x, this.currentCardContainer.y)
       const newPlacedCard = this.adapter.placedCardMoveTo(this.currentPossibleMove.placedCard, row, col)
       const possibleMove = this.findPossibleMove(newPlacedCard)
-      if (possibleMove) {
-        this.moveCurrentCard(possibleMove)
-      } else {
-        this.snapBackCurrentCard()
-      }
+      this.repositionCurrentCardContainer(possibleMove)
     })
 
     this.events.on('wake', this.onWake, this)
@@ -278,7 +273,7 @@ export abstract class BoardScene extends Phaser.Scene {
 
     this.cardSpritesMap.forEach(cardSprite => cardSprite.setVisible(false))
     this.currentCardContainer.setVisible(false)
-    this.unhighlightScoringComponents()
+    this.unhighlightScoring()
     this.deck.reset()
     this.board = this.adapter.emptyBoard
     this.possibleMoves = []
@@ -294,17 +289,18 @@ export abstract class BoardScene extends Phaser.Scene {
   }
 
   protected resize(): void {
-
     const width = window.innerWidth
     const height = window.innerHeight
     this.scale.resize(width, height)
+    this.rescale(this.board)
+  }
 
-    const boardRange = this.getBoardRange(this.board)
+  private rescale(board: CommonBoard): void {
 
-    this.cameras.main.centerOn(boardRange.centreX, boardRange.centreY)
+    const boardRange = this.getBoardRange(board)
 
-    const scaleX = width / boardRange.width
-    const scaleY = height / boardRange.height
+    const scaleX = window.innerWidth / boardRange.width
+    const scaleY = window.innerHeight / boardRange.height
     const scale = Math.min(scaleX, scaleY)
 
     this.tweens.add({
@@ -313,6 +309,8 @@ export abstract class BoardScene extends Phaser.Scene {
       duration: 1000,
       ease: 'Expo.Out'
     })
+
+    this.cameras.main.centerOn(boardRange.centreX, boardRange.centreY)
   }
 
   private onWake() {
@@ -345,12 +343,12 @@ export abstract class BoardScene extends Phaser.Scene {
 
   public onRotateCW(): void {
     log.debug('[BoardScene#onRotateCW]')
-    this.rotateCurrentCard(+this.boardSceneConfig.ROTATION_ANGLE)
+    this.rotateCurrentCardContainer(+this.boardSceneConfig.ROTATION_ANGLE)
   }
 
   public onRotateCCW(): void {
     log.debug('[BoardScene#onRotateCCW]')
-    this.rotateCurrentCard(-this.boardSceneConfig.ROTATION_ANGLE)
+    this.rotateCurrentCardContainer(-this.boardSceneConfig.ROTATION_ANGLE)
   }
 
   public onPlaceCard(): void {

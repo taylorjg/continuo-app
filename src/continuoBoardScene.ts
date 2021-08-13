@@ -123,7 +123,7 @@ export class ContinuoBoardScene extends BoardScene {
     return currentCardHighlight
   }
 
-  protected createScoringComponentHighlights(currentPossibleMove: PossibleMove): Phaser.GameObjects.Shape[] {
+  protected createScoringHighlights(currentPossibleMove: PossibleMove): Phaser.GameObjects.Shape[] {
     return currentPossibleMove.chains.map(chain => {
       const points = chain.cells.map(cell => this.getCellPosition(cell.row, cell.col))
       const polygon = new Phaser.GameObjects.Polygon(this, 0, 0, points)
