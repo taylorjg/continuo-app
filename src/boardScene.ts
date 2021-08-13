@@ -331,14 +331,13 @@ export abstract class BoardScene extends Phaser.Scene {
     this.placeCurrentCardTentative(possibleMove, PlayerType.Human)
   }
 
-  public async onComputerMove(): Promise<void> {
+  public onComputerMove(): void {
     log.debug('[BoardScene#onComputerMove]')
     const card = this.deck.nextCard()
     this.possibleMoves = this.adapter.evaluateCard(this.board, card)
     const possibleMove = this.chooseRandomBestScoreMove(this.possibleMoves)
     this.placeCurrentCardTentative(possibleMove, PlayerType.Computer)
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    this.placeCurrentCardFinal(PlayerType.Computer)
+    this.time.delayedCall(2000, () => this.placeCurrentCardFinal(PlayerType.Computer))
   }
 
   public onRotateCW(): void {

@@ -1,7 +1,7 @@
 export interface IBoardScene {
   onRestart(): void
   onNextCard(): void
-  onComputerMove(): Promise<void>
+  onComputerMove(): void
   onRotateCW(): void
   onRotateCCW(): void
   onPlaceCard(): void

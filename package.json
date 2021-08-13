@@ -1,7 +1,7 @@
 {
-  "name": "continuo-app-phaser-poc",
-  "version": "0.0.25",
-  "description": "Learning Phaser 3 by making a Continuo app",
+  "name": "continuo-app",
+  "version": "0.0.26",
+  "description": "Continuo and Hexago game using Phaser 3 and TypeScript",
   "main": "index.js",
   "scripts": {
     "build": "webpack",
