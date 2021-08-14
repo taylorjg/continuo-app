@@ -1,3 +1,5 @@
+import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
+
 export interface IBoardScene {
   onRestart(): void
   onNextCard(): void
@@ -6,6 +8,8 @@ export interface IBoardScene {
   onRotateCCW(): void
   onPlaceCard(): void
 }
+
+export type SceneWithRexUI = Phaser.Scene & { rexUI: RexUIPlugin }
 
 export type CommonAdapter = {
   deck: CommonDeck
