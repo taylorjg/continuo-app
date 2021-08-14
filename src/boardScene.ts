@@ -36,6 +36,7 @@ export abstract class BoardScene extends Phaser.Scene {
   private cardSpritesMap: Map<CommonCard, Phaser.GameObjects.Sprite>
   private currentCardContainer: Phaser.GameObjects.Container
   private scoringHighlights: Phaser.GameObjects.Shape[]
+  private rotating: boolean
 
   constructor(sceneName: string, boardSceneConfig: BoardSceneConfig, adapter: CommonAdapter) {
     super(sceneName)
@@ -45,6 +46,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.board = this.adapter.emptyBoard
     this.cardSpritesMap = new Map<CommonCard, Phaser.GameObjects.Sprite>()
     this.scoringHighlights = []
+    this.rotating = false
   }
 
   protected abstract getInitialPlacedCards(deck: CommonDeck, board: CommonBoard): Generator<CommonPlacedCard, void, CommonBoard>
@@ -159,6 +161,9 @@ export abstract class BoardScene extends Phaser.Scene {
   }
 
   private rotateCurrentCardContainer(rotationAngle: number): void {
+    if (this.rotating) {
+      return
+    }
     const newPlacedCard = rotationAngle > 0
       ? this.adapter.placedCardRotateCW(this.currentPossibleMove.placedCard)
       : this.adapter.placedCardRotateCCW(this.currentPossibleMove.placedCard)
@@ -166,6 +171,7 @@ export abstract class BoardScene extends Phaser.Scene {
     if (possibleMove) {
       this.boardSceneConfig.eventEmitter.emit('startRotateCard')
       this.unhighlightScoring()
+      this.rotating = true
       this.tweens.add({
         targets: this.currentCardContainer,
         angle: this.currentCardContainer.angle + rotationAngle,
@@ -175,6 +181,7 @@ export abstract class BoardScene extends Phaser.Scene {
           this.currentPossibleMove = possibleMove
           this.highlightScoring(this.currentPossibleMove)
           this.emitCurrentCardChange('endRotateCard')
+          this.rotating = false
         }
       })
     }
@@ -244,6 +251,14 @@ export abstract class BoardScene extends Phaser.Scene {
     })
 
     this.events.on('wake', this.onWake, this)
+
+    this.input.keyboard.on('keydown-LEFT', () => {
+      this.onRotateCCW()
+    })
+
+    this.input.keyboard.on('keydown-RIGHT', () => {
+      this.onRotateCW()
+    })
   }
 
   private findPossibleMove(placedCard: CommonPlacedCard): CommonPossibleMove {
