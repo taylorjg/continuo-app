@@ -16,8 +16,6 @@ const createLabel = (scene: Phaser.Scene, text: string) => {
 const createConfirmationDialog = (scene: Phaser.Scene): RexUIPlugin.Dialog => {
   const rexUI = (<SceneWithRexUI>scene).rexUI
   return rexUI.add.dialog({
-    x: window.innerWidth / 2,
-    y: window.innerHeight / 2,
     background: rexUI.add.roundRectangle(0, 0, 0, 0, 5, 0x1565c0),
     content: createLabel(scene, 'Abandon the current game ?'),
     actions: [createLabel(scene, 'Yes'), createLabel(scene, 'No')],
@@ -36,10 +34,15 @@ const createConfirmationDialog = (scene: Phaser.Scene): RexUIPlugin.Dialog => {
 
 class ConfirmationDialogScene extends Phaser.Scene {
 
+  onYes?: Function
+  onNo?: Function
   overlay: Phaser.GameObjects.Rectangle
+  dialog: RexUIPlugin.Dialog
 
-  constructor() {
+  constructor(onYes?: Function, onNo?: Function) {
     super('ConfirmationDialog')
+    this.onYes = onYes
+    this.onNo = onNo
   }
 
   create() {
@@ -49,40 +52,53 @@ class ConfirmationDialogScene extends Phaser.Scene {
     window.addEventListener('resize', onResize)
     window.addEventListener('orientationchange', onOrientationChange)
 
-    this.overlay = this.add.rectangle(0, 0, window.innerWidth, window.innerHeight, 0x000000, 0.5)
+    this.overlay = this.add.rectangle(0, 0, 0, 0, 0x000000, 0.5)
       .setOrigin(0, 0)
       .setInteractive()
+
+    this.dialog = createConfirmationDialog(this).layout().popUp(100)
+
+    this.dialog.on('button.click', (
+      _button: Phaser.GameObjects.GameObject,
+      _groupName: string,
+      index: number,
+      _pointer: Phaser.Input.Pointer,
+      _event: any) => {
+      this.scene.remove()
+      switch (index) {
+        case 0:
+          this.onYes && this.onYes()
+          break
+        case 1:
+          this.onNo && this.onNo()
+          break
+      }
+    })
+
+    this.rearrange()
   }
 
   private resize(): void {
     const width = window.innerWidth
     const height = window.innerHeight
     this.scale.resize(width, height)
-    if (this.overlay.geom) {
+    this.rearrange()
+  }
+
+  private rearrange() {
+    const width = window.innerWidth
+    const height = window.innerHeight
+    if (this.overlay.visible) {
       this.overlay.setSize(width, height)
+    }
+    if (this.dialog.visible) {
+      Phaser.Display.Align.In.Center(this.dialog, this.overlay)
     }
   }
 }
 
 export class ConfirmationDialog {
   constructor(parentScene: Phaser.Scene, onYes?: Function, onNo?: Function) {
-    const dialogScene = parentScene.scene.add(undefined, new ConfirmationDialogScene(), true)
-    const dialog = createConfirmationDialog(dialogScene).layout().popUp(100)
-    dialog.on('button.click', (
-      _button: Phaser.GameObjects.GameObject,
-      _groupName: string,
-      index: number,
-      _pointer: Phaser.Input.Pointer,
-      _event: any) => {
-      dialogScene.scene.remove()
-      switch (index) {
-        case 0:
-          onYes && onYes()
-          break
-        case 1:
-          onNo && onNo()
-          break
-      }
-    })
+    parentScene.scene.add(undefined, new ConfirmationDialogScene(onYes, onNo), true)
   }
 }
