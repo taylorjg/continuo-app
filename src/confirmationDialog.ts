@@ -76,6 +76,10 @@ class ConfirmationDialogScene extends Phaser.Scene {
     })
 
     this.rearrange()
+
+    this.input.keyboard.on('keydown-ESC', () => {
+      this.scene.remove()
+    })
   }
 
   private resize(): void {
