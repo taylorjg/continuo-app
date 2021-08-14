@@ -36,14 +36,31 @@ const createConfirmationDialog = (scene: Phaser.Scene): RexUIPlugin.Dialog => {
 
 class ConfirmationDialogScene extends Phaser.Scene {
 
+  overlay: Phaser.GameObjects.Rectangle
+
   constructor() {
     super('ConfirmationDialog')
   }
 
   create() {
-    this.add.rectangle(0, 0, window.innerWidth, window.innerHeight, 0x000000, 0.5)
+    const onResize = () => this.resize()
+    const onOrientationChange = () => this.resize()
+
+    window.addEventListener('resize', onResize)
+    window.addEventListener('orientationchange', onOrientationChange)
+
+    this.overlay = this.add.rectangle(0, 0, window.innerWidth, window.innerHeight, 0x000000, 0.5)
       .setOrigin(0, 0)
       .setInteractive()
+  }
+
+  private resize(): void {
+    const width = window.innerWidth
+    const height = window.innerHeight
+    this.scale.resize(width, height)
+    if (this.overlay.geom) {
+      this.overlay.setSize(width, height)
+    }
   }
 }
 
