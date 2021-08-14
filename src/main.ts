@@ -1,4 +1,5 @@
 import * as Phaser from 'phaser'
+import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import log from 'loglevel'
 import { HomeScene } from './homeScene'
 import { version } from '../package.json'
@@ -17,6 +18,13 @@ const gameConfig: Phaser.Types.Core.GameConfig = {
   parent: 'game',
   dom: {
     createContainer: true
+  },
+  plugins: {
+    scene: [{
+      key: 'rexUI',
+      plugin: RexUIPlugin,
+      mapping: 'rexUI'
+    }]
   }
 }
 
