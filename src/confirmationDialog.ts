@@ -18,9 +18,8 @@ const createConfirmationDialog = (scene: Phaser.Scene): RexUIPlugin.Dialog => {
   return rexUI.add.dialog({
     x: window.innerWidth / 2,
     y: window.innerHeight / 2,
-    width: 500,
-    background: rexUI.add.roundRectangle(0, 0, 100, 100, 5, 0x1565c0),
-    content: createLabel(scene, 'Are you sure you want to quit ?'),
+    background: rexUI.add.roundRectangle(0, 0, 0, 0, 5, 0x1565c0),
+    content: createLabel(scene, 'Abandon the current game ?'),
     actions: [createLabel(scene, 'Yes'), createLabel(scene, 'No')],
     space: {
       left: 20,
@@ -35,9 +34,22 @@ const createConfirmationDialog = (scene: Phaser.Scene): RexUIPlugin.Dialog => {
   })
 }
 
+class ConfirmationDialogScene extends Phaser.Scene {
+
+  constructor() {
+    super('ConfirmationDialog')
+  }
+
+  create() {
+    this.add.rectangle(0, 0, window.innerWidth, window.innerHeight, 0x000000, 0.5)
+      .setOrigin(0, 0)
+      .setInteractive()
+  }
+}
+
 export class ConfirmationDialog {
   constructor(parentScene: Phaser.Scene, onYes?: Function, onNo?: Function) {
-    const dialogScene = parentScene.scene.add(undefined, new Phaser.Scene('ConfirmationDialog'), true)
+    const dialogScene = parentScene.scene.add(undefined, new ConfirmationDialogScene(), true)
     const dialog = createConfirmationDialog(dialogScene).layout().popUp(100)
     dialog.on('button.click', (
       _button: Phaser.GameObjects.GameObject,
@@ -50,7 +62,7 @@ export class ConfirmationDialog {
         case 0:
           onYes && onYes()
           break
-        case 1: // no
+        case 1:
           onNo && onNo()
           break
       }
