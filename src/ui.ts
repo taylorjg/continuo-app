@@ -21,3 +21,29 @@ export const createDialogOverlay = (scene: Phaser.Scene) => {
     .setOrigin(0, 0)
     .setInteractive()
 }
+
+export const createCloseButton = (scene: Phaser.Scene): Phaser.GameObjects.Components.Transform => {
+
+  const container = new Phaser.GameObjects.Container(scene)
+
+  const arc = new Phaser.GameObjects.Arc(scene, 0, 0, 14)
+  arc.setStrokeStyle(2, 0xFFFFFF)
+  arc.setFillStyle(0x000000)
+  arc.setInteractive()
+
+  const d = 8
+  const line1 = new Phaser.GameObjects.Line(scene, 0, 0, -d, +d, +d, -d)
+  const line2 = new Phaser.GameObjects.Line(scene, 0, 0, -d, -d, +d, +d)
+  line1.setStrokeStyle(2, 0xFFFFFF)
+  line2.setStrokeStyle(2, 0xFFFFFF)
+  line2.setOrigin(0, 0)
+  line1.setOrigin(0, 0)
+
+  container.add(arc)
+  container.add(line1)
+  container.add(line2)
+
+  scene.add.existing(container)
+
+  return container
+}
