@@ -1,24 +1,13 @@
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
-
 import { SceneWithRexUI } from './types'
-
-const createLabel = (scene: Phaser.Scene, text: string) => {
-  const rexUI = (<SceneWithRexUI>scene).rexUI
-  return rexUI.add.label({
-    width: 40,
-    height: 40,
-    background: rexUI.add.roundRectangle(0, 0, 0, 0, 5, 0x5e92f3),
-    text: scene.add.text(0, 0, text, { fontSize: '24px' }),
-    space: { left: 10, right: 10, top: 10, bottom: 10 }
-  })
-}
+import * as ui from './ui'
 
 const createConfirmationDialog = (scene: Phaser.Scene): RexUIPlugin.Dialog => {
   const rexUI = (<SceneWithRexUI>scene).rexUI
   return rexUI.add.dialog({
-    background: rexUI.add.roundRectangle(0, 0, 0, 0, 5, 0x1565c0),
-    content: createLabel(scene, 'Abandon the current game ?'),
-    actions: [createLabel(scene, 'Yes'), createLabel(scene, 'No')],
+    background: rexUI.add.roundRectangle(0, 0, 0, 0, 5, ui.DIALOG_BACKGROUND_COLOUR),
+    content: ui.createLabel(scene, 'Abandon the current game ?'),
+    actions: [ui.createLabel(scene, 'Yes'), ui.createLabel(scene, 'No')],
     space: {
       left: 20,
       right: 20,
@@ -52,10 +41,7 @@ class ConfirmationDialogScene extends Phaser.Scene {
     window.addEventListener('resize', onResize)
     window.addEventListener('orientationchange', onOrientationChange)
 
-    this.overlay = this.add.rectangle(0, 0, 0, 0, 0x000000, 0.5)
-      .setOrigin(0, 0)
-      .setInteractive()
-
+    this.overlay = ui.createDialogOverlay(this)
     this.dialog = createConfirmationDialog(this).layout().popUp(100)
 
     this.dialog.on('button.click', (

@@ -12,7 +12,6 @@ export class HUDScene extends Phaser.Scene {
   currentPlayerScore: PlayerScore
 
   homeElement: HTMLButtonElement
-  restartElement: HTMLButtonElement
   rotateCWElement: HTMLButtonElement
   rotateCCWElement: HTMLButtonElement
   placeCardElement: HTMLButtonElement
@@ -54,9 +53,6 @@ export class HUDScene extends Phaser.Scene {
     let y = 0
 
     this.homeElement = this.makeButton(y, 'Home', this.onHomeClick, false)
-    y += GAP_Y
-
-    this.restartElement = this.makeButton(y, 'Restart', this.onRestartClick, false)
     y += GAP_Y
 
     this.rotateCWElement = this.makeButton(y, 'Rotate CW', this.onRotateCWClick, true)
@@ -127,15 +123,6 @@ export class HUDScene extends Phaser.Scene {
     })
   }
 
-  private onRestartClick(): void {
-    log.debug('[HUDScene#onRestartClick]')
-    new ConfirmationDialog(this, () => {
-      this.boardScene.onRestart()
-      this.turnManager.reset()
-      this.turnManager.step()
-    })
-  }
-
   private updateRemainingCards(arg: any): void {
     const numCardsLeft: number = <number>arg.numCardsLeft
     this.remainingCardsText.setText(`Remaining cards: ${numCardsLeft}`)
@@ -167,7 +154,6 @@ export class HUDScene extends Phaser.Scene {
     const isNoMove = this.currentPlayerScore == null
     const isComputerMove = this.currentPlayerScore?.player.type == PlayerType.Computer
     this.homeElement.disabled = isComputerMove
-    this.restartElement.disabled = isComputerMove
     this.rotateCWElement.disabled = isComputerMove || isNoMove
     this.rotateCCWElement.disabled = isComputerMove || isNoMove
     this.placeCardElement.disabled = isComputerMove || isNoMove
@@ -247,7 +233,6 @@ export class HUDScene extends Phaser.Scene {
   private onStartRotateCard(arg: any): void {
     log.debug('[HUDScene#onStartRotateCard]', arg)
     this.homeElement.disabled = true
-    this.restartElement.disabled = true
     this.rotateCWElement.disabled = true
     this.rotateCCWElement.disabled = true
     this.placeCardElement.disabled = true
