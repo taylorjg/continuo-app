@@ -27,7 +27,6 @@ class ConfirmationDialogScene extends Phaser.Scene {
   onNo?: Function
   overlay: Phaser.GameObjects.Rectangle
   dialog: RexUIPlugin.Dialog
-  // closeButton: Phaser.GameObjects.Components.Transform
 
   constructor(onYes?: Function, onNo?: Function) {
     super('ConfirmationDialog')
@@ -44,7 +43,6 @@ class ConfirmationDialogScene extends Phaser.Scene {
 
     this.overlay = ui.createDialogOverlay(this)
     this.dialog = createConfirmationDialog(this).layout().popUp(0)
-    // this.closeButton = ui.createCloseButton(this)
 
     this.dialog.on('button.click', (
       _button: Phaser.GameObjects.GameObject,
@@ -68,15 +66,6 @@ class ConfirmationDialogScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-ESC', () => {
       this.closeDialog()
     })
-
-    // this.input.on('gameobjectdown', (
-    //   _pointer: Phaser.Input.Pointer,
-    //   gameObject: Phaser.GameObjects.GameObject,
-    //   _event: Phaser.Types.Input.EventData) => {
-    //   if (gameObject.name == 'closeButton') {
-    //     this.closeDialog()
-    //   }
-    // })
   }
 
   private closeDialog(): void {
@@ -102,9 +91,6 @@ class ConfirmationDialogScene extends Phaser.Scene {
     if (this.dialog.visible) {
       Phaser.Display.Align.In.Center(this.dialog, this.overlay)
     }
-
-    // const background = <Phaser.GameObjects.Shape>this.dialog.getElement('background')
-    // this.closeButton.setPosition(windowWidth / 2 + background.width / 2, windowHeight / 2 - background.height / 2)
   }
 }
 

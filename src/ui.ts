@@ -22,12 +22,12 @@ export const createDialogOverlay = (scene: Phaser.Scene) => {
     .setInteractive()
 }
 
-export const createCloseButton = (scene: Phaser.Scene): Phaser.GameObjects.Components.Transform => {
+export const createCloseButton = (scene: Phaser.Scene): Phaser.GameObjects.GameObject => {
   const icon = new Phaser.GameObjects.Sprite(scene, 0, 0, 'circlex')
   const arc = new Phaser.GameObjects.Arc(scene, 0, 0, icon.width / 2 - 1)
   arc.name = 'closeButton'
   arc.setFillStyle(0xFFFFFF)
-  arc.setInteractive()
+  arc.setInteractive({ useHandCursor: true })
   const container = new Phaser.GameObjects.Container(scene)
   container.add(arc)
   container.add(icon)

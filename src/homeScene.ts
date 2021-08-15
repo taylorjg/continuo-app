@@ -5,12 +5,16 @@ import { ContinuoBoardScene } from './continuoBoardScene'
 import { HexagoBoardScene } from './hexagoBoardScene'
 import { continuoCardImage } from './continuoCardImage'
 import { hexagoCardImage } from './hexagoCardImage'
+import { BaseDialog } from './baseDialog'
+import { SceneWithRexUI } from './types'
+import * as ui from './ui'
 
 export class HomeScene extends Phaser.Scene {
 
   eventEmitter: Phaser.Events.EventEmitter
   playContinuoButton: Phaser.GameObjects.DOMElement
   playHexagoButton: Phaser.GameObjects.DOMElement
+  playersButton: Phaser.GameObjects.Sprite
   hudScene: Phaser.Scene
   continuoBoardScene: Phaser.Scene
   hexagoBoardScene: Phaser.Scene
@@ -58,6 +62,8 @@ export class HomeScene extends Phaser.Scene {
     this.load.audio('best-move', 'assets/sounds/best-move.wav')
     this.load.audio('illegal-move', 'assets/sounds/illegal-move.wav')
     this.load.audio('rotate-card', 'assets/sounds/rotate-card.wav')
+    this.load.image('house', 'assets/icons/53-house@2x.png')
+    this.load.image('group', 'assets/icons/112-group@2x.png')
     this.load.image('circlex', 'assets/icons/298-circlex@2x.png')
   }
 
@@ -78,6 +84,14 @@ export class HomeScene extends Phaser.Scene {
 
     this.playContinuoButton = this.makeButton('Play Continuo', continuoCardImage, this.onPlayContinuo, [100, 100])
     this.playHexagoButton = this.makeButton('Play Hexago', hexagoCardImage, this.onPlayHexago, [173 / 2, 100])
+
+    this.playersButton = this.add.sprite(0, 0, 'group')
+    this.playersButton.setOrigin(1, 0)
+    this.playersButton.setInteractive({ useHandCursor: true })
+    this.playersButton.name = 'playersButton'
+
+    this.input.on('gameobjectdown', this.onClick, this)
+
     this.repositionButtons()
   }
 
@@ -88,6 +102,7 @@ export class HomeScene extends Phaser.Scene {
     const centreY = height / 2
     this.playContinuoButton.setPosition(centreX, centreY - 75)
     this.playHexagoButton.setPosition(centreX, centreY + 75)
+    this.playersButton.setPosition(width - 10, 10)
   }
 
   private resize(): void {
@@ -131,6 +146,30 @@ export class HomeScene extends Phaser.Scene {
   private launchIfNotSleeping(scene: Phaser.Scene): void {
     if (!this.scene.isSleeping(scene)) {
       this.scene.launch(scene)
+    }
+  }
+
+  private onClick(
+    _pointer: Phaser.Input.Pointer,
+    gameObject: Phaser.GameObjects.GameObject,
+    _event: Phaser.Types.Input.EventData
+  ): void {
+    if (gameObject.name == 'playersButton') {
+      new BaseDialog(this, 'PlayersDialog', (baseDialogScene: SceneWithRexUI) => {
+        return baseDialogScene.rexUI.add.dialog({
+          background: baseDialogScene.rexUI.add.roundRectangle(0, 0, 0, 0, 5, ui.DIALOG_BACKGROUND_COLOUR),
+          content: ui.createLabel(baseDialogScene, 'Placeholder for Players dialog'),
+          space: {
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: 20,
+            content: 25
+          },
+          align: { title: 'center', actions: 'right' },
+          click: { mode: 'release' }
+        })
+      })
     }
   }
 }

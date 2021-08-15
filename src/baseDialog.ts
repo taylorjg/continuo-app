@@ -1,12 +1,12 @@
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
-import { SceneWithRexUI } from './types'
 import * as ui from './ui'
 
-class ConfirmationDialogScene extends Phaser.Scene {
+class BaseDialogScene extends Phaser.Scene {
 
   createDialogContent: Function
   overlay: Phaser.GameObjects.Rectangle
   dialog: RexUIPlugin.Dialog
+  closeButton: Phaser.GameObjects.GameObject
 
   constructor(key: string, createDialogContent: Function) {
     super(key)
@@ -21,30 +21,27 @@ class ConfirmationDialogScene extends Phaser.Scene {
     window.addEventListener('orientationchange', onOrientationChange)
 
     this.overlay = ui.createDialogOverlay(this)
-    this.dialog = this.createDialogContent(this).layout().popUp(100)
-
-    // this.dialog.on('button.click', (
-    //   _button: Phaser.GameObjects.GameObject,
-    //   _groupName: string,
-    //   index: number,
-    //   _pointer: Phaser.Input.Pointer,
-    //   _event: any) => {
-    //   this.scene.remove()
-    //   switch (index) {
-    //     case 0:
-    //       this.onYes && this.onYes()
-    //       break
-    //     case 1:
-    //       this.onNo && this.onNo()
-    //       break
-    //   }
-    // })
+    this.dialog = this.createDialogContent(this).layout().popUp(0)
+    this.closeButton = ui.createCloseButton(this)
 
     this.rearrange()
 
     this.input.keyboard.on('keydown-ESC', () => {
-      this.scene.remove()
+      this.closeDialog()
     })
+
+    this.input.on('gameobjectdown', (
+      _pointer: Phaser.Input.Pointer,
+      gameObject: Phaser.GameObjects.GameObject,
+      _event: Phaser.Types.Input.EventData) => {
+      if (gameObject.name == 'closeButton') {
+        this.closeDialog()
+      }
+    })
+  }
+
+  private closeDialog(): void {
+    this.scene.remove()
   }
 
   private resize(): void {
@@ -55,13 +52,25 @@ class ConfirmationDialogScene extends Phaser.Scene {
   }
 
   private rearrange() {
-    const width = window.innerWidth
-    const height = window.innerHeight
+
+    const windowWidth = window.innerWidth
+    const windowHeight = window.innerHeight
+
     if (this.overlay.visible) {
-      this.overlay.setSize(width, height)
+      this.overlay.setSize(windowWidth, windowHeight)
     }
+
     if (this.dialog.visible) {
       Phaser.Display.Align.In.Center(this.dialog, this.overlay)
     }
+
+    const background = <Phaser.GameObjects.GameObject>this.dialog.getElement('background')
+    Phaser.Display.Align.To.RightTop(this.closeButton, background)
+  }
+}
+
+export class BaseDialog {
+  constructor(parentScene: Phaser.Scene, key: string, createDialogContent: Function) {
+    parentScene.scene.add(undefined, new BaseDialogScene(key, createDialogContent), true)
   }
 }
