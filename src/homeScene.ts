@@ -58,6 +58,7 @@ export class HomeScene extends Phaser.Scene {
     this.load.audio('best-move', 'assets/sounds/best-move.wav')
     this.load.audio('illegal-move', 'assets/sounds/illegal-move.wav')
     this.load.audio('rotate-card', 'assets/sounds/rotate-card.wav')
+    this.load.image('circlex', 'assets/icons/298-circlex@2x.png')
   }
 
   create() {

@@ -73,7 +73,7 @@ class ConfirmationDialogScene extends Phaser.Scene {
     //   _pointer: Phaser.Input.Pointer,
     //   gameObject: Phaser.GameObjects.GameObject,
     //   _event: Phaser.Types.Input.EventData) => {
-    //   if (gameObject instanceof Phaser.GameObjects.Arc) {
+    //   if (gameObject.name == 'closeButton') {
     //     this.closeDialog()
     //   }
     // })
