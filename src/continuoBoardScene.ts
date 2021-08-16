@@ -43,6 +43,14 @@ const drawCard = (graphics: Phaser.GameObjects.Graphics, card: Card): void => {
   }
 }
 
+export const createContinuoCardSprite = (scene: Phaser.Scene): Phaser.GameObjects.Sprite => {
+  const graphics = new Phaser.GameObjects.Graphics(scene)
+  drawCard(graphics, Deck.originalCards[0])
+  const key = 'ContinuoCardSprite'
+  graphics.generateTexture(key, CARD_SIZE, CARD_SIZE)
+  return new Phaser.GameObjects.Sprite(scene, 0, 0, key)
+}
+
 const adapter: CommonAdapter = {
   deck: new Deck(),
   originalCards: Deck.originalCards,

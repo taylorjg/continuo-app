@@ -5,8 +5,8 @@
 # TODO
 
 * ~~add dialog to confirm leave game~~
-* home screen buttons html => UI components
-* HUD buttons html => UI components
+* ~~home screen buttons HTML => UI components~~
+* HUD buttons HTML => UI components
 * HUD scoreboard => UI components
 * could move current card score into Place Card button
 * ~~remove Restart button~~

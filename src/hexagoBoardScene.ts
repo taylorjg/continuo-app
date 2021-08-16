@@ -179,6 +179,14 @@ const rotationToAngle = (rotation: Rotation): number => {
   }
 }
 
+export const createHexagoCardSprite = (scene: Phaser.Scene): Phaser.GameObjects.Sprite => {
+  const graphics = new Phaser.GameObjects.Graphics(scene)
+  drawCard(graphics, Deck.originalCards[0])
+  const key = 'HexagoCardSprite'
+  graphics.generateTexture(key, CARD_WIDTH, CARD_HEIGHT)
+  return new Phaser.GameObjects.Sprite(scene, 0, 0, key)
+}
+
 const adapter: CommonAdapter = {
   deck: new Deck(),
   originalCards: Deck.originalCards,
