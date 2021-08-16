@@ -106,7 +106,7 @@ export class HUDScene extends Phaser.Scene {
     this.eventEmitter.on('startComputerMove', this.onStartComputerMove, this)
     this.eventEmitter.on('endComputerMove', this.onEndComputerMove, this)
 
-    this.events.on('wake', this.onWake, this)
+    this.events.on(Phaser.Scenes.Events.WAKE, this.onWake, this)
   }
 
   private onWake(_thisScene: Phaser.Scene, boardScene: IBoardScene) {

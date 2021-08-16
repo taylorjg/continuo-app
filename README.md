@@ -9,7 +9,7 @@
 * HUD buttons html => UI components
 * HUD scoreboard => UI components
 * could move current card score into Place Card button
-* remove Restart button
+* ~~remove Restart button~~
 * move Home button/icon to right hand side of HUDScene
 * add a status bar
 * final scoreboard dialog

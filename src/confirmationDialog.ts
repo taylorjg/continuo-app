@@ -66,6 +66,15 @@ class ConfirmationDialogScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-ESC', () => {
       this.closeDialog()
     })
+
+    this.input.on(Phaser.Input.Events.GAMEOBJECT_DOWN, (
+      _pointer: Phaser.Input.Pointer,
+      gameObject: Phaser.GameObjects.GameObject,
+      _event: Phaser.Types.Input.EventData) => {
+      if (gameObject.name == 'dialogOverlay') {
+        this.closeDialog()
+      }
+    })
   }
 
   private closeDialog(): void {
@@ -86,6 +95,8 @@ class ConfirmationDialogScene extends Phaser.Scene {
 
     if (this.overlay.visible) {
       this.overlay.setSize(windowWidth, windowHeight)
+      // Ensure the hit area covers the new size
+      this.overlay.setInteractive()
     }
 
     if (this.dialog.visible) {

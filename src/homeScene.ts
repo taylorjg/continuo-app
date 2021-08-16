@@ -80,7 +80,7 @@ export class HomeScene extends Phaser.Scene {
     this.continuoBoardScene = this.game.scene.add('ContinuoBoardScene', new ContinuoBoardScene(this.eventEmitter))
     this.hexagoBoardScene = this.game.scene.add('HexagoBoardScene', new HexagoBoardScene(this.eventEmitter))
 
-    this.events.on('wake', this.onWake, this)
+    this.events.on(Phaser.Scenes.Events.WAKE, this.onWake, this)
 
     this.playContinuoButton = this.makeButton('Play Continuo', continuoCardImage, this.onPlayContinuo, [100, 100])
     this.playHexagoButton = this.makeButton('Play Hexago', hexagoCardImage, this.onPlayHexago, [173 / 2, 100])
@@ -90,7 +90,7 @@ export class HomeScene extends Phaser.Scene {
     this.playersButton.setInteractive({ useHandCursor: true })
     this.playersButton.name = 'playersButton'
 
-    this.input.on('gameobjectdown', this.onClick, this)
+    this.input.on(Phaser.Input.Events.GAMEOBJECT_DOWN, this.onClick, this)
 
     this.repositionButtons()
   }

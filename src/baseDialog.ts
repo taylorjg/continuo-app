@@ -30,10 +30,13 @@ class BaseDialogScene extends Phaser.Scene {
       this.closeDialog()
     })
 
-    this.input.on('gameobjectdown', (
+    this.input.on(Phaser.Input.Events.GAMEOBJECT_DOWN, (
       _pointer: Phaser.Input.Pointer,
       gameObject: Phaser.GameObjects.GameObject,
       _event: Phaser.Types.Input.EventData) => {
+      if (gameObject.name == 'dialogOverlay') {
+        this.closeDialog()
+      }
       if (gameObject.name == 'closeButton') {
         this.closeDialog()
       }
@@ -58,6 +61,8 @@ class BaseDialogScene extends Phaser.Scene {
 
     if (this.overlay.visible) {
       this.overlay.setSize(windowWidth, windowHeight)
+      // Ensure the hit area covers the new size
+      this.overlay.setInteractive()
     }
 
     if (this.dialog.visible) {

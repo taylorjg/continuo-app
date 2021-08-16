@@ -226,13 +226,13 @@ export abstract class BoardScene extends Phaser.Scene {
 
     this.input.setDraggable(this.currentCardContainer)
 
-    this.input.on('dragstart', (
+    this.input.on(Phaser.Input.Events.DRAG_START, (
       _pointer: Phaser.Input.Pointer,
       _gameObject: Phaser.GameObjects.GameObject) => {
       this.unhighlightScoring()
     })
 
-    this.input.on('drag', (
+    this.input.on(Phaser.Input.Events.DRAG, (
       _pointer: Phaser.Input.Pointer,
       _gameObject: Phaser.GameObjects.GameObject,
       dragX: number,
@@ -241,7 +241,7 @@ export abstract class BoardScene extends Phaser.Scene {
       this.currentCardContainer.y = dragY
     })
 
-    this.input.on('dragend', (
+    this.input.on(Phaser.Input.Events.DRAG_END, (
       _pointer: Phaser.Input.Pointer,
       _gameObject: Phaser.GameObjects.GameObject) => {
       const { row, col } = this.getSnapPosition(this.currentCardContainer.x, this.currentCardContainer.y)
@@ -250,7 +250,7 @@ export abstract class BoardScene extends Phaser.Scene {
       this.repositionCurrentCardContainer(possibleMove)
     })
 
-    this.events.on('wake', this.onWake, this)
+    this.events.on(Phaser.Scenes.Events.WAKE, this.onWake, this)
 
     this.input.keyboard.on('keydown-LEFT', () => {
       this.onRotateCCW()

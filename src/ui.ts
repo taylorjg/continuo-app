@@ -18,6 +18,7 @@ export const createLabel = (scene: Phaser.Scene, text: string) => {
 
 export const createDialogOverlay = (scene: Phaser.Scene) => {
   return scene.add.rectangle(0, 0, 0, 0, DIALOG_OVERLAY_COLOUR, DIALOG_OVERLAY_ALPHA)
+    .setName('dialogOverlay')
     .setOrigin(0, 0)
     .setInteractive()
 }
