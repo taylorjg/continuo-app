@@ -101,8 +101,8 @@ export class ContinuoBoardScene extends BoardScene {
   }
 
   protected getSnapPosition(x: number, y: number): Cell {
-    const row = Phaser.Math.Snap.To(y, QUARTER_CARD_SIZE, 0, true)
-    const col = Phaser.Math.Snap.To(x, QUARTER_CARD_SIZE, 0, true)
+    const row = Math.round(y / QUARTER_CARD_SIZE)
+    const col = Math.round(x / QUARTER_CARD_SIZE)
     return new Cell(row - 2, col - 2)
   }
 

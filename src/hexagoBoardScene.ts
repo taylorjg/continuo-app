@@ -238,8 +238,6 @@ export class HexagoBoardScene extends BoardScene {
   }
 
   protected getSnapPosition(x: number, y: number): Cell {
-    // const row = Phaser.Math.Snap.To(y, ROW_HEIGHT, 0, true)
-    // const col = Phaser.Math.Snap.To(x, COL_WIDTH, 0, true)
     const row = Math.round(y / ROW_HEIGHT)
     const col = Math.round(x / COL_WIDTH)
     return new Cell(row, col)
