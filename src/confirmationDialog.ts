@@ -2,10 +2,9 @@ import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import { SceneWithRexUI } from './types'
 import * as ui from './ui'
 
-const createConfirmationDialog = (scene: Phaser.Scene): RexUIPlugin.Dialog => {
-  const rexUI = (<SceneWithRexUI>scene).rexUI
-  return rexUI.add.dialog({
-    background: rexUI.add.roundRectangle(0, 0, 0, 0, 5, ui.DIALOG_BACKGROUND_COLOUR),
+const createConfirmationDialog = (scene: SceneWithRexUI): RexUIPlugin.Dialog => {
+  return scene.rexUI.add.dialog({
+    background: ui.createDialogBackground(scene),
     content: ui.createLabel(scene, 'Abandon the current game ?'),
     actions: [ui.createLabel(scene, 'Yes'), ui.createLabel(scene, 'No')],
     space: {
@@ -23,6 +22,7 @@ const createConfirmationDialog = (scene: Phaser.Scene): RexUIPlugin.Dialog => {
 
 class ConfirmationDialogScene extends Phaser.Scene {
 
+  rexUI: RexUIPlugin
   onYes?: Function
   onNo?: Function
   overlay: Phaser.GameObjects.Rectangle

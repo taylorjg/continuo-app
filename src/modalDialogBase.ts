@@ -1,7 +1,7 @@
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import * as ui from './ui'
 
-class BaseDialogScene extends Phaser.Scene {
+class ModalDialogBaseScene extends Phaser.Scene {
 
   createDialogContent: Function
   overlay: Phaser.GameObjects.Rectangle
@@ -74,8 +74,8 @@ class BaseDialogScene extends Phaser.Scene {
   }
 }
 
-export class BaseDialog {
+export class ModalDialogBase {
   constructor(parentScene: Phaser.Scene, key: string, createDialogContent: Function) {
-    parentScene.scene.add(undefined, new BaseDialogScene(key, createDialogContent), true)
+    parentScene.scene.add(undefined, new ModalDialogBaseScene(key, createDialogContent), true)
   }
 }
