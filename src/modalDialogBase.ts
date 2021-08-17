@@ -1,7 +1,7 @@
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import * as ui from './ui'
 
-class ModalDialogBaseScene extends Phaser.Scene {
+export class ModalDialogBaseScene extends Phaser.Scene {
 
   createDialogContent: Function
   overlay: Phaser.GameObjects.Rectangle

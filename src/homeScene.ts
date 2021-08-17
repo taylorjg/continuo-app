@@ -4,8 +4,7 @@ import log from 'loglevel'
 import { HUDScene } from './hudScene'
 import { ContinuoBoardScene, createContinuoCardSprite } from './continuoBoardScene'
 import { HexagoBoardScene, createHexagoCardSprite } from './hexagoBoardScene'
-import { ModalDialogBase } from './modalDialogBase'
-import { SceneWithRexUI } from './types'
+import { ChoosePlayersDialog } from './choosePlayersDialog'
 import * as ui from './ui'
 
 const LABEL_WIDTH = 375
@@ -113,21 +112,7 @@ export class HomeScene extends Phaser.Scene {
 
   private onChoosePlayers(): void {
     log.debug('[HomeScene#onChoosePlayers]')
-    new ModalDialogBase(this, 'ChoosePlayersDialog', (scene: SceneWithRexUI) => {
-      return scene.rexUI.add.dialog({
-        background: ui.createDialogBackground(scene),
-        content: ui.createLabel(scene, 'Placeholder for Choose Players dialog'),
-        space: {
-          left: 20,
-          right: 20,
-          top: 20,
-          bottom: 20,
-          content: 25
-        },
-        align: { title: 'center', actions: 'right' },
-        click: { mode: 'release' }
-      })
-    })
+    new ChoosePlayersDialog(this)
   }
 
   private onWake(): void {
