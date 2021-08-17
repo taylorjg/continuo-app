@@ -16,6 +16,7 @@ export class HomeScene extends Phaser.Scene {
 
   rexUI: RexUIPlugin
   eventEmitter: Phaser.Events.EventEmitter
+  background: Phaser.GameObjects.TileSprite
   playContinuoButton: RexUIPlugin.Label
   playHexagoButton: RexUIPlugin.Label
   choosePlayersButton: RexUIPlugin.Label
@@ -32,6 +33,8 @@ export class HomeScene extends Phaser.Scene {
     this.load.audio('illegal-move', 'assets/sounds/illegal-move.wav')
     this.load.audio('rotate-card', 'assets/sounds/rotate-card.wav')
 
+    this.load.image('linen', 'assets/images/linen.png')
+
     this.load.image('house', 'assets/icons/53-house@2x.png')
     this.load.image('group', 'assets/icons/112-group@2x.png')
     this.load.image('circlex', 'assets/icons/298-circlex@2x.png')
@@ -46,6 +49,8 @@ export class HomeScene extends Phaser.Scene {
 
     this.eventEmitter = new Phaser.Events.EventEmitter()
 
+    this.background = this.add.tileSprite(0, 0, window.innerWidth, window.innerHeight, 'linen').setOrigin(0, 0)
+
     const continuoCardSprite = createContinuoCardSprite(this).setScale(.4, .4)
     const hexagoCardSprite = createHexagoCardSprite(this).setScale(.5, .5)
     const groupSprite = new Phaser.GameObjects.Sprite(this, 0, 0, 'group')
@@ -54,7 +59,7 @@ export class HomeScene extends Phaser.Scene {
     this.playHexagoButton = this.createButton('playHexago', 'Play Hexago', hexagoCardSprite)
     this.choosePlayersButton = this.createButton('choosePlayers', 'Choose Players', groupSprite)
 
-    this.repositionButtons()
+    this.rearrange()
 
     this.input.on(Phaser.Input.Events.GAMEOBJECT_DOWN, this.onClick, this)
 
@@ -80,19 +85,20 @@ export class HomeScene extends Phaser.Scene {
       .layout()
   }
 
-  private repositionButtons(): void {
+  private resize(): void {
+    const width = window.innerWidth
+    const height = window.innerHeight
+    this.scale.resize(width, height)
+    this.rearrange()
+  }
+
+  private rearrange(): void {
     const centreX = window.innerWidth / 2
     const centreY = window.innerHeight / 2
     this.playContinuoButton.setPosition(centreX, centreY - LABEL_HEIGHT - LABEL_GAP)
     this.playHexagoButton.setPosition(centreX, centreY)
     this.choosePlayersButton.setPosition(centreX, centreY + LABEL_HEIGHT + LABEL_GAP)
-  }
-
-  private resize(): void {
-    const width = window.innerWidth
-    const height = window.innerHeight
-    this.scale.resize(width, height)
-    this.repositionButtons()
+    this.background.setSize(window.innerWidth, window.innerHeight)
   }
 
   private onPlayContinuo(): void {
