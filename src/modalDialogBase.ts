@@ -1,17 +1,18 @@
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import * as ui from './ui'
 
-export class ModalDialogBaseScene extends Phaser.Scene {
+export abstract class ModalDialogBaseScene extends Phaser.Scene {
 
-  createDialogContent: Function
+  rexUI: RexUIPlugin
   overlay: Phaser.GameObjects.Rectangle
   dialog: RexUIPlugin.Dialog
   closeButton: Phaser.GameObjects.GameObject
 
-  constructor(key: string, createDialogContent: Function) {
+  constructor(key: string) {
     super(key)
-    this.createDialogContent = createDialogContent
   }
+
+  protected abstract createDialogContent(): RexUIPlugin.Dialog
 
   create() {
     const onResize = () => this.resize()
@@ -21,7 +22,7 @@ export class ModalDialogBaseScene extends Phaser.Scene {
     window.addEventListener('orientationchange', onOrientationChange)
 
     this.overlay = ui.createDialogOverlay(this)
-    this.dialog = this.createDialogContent(this).layout().popUp(0)
+    this.dialog = this.createDialogContent().layout().popUp(0)
     this.closeButton = ui.createCloseButton(this)
 
     this.rearrange()
@@ -71,11 +72,5 @@ export class ModalDialogBaseScene extends Phaser.Scene {
 
     const background = <Phaser.GameObjects.GameObject>this.dialog.getElement('background')
     Phaser.Display.Align.To.RightTop(this.closeButton, background)
-  }
-}
-
-export class ModalDialogBase {
-  constructor(parentScene: Phaser.Scene, key: string, createDialogContent: Function) {
-    parentScene.scene.add(undefined, new ModalDialogBaseScene(key, createDialogContent), true)
   }
 }
