@@ -44,7 +44,7 @@ export abstract class ModalDialogBaseScene extends Phaser.Scene {
     })
   }
 
-  private closeDialog(): void {
+  protected closeDialog(): void {
     this.scene.remove()
   }
 

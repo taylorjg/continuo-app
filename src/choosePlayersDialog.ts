@@ -2,7 +2,7 @@ import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import { ModalDialogBaseScene } from './modalDialogBase'
 import * as ui from './ui'
 
-export class ChoosePlayersDialogScene extends ModalDialogBaseScene {
+class ChoosePlayersDialogScene extends ModalDialogBaseScene {
 
   constructor() {
     super('ChoosePlayersDialog')
