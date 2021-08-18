@@ -108,35 +108,9 @@ export class HUDScene extends Phaser.Scene {
       y += GAP_Y
     })
 
-    this.homeButton = this.rexUI.add.label({
-      name: 'homeButton',
-      background: ui.createLabelBackgroundWithBorder(this),
-      icon: this.add.sprite(0, 0, 'house').setScale(.4, .4),
-    })
-      .setInnerPadding(INNER_PADDING)
-      .setOrigin(1, 0)
-      .setInteractive({ useHandCursor: true })
-      .layout()
-
-    this.scoreboardButton = this.rexUI.add.label({
-      name: 'scoreboardButton',
-      background: ui.createLabelBackgroundWithBorder(this),
-      icon: this.add.sprite(0, 0, 'bar-chart').setScale(.4, .4),
-    })
-      .setInnerPadding(INNER_PADDING)
-      .setOrigin(1, 0)
-      .setInteractive({ useHandCursor: true })
-      .layout()
-
-    this.settingsButton = this.rexUI.add.label({
-      name: 'settingsButton',
-      background: ui.createLabelBackgroundWithBorder(this),
-      icon: this.add.sprite(0, 0, 'gear').setScale(.4, .4),
-    })
-      .setInnerPadding(INNER_PADDING)
-      .setOrigin(1, 0)
-      .setInteractive({ useHandCursor: true })
-      .layout()
+    this.homeButton = this.createButton('homeButton', 'house')
+    this.scoreboardButton = this.createButton('scoreboardButton', 'bar-chart')
+    this.settingsButton = this.createButton('settingsButton', 'gear')
 
     this.rearrange()
 
@@ -164,6 +138,23 @@ export class HUDScene extends Phaser.Scene {
     })
   }
 
+  private createButton(name: string, iconTexture: string) {
+    const sprite = new Phaser.GameObjects.Sprite(this, 0, 0, iconTexture).setScale(.4, .4)
+    const iconContainer = new Phaser.GameObjects.Container(this, 0, 0, [sprite])
+    return this.rexUI.add.label({
+      width: 35,
+      height: 35,
+      name,
+      background: ui.createLabelBackgroundWithBorder(this),
+      icon: this.add.existing(iconContainer),
+      align: 'center'
+    })
+      .setInnerPadding(INNER_PADDING)
+      .setOrigin(1, 0)
+      .setInteractive({ useHandCursor: true })
+      .layout()
+  }
+
   private resize(): void {
     const width = window.innerWidth
     const height = window.innerHeight
@@ -173,8 +164,8 @@ export class HUDScene extends Phaser.Scene {
 
   private rearrange(): void {
     this.homeButton.setPosition(window.innerWidth - 10, 10)
-    this.scoreboardButton.setPosition(window.innerWidth - 10, 50)
-    this.settingsButton.setPosition(window.innerWidth - 10, 90)
+    this.scoreboardButton.setPosition(window.innerWidth - 10, 10 + 45)
+    this.settingsButton.setPosition(window.innerWidth - 10, 10 + 45 + 45)
   }
 
   private onWake(_thisScene: Phaser.Scene, boardScene: IBoardScene) {

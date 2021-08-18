@@ -108,7 +108,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.currentCardContainer.setVisible(true)
 
     if (playerType == PlayerType.Human) {
-      this.currentCardContainer.setInteractive()
+      this.currentCardContainer.setInteractive({ useHandCursor: true })
     } else {
       this.currentCardContainer.disableInteractive()
     }
@@ -221,7 +221,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.currentCardContainer.setVisible(false)
     this.currentCardContainer.setDepth(CURRENT_CARD_DEPTH)
     this.currentCardContainer.setSize(CARD_WIDTH, CARD_HEIGHT)
-    this.currentCardContainer.setInteractive()
+    this.currentCardContainer.setInteractive({ useHandCursor: true })
     this.add.existing(this.currentCardContainer)
 
     this.input.setDraggable(this.currentCardContainer)
