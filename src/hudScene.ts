@@ -24,6 +24,7 @@ export class HUDScene extends Phaser.Scene {
   placeCardElement: HTMLButtonElement
   toggleFullScreenButton: HTMLButtonElement
 
+  rhsButtons: RexUIPlugin.Sizer
   homeButton: RexUIPlugin.Label
   scoreboardButton: RexUIPlugin.Label
   settingsButton: RexUIPlugin.Label
@@ -112,7 +113,15 @@ export class HUDScene extends Phaser.Scene {
     this.scoreboardButton = this.createButton('scoreboardButton', 'bar-chart')
     this.settingsButton = this.createButton('settingsButton', 'gear')
 
-    this.rearrange()
+    this.rhsButtons = this.rexUI.add.sizer({
+      anchor: { right: 'right-10', top: 'top+10' },
+      orientation: 'vertical',
+      space: { item: 10 }
+    })
+      .add(this.homeButton)
+      .add(this.scoreboardButton)
+      .add(this.settingsButton)
+      .layout()
 
     this.eventEmitter.on('nextTurn', this.onNextTurn, this)
     this.eventEmitter.on('finalScores', this.onFinalScores, this)
@@ -150,7 +159,6 @@ export class HUDScene extends Phaser.Scene {
       align: 'center'
     })
       .setInnerPadding(INNER_PADDING)
-      .setOrigin(1, 0)
       .setInteractive({ useHandCursor: true })
       .layout()
   }
@@ -159,13 +167,6 @@ export class HUDScene extends Phaser.Scene {
     const width = window.innerWidth
     const height = window.innerHeight
     this.scale.resize(width, height)
-    this.rearrange()
-  }
-
-  private rearrange(): void {
-    this.homeButton.setPosition(window.innerWidth - 10, 10)
-    this.scoreboardButton.setPosition(window.innerWidth - 10, 10 + 45)
-    this.settingsButton.setPosition(window.innerWidth - 10, 10 + 45 + 45)
   }
 
   private onWake(_thisScene: Phaser.Scene, boardScene: IBoardScene) {
