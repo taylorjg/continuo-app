@@ -2,16 +2,16 @@ import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import { ModalDialogBaseScene } from './modalDialogBase'
 import * as ui from './ui'
 
-class ChoosePlayersDialogScene extends ModalDialogBaseScene {
+class SettingsDialogScene extends ModalDialogBaseScene {
 
   constructor() {
-    super('ChoosePlayersDialog')
+    super('SettingsDialog')
   }
 
   protected createDialogContent(): RexUIPlugin.Dialog {
     return this.rexUI.add.dialog({
       background: ui.createDialogBackground(this),
-      content: ui.createLabel(this, 'Placeholder for Choose Players dialog'),
+      content: ui.createLabel(this, 'Placeholder for Settings dialog'),
       space: {
         left: 20,
         right: 20,
@@ -25,6 +25,6 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
   }
 }
 
-export const createChoosePlayersDialog = (parentScene: Phaser.Scene) => {
-  parentScene.scene.add(undefined, new ChoosePlayersDialogScene(), true)
+export const createSettingsDialog = (parentScene: Phaser.Scene): void => {
+  parentScene.scene.add(undefined, new SettingsDialogScene(), true)
 }

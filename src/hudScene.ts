@@ -1,11 +1,15 @@
 import * as Phaser from 'phaser'
+import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import log from 'loglevel'
 import { IBoardScene } from './types'
 import { TurnManager, PlayerScore, Scoreboard, PlayerType } from './turnManager'
-import { ConfirmationDialog } from './confirmationDialog'
+import { createConfirmationDialog } from './confirmationDialog'
+import { createSettingsDialog } from './settingsPlayersDialog'
+import * as ui from './ui'
 
 export class HUDScene extends Phaser.Scene {
 
+  rexUI: RexUIPlugin
   eventEmitter: Phaser.Events.EventEmitter
   boardScene: IBoardScene
   turnManager: TurnManager
@@ -16,6 +20,8 @@ export class HUDScene extends Phaser.Scene {
   rotateCCWElement: HTMLButtonElement
   placeCardElement: HTMLButtonElement
   toggleFullScreenButton: HTMLButtonElement
+
+  settingsButton: RexUIPlugin.Label
 
   remainingCardsText: Phaser.GameObjects.Text
   currentCardScoreText: Phaser.GameObjects.Text
@@ -47,6 +53,12 @@ export class HUDScene extends Phaser.Scene {
 
   public create() {
     log.debug('[HUDScene#create]')
+
+    const onResize = () => this.resize()
+    const onOrientationChange = () => this.resize()
+
+    window.addEventListener('resize', onResize)
+    window.addEventListener('orientationchange', onOrientationChange)
 
     const GAP_Y = 30
 
@@ -96,6 +108,18 @@ export class HUDScene extends Phaser.Scene {
       y += GAP_Y
     })
 
+    this.settingsButton = this.rexUI.add.label({
+      name: 'settingsButton',
+      background: ui.createLabelBackgroundWithBorder(this),
+      icon: this.add.image(0, 0, 'gear'),
+      space: { left: 10, right: 10, top: 10, bottom: 10 }
+    })
+      .setOrigin(1, 0)
+      .setInteractive({ useHandCursor: true })
+      .layout()
+
+    this.rearrange()
+
     this.eventEmitter.on('nextTurn', this.onNextTurn, this)
     this.eventEmitter.on('finalScores', this.onFinalScores, this)
     this.eventEmitter.on('nextCard', this.onNextCard, this)
@@ -107,6 +131,26 @@ export class HUDScene extends Phaser.Scene {
     this.eventEmitter.on('endComputerMove', this.onEndComputerMove, this)
 
     this.events.on(Phaser.Scenes.Events.WAKE, this.onWake, this)
+
+    this.input.on(Phaser.Input.Events.GAMEOBJECT_DOWN, (
+      _pointer: Phaser.Input.Pointer,
+      gameObject: Phaser.GameObjects.GameObject,
+      _event: Phaser.Types.Input.EventData) => {
+      if (gameObject.name == 'settingsButton') {
+        this.onSettingsClick()
+      }
+    })
+  }
+
+  private resize(): void {
+    const width = window.innerWidth
+    const height = window.innerHeight
+    this.scale.resize(width, height)
+    this.rearrange()
+  }
+
+  private rearrange(): void {
+    this.settingsButton.setPosition(window.innerWidth - 10, 10)
   }
 
   private onWake(_thisScene: Phaser.Scene, boardScene: IBoardScene) {
@@ -118,9 +162,7 @@ export class HUDScene extends Phaser.Scene {
 
   private onHomeClick(): void {
     log.debug('[HUDScene#onHomeClick]')
-    new ConfirmationDialog(this, () => {
-      this.game.scene.wake('HomeScene')
-    })
+    createConfirmationDialog(this, () => this.game.scene.wake('HomeScene'))
   }
 
   private updateRemainingCards(arg: any): void {
@@ -254,5 +296,10 @@ export class HUDScene extends Phaser.Scene {
   private onEndComputerMove(arg: any): void {
     log.debug('[HUDScene#onEndComputerMove]', arg)
     this.endOfTurn(arg)
+  }
+
+  private onSettingsClick(): void {
+    log.debug('[HUDScene#onSettingsClick]')
+    createSettingsDialog(this)
   }
 }

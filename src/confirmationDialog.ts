@@ -52,8 +52,6 @@ class ConfirmationDialogScene extends ModalDialogBaseScene {
   }
 }
 
-export class ConfirmationDialog {
-  constructor(parentScene: Phaser.Scene, onYes?: Function, onNo?: Function) {
-    parentScene.scene.add(undefined, new ConfirmationDialogScene(onYes, onNo), true)
-  }
+export const createConfirmationDialog = (parentScene: Phaser.Scene, onYes?: Function, onNo?: Function) => {
+  parentScene.scene.add(undefined, new ConfirmationDialogScene(onYes, onNo), true)
 }

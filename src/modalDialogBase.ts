@@ -68,9 +68,7 @@ export abstract class ModalDialogBaseScene extends Phaser.Scene {
 
     if (this.dialog.visible) {
       Phaser.Display.Align.In.Center(this.dialog, this.overlay)
+      Phaser.Display.Align.To.RightTop(this.closeButton, this.dialog)
     }
-
-    const background = <Phaser.GameObjects.GameObject>this.dialog.getElement('background')
-    Phaser.Display.Align.To.RightTop(this.closeButton, background)
   }
 }

@@ -4,7 +4,7 @@ import log from 'loglevel'
 import { HUDScene } from './hudScene'
 import { ContinuoBoardScene, createContinuoCardSprite } from './continuoBoardScene'
 import { HexagoBoardScene, createHexagoCardSprite } from './hexagoBoardScene'
-import { ChoosePlayersDialog } from './choosePlayersDialog'
+import { createChoosePlayersDialog } from './choosePlayersDialog'
 import * as ui from './ui'
 
 const LABEL_WIDTH = 375
@@ -34,6 +34,7 @@ export class HomeScene extends Phaser.Scene {
 
     this.load.image('linen', 'assets/images/linen.png')
 
+    this.load.image('gear', 'assets/icons/19-gear@2x.png')
     this.load.image('house', 'assets/icons/53-house@2x.png')
     this.load.image('group', 'assets/icons/112-group@2x.png')
     this.load.image('circlex', 'assets/icons/298-circlex@2x.png')
@@ -112,7 +113,7 @@ export class HomeScene extends Phaser.Scene {
 
   private onChoosePlayers(): void {
     log.debug('[HomeScene#onChoosePlayers]')
-    new ChoosePlayersDialog(this)
+    createChoosePlayersDialog(this)
   }
 
   private onWake(): void {
