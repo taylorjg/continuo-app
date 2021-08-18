@@ -5,7 +5,11 @@ import { IBoardScene } from './types'
 import { TurnManager, PlayerScore, Scoreboard, PlayerType } from './turnManager'
 import { createConfirmationDialog } from './confirmationDialog'
 import { createSettingsDialog } from './settingsPlayersDialog'
+import { createScoreboardDialog } from './scoreboardDialog'
 import * as ui from './ui'
+
+const INNER_PADDING = 7
+const GAP_Y = 30
 
 export class HUDScene extends Phaser.Scene {
 
@@ -15,12 +19,13 @@ export class HUDScene extends Phaser.Scene {
   turnManager: TurnManager
   currentPlayerScore: PlayerScore
 
-  homeElement: HTMLButtonElement
   rotateCWElement: HTMLButtonElement
   rotateCCWElement: HTMLButtonElement
   placeCardElement: HTMLButtonElement
   toggleFullScreenButton: HTMLButtonElement
 
+  homeButton: RexUIPlugin.Label
+  scoreboardButton: RexUIPlugin.Label
   settingsButton: RexUIPlugin.Label
 
   remainingCardsText: Phaser.GameObjects.Text
@@ -60,12 +65,7 @@ export class HUDScene extends Phaser.Scene {
     window.addEventListener('resize', onResize)
     window.addEventListener('orientationchange', onOrientationChange)
 
-    const GAP_Y = 30
-
     let y = 0
-
-    this.homeElement = this.makeButton(y, 'Home', this.onHomeClick, false)
-    y += GAP_Y
 
     this.rotateCWElement = this.makeButton(y, 'Rotate CW', this.onRotateCWClick, true)
     y += GAP_Y
@@ -108,12 +108,32 @@ export class HUDScene extends Phaser.Scene {
       y += GAP_Y
     })
 
+    this.homeButton = this.rexUI.add.label({
+      name: 'homeButton',
+      background: ui.createLabelBackgroundWithBorder(this),
+      icon: this.add.sprite(0, 0, 'house').setScale(.4, .4),
+    })
+      .setInnerPadding(INNER_PADDING)
+      .setOrigin(1, 0)
+      .setInteractive({ useHandCursor: true })
+      .layout()
+
+    this.scoreboardButton = this.rexUI.add.label({
+      name: 'scoreboardButton',
+      background: ui.createLabelBackgroundWithBorder(this),
+      icon: this.add.sprite(0, 0, 'bar-chart').setScale(.4, .4),
+    })
+      .setInnerPadding(INNER_PADDING)
+      .setOrigin(1, 0)
+      .setInteractive({ useHandCursor: true })
+      .layout()
+
     this.settingsButton = this.rexUI.add.label({
       name: 'settingsButton',
       background: ui.createLabelBackgroundWithBorder(this),
-      icon: this.add.image(0, 0, 'gear'),
-      space: { left: 10, right: 10, top: 10, bottom: 10 }
+      icon: this.add.sprite(0, 0, 'gear').setScale(.4, .4),
     })
+      .setInnerPadding(INNER_PADDING)
       .setOrigin(1, 0)
       .setInteractive({ useHandCursor: true })
       .layout()
@@ -136,8 +156,10 @@ export class HUDScene extends Phaser.Scene {
       _pointer: Phaser.Input.Pointer,
       gameObject: Phaser.GameObjects.GameObject,
       _event: Phaser.Types.Input.EventData) => {
-      if (gameObject.name == 'settingsButton') {
-        this.onSettingsClick()
+      switch (gameObject.name) {
+        case 'homeButton': return this.onHomeClick()
+        case 'scoreboardButton': return this.onScoreboardClick()
+        case 'settingsButton': return this.onSettingsClick()
       }
     })
   }
@@ -150,7 +172,9 @@ export class HUDScene extends Phaser.Scene {
   }
 
   private rearrange(): void {
-    this.settingsButton.setPosition(window.innerWidth - 10, 10)
+    this.homeButton.setPosition(window.innerWidth - 10, 10)
+    this.scoreboardButton.setPosition(window.innerWidth - 10, 50)
+    this.settingsButton.setPosition(window.innerWidth - 10, 90)
   }
 
   private onWake(_thisScene: Phaser.Scene, boardScene: IBoardScene) {
@@ -195,7 +219,6 @@ export class HUDScene extends Phaser.Scene {
   private updateButtonState(): void {
     const isNoMove = this.currentPlayerScore == null
     const isComputerMove = this.currentPlayerScore?.player.type == PlayerType.Computer
-    this.homeElement.disabled = isComputerMove
     this.rotateCWElement.disabled = isComputerMove || isNoMove
     this.rotateCCWElement.disabled = isComputerMove || isNoMove
     this.placeCardElement.disabled = isComputerMove || isNoMove
@@ -274,7 +297,6 @@ export class HUDScene extends Phaser.Scene {
 
   private onStartRotateCard(arg: any): void {
     log.debug('[HUDScene#onStartRotateCard]', arg)
-    this.homeElement.disabled = true
     this.rotateCWElement.disabled = true
     this.rotateCCWElement.disabled = true
     this.placeCardElement.disabled = true
@@ -296,6 +318,11 @@ export class HUDScene extends Phaser.Scene {
   private onEndComputerMove(arg: any): void {
     log.debug('[HUDScene#onEndComputerMove]', arg)
     this.endOfTurn(arg)
+  }
+
+  private onScoreboardClick(): void {
+    log.debug('[HUDScene#onScoreboardClick]')
+    createScoreboardDialog(this)
   }
 
   private onSettingsClick(): void {
