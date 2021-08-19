@@ -22,12 +22,13 @@ export class HUDScene extends Phaser.Scene {
   rotateCWElement: HTMLButtonElement
   rotateCCWElement: HTMLButtonElement
   placeCardElement: HTMLButtonElement
-  toggleFullScreenButton: HTMLButtonElement
 
   rhsButtons: RexUIPlugin.Sizer
   homeButton: RexUIPlugin.Label
   scoreboardButton: RexUIPlugin.Label
   settingsButton: RexUIPlugin.Label
+  enterFullscreenButton: RexUIPlugin.Label
+  leaveFullscreenButton: RexUIPlugin.Label
 
   remainingCardsText: Phaser.GameObjects.Text
   currentCardScoreText: Phaser.GameObjects.Text
@@ -77,20 +78,6 @@ export class HUDScene extends Phaser.Scene {
     this.placeCardElement = this.makeButton(y, 'Place Card', this.onPlaceCardClick, true)
     y += GAP_Y
 
-    if (this.sys.game.device.fullscreen.available) {
-      const onToggleFullScreenMode = () => {
-        if (this.scale.isFullscreen) {
-          this.scale.stopFullscreen()
-          this.toggleFullScreenButton.innerText = 'Enter Full Screen'
-        } else {
-          this.scale.startFullscreen()
-          this.toggleFullScreenButton.innerText = 'Exit Full Screen'
-        }
-      }
-      this.toggleFullScreenButton = this.makeButton(y, 'Enter Full Screen', onToggleFullScreenMode, false)
-      y += GAP_Y
-    }
-
     y += GAP_Y
 
     this.remainingCardsText = this.add.text(10, y, '')
@@ -121,7 +108,18 @@ export class HUDScene extends Phaser.Scene {
       .add(this.homeButton)
       .add(this.scoreboardButton)
       .add(this.settingsButton)
-      .layout()
+
+    if (this.sys.game.device.fullscreen.available) {
+      if (this.scale.isFullscreen) {
+        this.leaveFullscreenButton = this.createButton('leaveFullscreenButton', 'arrows-in')
+        this.rhsButtons.add(this.leaveFullscreenButton)
+      } else {
+        this.enterFullscreenButton = this.createButton('enterFullscreenButton', 'arrows-out')
+        this.rhsButtons.add(this.enterFullscreenButton)
+      }
+    }
+
+    this.rhsButtons.layout()
 
     this.eventEmitter.on('nextTurn', this.onNextTurn, this)
     this.eventEmitter.on('finalScores', this.onFinalScores, this)
@@ -143,6 +141,8 @@ export class HUDScene extends Phaser.Scene {
         case 'homeButton': return this.onHomeClick()
         case 'scoreboardButton': return this.onScoreboardClick()
         case 'settingsButton': return this.onSettingsClick()
+        case 'enterFullscreenButton': return this.onEnterFullscreenClick()
+        case 'leaveFullscreenButton': return this.onLeaveFullscreenClick()
       }
     })
   }
@@ -320,5 +320,25 @@ export class HUDScene extends Phaser.Scene {
   private onSettingsClick(): void {
     log.debug('[HUDScene#onSettingsClick]')
     createSettingsDialog(this)
+  }
+
+  private onEnterFullscreenClick(): void {
+    log.debug('[HUDScene#onEnterFullscreenClick]')
+    this.scale.startFullscreen()
+    this.leaveFullscreenButton = this.createButton('leaveFullscreenButton', 'arrows-in')
+    this.rhsButtons
+      .remove(this.enterFullscreenButton, true)
+      .add(this.leaveFullscreenButton)
+      .layout()
+  }
+
+  private onLeaveFullscreenClick(): void {
+    log.debug('[HUDScene#onLeaveFullscreenClick]')
+    this.scale.stopFullscreen()
+    this.enterFullscreenButton = this.createButton('enterFullscreenButton', 'arrows-out')
+    this.rhsButtons
+      .remove(this.leaveFullscreenButton, true)
+      .add(this.enterFullscreenButton)
+      .layout()
   }
 }
