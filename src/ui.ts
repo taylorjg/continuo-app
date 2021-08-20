@@ -13,7 +13,9 @@ export const ROUND_RADIUS = 5
 
 export const createDialogBackground = (scene: SceneWithRexUI) => {
   return scene.rexUI.add.roundRectangle(0, 0, 0, 0, ROUND_RADIUS, DIALOG_BACKGROUND_COLOUR)
+    .setName('dialogBackground')
     .setStrokeStyle(BORDER_WIDTH, BORDER_COLOUR)
+    .setInteractive({ useHandCursor: false })
 }
 
 export const createLabelBackground = (scene: SceneWithRexUI) => {

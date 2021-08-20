@@ -1,6 +1,8 @@
 import * as Phaser from 'phaser'
 import log from 'loglevel'
 
+import { Settings } from './settings'
+
 import {
   CommonAdapter,
   CommonBoard,
@@ -20,6 +22,7 @@ export const HIGHLIGHT_COLOUR = 0xFF00FF
 
 export type BoardSceneConfig = {
   eventEmitter: Phaser.Events.EventEmitter,
+  settings: Settings,
   CARD_WIDTH: number,
   CARD_HEIGHT: number,
   ROTATION_ANGLE: number
@@ -158,6 +161,18 @@ export abstract class BoardScene extends Phaser.Scene {
         this.emitCurrentCardChange('moveCard')
       }
     })
+
+    if (possibleMove && this.boardSceneConfig.settings.soundBestScoreEnabled) {
+      const score = possibleMove.score
+      const bestScore = this.possibleMoves[0].score
+      if (score == bestScore) {
+        this.sound.play('best-move')
+      }
+    }
+
+    if (!possibleMove && this.boardSceneConfig.settings.soundIllegalMoveEnabled) {
+      this.sound.play('illegal-move')
+    }
   }
 
   private rotateCurrentCardContainer(rotationAngle: number): void {
@@ -169,6 +184,9 @@ export abstract class BoardScene extends Phaser.Scene {
       : this.adapter.placedCardRotateCCW(this.currentPossibleMove.placedCard)
     const possibleMove = this.findPossibleMove(newPlacedCard)
     if (possibleMove) {
+      if (this.boardSceneConfig.settings.soundRotationEnabled) {
+        this.sound.play('rotate-card')
+      }
       this.boardSceneConfig.eventEmitter.emit('startRotateCard')
       this.unhighlightScoring()
       this.rotating = true
@@ -181,6 +199,13 @@ export abstract class BoardScene extends Phaser.Scene {
           this.currentPossibleMove = possibleMove
           this.highlightScoring(this.currentPossibleMove)
           this.emitCurrentCardChange('endRotateCard')
+          if (this.boardSceneConfig.settings.soundBestScoreEnabled) {
+            const score = possibleMove.score
+            const bestScore = this.possibleMoves[0].score
+            if (score == bestScore) {
+              this.sound.play('best-move')
+            }
+          }
           this.rotating = false
         }
       })

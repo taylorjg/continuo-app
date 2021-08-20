@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser'
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import log from 'loglevel'
+import { Settings } from './settings'
 import { HUDScene } from './hudScene'
 import { ContinuoBoardScene, createContinuoCardSprite } from './continuoBoardScene'
 import { HexagoBoardScene, createHexagoCardSprite } from './hexagoBoardScene'
@@ -15,6 +16,7 @@ export class HomeScene extends Phaser.Scene {
 
   rexUI: RexUIPlugin
   eventEmitter: Phaser.Events.EventEmitter
+  settings: Settings
   background: Phaser.GameObjects.TileSprite
   playContinuoButton: RexUIPlugin.Label
   playHexagoButton: RexUIPlugin.Label
@@ -51,6 +53,7 @@ export class HomeScene extends Phaser.Scene {
     window.addEventListener('orientationchange', onOrientationChange)
 
     this.eventEmitter = new Phaser.Events.EventEmitter()
+    this.settings = new Settings(true, false, false)
 
     this.background = this.add.tileSprite(0, 0, window.innerWidth, window.innerHeight, 'linen').setOrigin(0, 0)
 
@@ -66,9 +69,9 @@ export class HomeScene extends Phaser.Scene {
 
     this.input.on(Phaser.Input.Events.GAMEOBJECT_DOWN, this.onClick, this)
 
-    this.hudScene = this.game.scene.add('HUDScene', new HUDScene(this.eventEmitter))
-    this.continuoBoardScene = this.game.scene.add('ContinuoBoardScene', new ContinuoBoardScene(this.eventEmitter))
-    this.hexagoBoardScene = this.game.scene.add('HexagoBoardScene', new HexagoBoardScene(this.eventEmitter))
+    this.hudScene = this.game.scene.add('HUDScene', new HUDScene(this.eventEmitter, this.settings))
+    this.continuoBoardScene = this.game.scene.add('ContinuoBoardScene', new ContinuoBoardScene(this.eventEmitter, this.settings))
+    this.hexagoBoardScene = this.game.scene.add('HexagoBoardScene', new HexagoBoardScene(this.eventEmitter, this.settings))
 
     this.events.on(Phaser.Scenes.Events.WAKE, this.onWake, this)
   }

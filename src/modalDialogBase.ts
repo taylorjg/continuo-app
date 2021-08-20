@@ -34,12 +34,14 @@ export abstract class ModalDialogBaseScene extends Phaser.Scene {
     this.input.on(Phaser.Input.Events.GAMEOBJECT_DOWN, (
       _pointer: Phaser.Input.Pointer,
       gameObject: Phaser.GameObjects.GameObject,
-      _event: Phaser.Types.Input.EventData) => {
+      event: Phaser.Types.Input.EventData) => {
       if (gameObject.name == 'dialogOverlay') {
         this.closeDialog()
+        return
       }
       if (gameObject.name == 'closeButton') {
         this.closeDialog()
+        return
       }
     })
   }

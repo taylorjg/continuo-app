@@ -1,10 +1,11 @@
 import * as Phaser from 'phaser'
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import log from 'loglevel'
+import { Settings } from './settings'
 import { IBoardScene } from './types'
 import { TurnManager, PlayerScore, Scoreboard, PlayerType } from './turnManager'
 import { createConfirmationDialog } from './confirmationDialog'
-import { createSettingsDialog } from './settingsPlayersDialog'
+import { createSettingsDialog } from './settingsDialog'
 import { createScoreboardDialog } from './scoreboardDialog'
 import * as ui from './ui'
 
@@ -15,6 +16,7 @@ export class HUDScene extends Phaser.Scene {
 
   rexUI: RexUIPlugin
   eventEmitter: Phaser.Events.EventEmitter
+  settings: Settings
   boardScene: IBoardScene
   turnManager: TurnManager
   currentPlayerScore: PlayerScore
@@ -34,9 +36,10 @@ export class HUDScene extends Phaser.Scene {
   currentCardScoreText: Phaser.GameObjects.Text
   scoreboardTexts: Phaser.GameObjects.Text[]
 
-  constructor(eventEmitter: Phaser.Events.EventEmitter) {
+  constructor(eventEmitter: Phaser.Events.EventEmitter, settings: Settings) {
     super('HUDScene')
     this.eventEmitter = eventEmitter
+    this.settings = settings
     this.turnManager = new TurnManager(this.eventEmitter)
     this.currentPlayerScore = null
   }
@@ -319,7 +322,7 @@ export class HUDScene extends Phaser.Scene {
 
   private onSettingsClick(): void {
     log.debug('[HUDScene#onSettingsClick]')
-    createSettingsDialog(this)
+    createSettingsDialog(this, this.settings)
   }
 
   private onEnterFullscreenClick(): void {
