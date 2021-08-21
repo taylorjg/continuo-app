@@ -1,3 +1,4 @@
+import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import { SceneWithRexUI } from './types'
 
 export const DIALOG_BACKGROUND_COLOUR = 0x1565c0
@@ -10,6 +11,18 @@ export const BORDER_WIDTH = 2
 export const BORDER_COLOUR = 0xFFFFFF
 
 export const ROUND_RADIUS = 5
+
+export const TEXT_STYLE = {
+  fontFamily: 'Verdana',
+  fontSize: '24px'
+}
+
+export const createDialogOverlay = (scene: Phaser.Scene) => {
+  return scene.add.rectangle(0, 0, 0, 0, DIALOG_OVERLAY_COLOUR, DIALOG_OVERLAY_ALPHA)
+    .setName('dialogOverlay')
+    .setOrigin(0, 0)
+    .setInteractive()
+}
 
 export const createDialogBackground = (scene: SceneWithRexUI) => {
   return scene.rexUI.add.roundRectangle(0, 0, 0, 0, ROUND_RADIUS, DIALOG_BACKGROUND_COLOUR)
@@ -32,16 +45,28 @@ export const createLabel = (scene: SceneWithRexUI, text: string) => {
     width: 40,
     height: 40,
     background: createLabelBackground(scene),
-    text: scene.add.text(0, 0, text, { fontSize: '24px' }),
+    text: scene.add.text(0, 0, text, TEXT_STYLE),
     space: { left: 10, right: 10, top: 10, bottom: 10 }
   })
 }
 
-export const createDialogOverlay = (scene: Phaser.Scene) => {
-  return scene.add.rectangle(0, 0, 0, 0, DIALOG_OVERLAY_COLOUR, DIALOG_OVERLAY_ALPHA)
-    .setName('dialogOverlay')
-    .setOrigin(0, 0)
-    .setInteractive()
+export const createCheckbox = (scene: SceneWithRexUI, name: string, text: string): RexUIPlugin.Label => {
+  return scene.rexUI.add.label({
+    name,
+    text: scene.add.text(0, 0, text, { fontFamily: 'Arial', fontSize: '20px' }),
+    icon: scene.add.container(0, 0, [
+      scene.add.rectangle(0, 0, 22, 22).setStrokeStyle(2, 0xFFFFFF).setName('outerRectangle'),
+      scene.add.rectangle(0, 0, 16, 16).setName('innerRectangle')
+    ]).setSize(22, 22),
+    space: { icon: 15 }
+  })
+}
+
+export const updateCheckbox = (gameObject: Phaser.GameObjects.GameObject, value: boolean) => {
+  const checkbox = <RexUIPlugin.Label>gameObject
+  const container = <Phaser.GameObjects.Container>checkbox.getElement('icon')
+  const innerRectangle = <Phaser.GameObjects.Rectangle>container.getByName('innerRectangle')
+  innerRectangle.setFillStyle(value ? 0xFFFFFF : undefined)
 }
 
 export const createCloseButton = (scene: Phaser.Scene): Phaser.GameObjects.GameObject => {

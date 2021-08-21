@@ -99,9 +99,9 @@ export class HUDScene extends Phaser.Scene {
       y += GAP_Y
     })
 
-    this.homeButton = this.createButton('homeButton', 'house')
-    this.scoreboardButton = this.createButton('scoreboardButton', 'bar-chart')
-    this.settingsButton = this.createButton('settingsButton', 'gear')
+    this.homeButton = this.createHUDSceneButton('homeButton', 'house')
+    this.scoreboardButton = this.createHUDSceneButton('scoreboardButton', 'bar-chart')
+    this.settingsButton = this.createHUDSceneButton('settingsButton', 'gear')
 
     this.rhsButtons = this.rexUI.add.sizer({
       anchor: { right: 'right-10', top: 'top+10' },
@@ -114,10 +114,10 @@ export class HUDScene extends Phaser.Scene {
 
     if (this.sys.game.device.fullscreen.available) {
       if (this.scale.isFullscreen) {
-        this.leaveFullscreenButton = this.createButton('leaveFullscreenButton', 'arrows-in')
+        this.leaveFullscreenButton = this.createHUDSceneButton('leaveFullscreenButton', 'arrows-in')
         this.rhsButtons.add(this.leaveFullscreenButton)
       } else {
-        this.enterFullscreenButton = this.createButton('enterFullscreenButton', 'arrows-out')
+        this.enterFullscreenButton = this.createHUDSceneButton('enterFullscreenButton', 'arrows-out')
         this.rhsButtons.add(this.enterFullscreenButton)
       }
     }
@@ -150,7 +150,7 @@ export class HUDScene extends Phaser.Scene {
     })
   }
 
-  private createButton(name: string, iconTexture: string) {
+  private createHUDSceneButton(name: string, iconTexture: string) {
     const sprite = new Phaser.GameObjects.Sprite(this, 0, 0, iconTexture).setScale(.4, .4)
     const iconContainer = new Phaser.GameObjects.Container(this, 0, 0, [sprite])
     return this.rexUI.add.label({
@@ -328,7 +328,7 @@ export class HUDScene extends Phaser.Scene {
   private onEnterFullscreenClick(): void {
     log.debug('[HUDScene#onEnterFullscreenClick]')
     this.scale.startFullscreen()
-    this.leaveFullscreenButton = this.createButton('leaveFullscreenButton', 'arrows-in')
+    this.leaveFullscreenButton = this.createHUDSceneButton('leaveFullscreenButton', 'arrows-in')
     this.rhsButtons
       .remove(this.enterFullscreenButton, true)
       .add(this.leaveFullscreenButton)
@@ -338,7 +338,7 @@ export class HUDScene extends Phaser.Scene {
   private onLeaveFullscreenClick(): void {
     log.debug('[HUDScene#onLeaveFullscreenClick]')
     this.scale.stopFullscreen()
-    this.enterFullscreenButton = this.createButton('enterFullscreenButton', 'arrows-out')
+    this.enterFullscreenButton = this.createHUDSceneButton('enterFullscreenButton', 'arrows-out')
     this.rhsButtons
       .remove(this.leaveFullscreenButton, true)
       .add(this.enterFullscreenButton)

@@ -61,9 +61,9 @@ export class HomeScene extends Phaser.Scene {
     const hexagoCardSprite = createHexagoCardSprite(this).setScale(.5, .5)
     const groupSprite = new Phaser.GameObjects.Sprite(this, 0, 0, 'group')
 
-    this.playContinuoButton = this.createButton('playContinuo', 'Play Continuo', continuoCardSprite)
-    this.playHexagoButton = this.createButton('playHexago', 'Play Hexago', hexagoCardSprite)
-    this.choosePlayersButton = this.createButton('choosePlayers', 'Choose Players', groupSprite)
+    this.playContinuoButton = this.createHomeSceneButton('playContinuo', 'Play Continuo', continuoCardSprite)
+    this.playHexagoButton = this.createHomeSceneButton('playHexago', 'Play Hexago', hexagoCardSprite)
+    this.choosePlayersButton = this.createHomeSceneButton('choosePlayers', 'Choose Players', groupSprite)
 
     this.rearrange()
 
@@ -76,13 +76,13 @@ export class HomeScene extends Phaser.Scene {
     this.events.on(Phaser.Scenes.Events.WAKE, this.onWake, this)
   }
 
-  private createButton(name: string, text: string, sprite: Phaser.GameObjects.Sprite) {
+  private createHomeSceneButton(name: string, text: string, sprite: Phaser.GameObjects.Sprite) {
     const iconContainer = new Phaser.GameObjects.Container(this, 0, 0, [sprite]).setSize(125, 75)
     return this.rexUI.add.label({
       width: LABEL_WIDTH,
       height: LABEL_HEIGHT,
       background: ui.createLabelBackgroundWithBorder(this),
-      text: this.add.text(0, 0, text, { fontSize: '24px' }),
+      text: this.add.text(0, 0, text, ui.TEXT_STYLE),
       icon: this.add.existing(iconContainer),
       space: { left: 10, right: 10, top: 10, bottom: 10, icon: 10 }
     })

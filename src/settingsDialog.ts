@@ -4,18 +4,6 @@ import { SceneWithRexUI } from './types'
 import { Settings } from './settings'
 import * as ui from './ui'
 
-const createCheckbox = (scene: SceneWithRexUI, name: string, text: string) => {
-  return scene.rexUI.add.label({
-    name,
-    text: scene.add.text(0, 0, text, { fontFamily: 'Arial', fontSize: '20px' }),
-    icon: scene.add.container(0, 0, [
-      scene.add.rectangle(0, 0, 22, 22).setStrokeStyle(2, 0xFFFFFF),
-      scene.add.rectangle(0, 0, 16, 16)
-    ]).setSize(22, 22),
-    space: { icon: 15 }
-  })
-}
-
 const createContent = (scene: SceneWithRexUI, settings: Settings): Phaser.GameObjects.GameObject => {
   const sizer = scene.rexUI.add.sizer({ orientation: 'vertical' })
   sizer.add(createSoundsPanel(scene, settings))
@@ -24,21 +12,19 @@ const createContent = (scene: SceneWithRexUI, settings: Settings): Phaser.GameOb
 
 const createSoundsPanel = (scene: SceneWithRexUI, settings: Settings): Phaser.GameObjects.GameObject => {
   const sizer = scene.rexUI.add.sizer({ orientation: 'vertical' })
-  sizer.add(scene.add.text(0, 0, 'Sounds:', { fontFamily: 'Arial', fontSize: '24px' }), { align: 'left' })
+  sizer.add(scene.add.text(0, 0, 'Sounds:', ui.TEXT_STYLE), { align: 'left' })
   const buttons = scene.rexUI.add.buttons({
     orientation: 'vertical',
     buttons: [
-      createCheckbox(scene, 'sound-0', 'Top scoring placement of current card'),
-      createCheckbox(scene, 'sound-1', 'Illegal placement of current card'),
-      createCheckbox(scene, 'sound-2', 'Rotation of current card')
+      ui.createCheckbox(scene, 'sound-0', 'Top scoring placement of current card'),
+      ui.createCheckbox(scene, 'sound-1', 'Illegal placement of current card'),
+      ui.createCheckbox(scene, 'sound-2', 'Rotation of current card')
     ],
     type: 'checkboxes',
-    setValueCallback: (button: RexUIPlugin.Label, value: boolean, previousValue: boolean) => {
-      const container = <Phaser.GameObjects.Container>button.getElement('icon')
-      const rectangle = <Phaser.GameObjects.Rectangle>container.getAt(1)
-      rectangle.setFillStyle(value ? 0xFFFFFF : undefined)
+    setValueCallback: (gameObject: Phaser.GameObjects.GameObject, value: boolean, previousValue: boolean) => {
+      ui.updateCheckbox(gameObject, value)
       if (previousValue !== undefined) {
-        switch (button.name) {
+        switch (gameObject.name) {
           case 'sound-0':
             settings.soundBestScoreEnabled = value
             break
@@ -72,7 +58,7 @@ class SettingsDialogScene extends ModalDialogBaseScene {
   protected createDialogContent(): RexUIPlugin.Dialog {
     return this.rexUI.add.dialog({
       background: ui.createDialogBackground(this),
-      title: this.add.text(0, 0, 'Settings', { fontFamily: 'Arial', fontSize: '24px' }),
+      title: this.add.text(0, 0, 'Settings', ui.TEXT_STYLE),
       content: createContent(this, this.settings),
       space: {
         left: 20,
