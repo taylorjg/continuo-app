@@ -40,6 +40,7 @@ export abstract class BoardScene extends Phaser.Scene {
   private currentCardContainer: Phaser.GameObjects.Container
   private scoringHighlights: Phaser.GameObjects.Shape[]
   private rotating: boolean
+  private bestScoreLocationsFound: Set<CommonPossibleMove>
 
   constructor(sceneName: string, boardSceneConfig: BoardSceneConfig, adapter: CommonAdapter) {
     super(sceneName)
@@ -50,6 +51,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.cardSpritesMap = new Map<CommonCard, Phaser.GameObjects.Sprite>()
     this.scoringHighlights = []
     this.rotating = false
+    this.bestScoreLocationsFound = new Set()
   }
 
   protected abstract getInitialPlacedCards(deck: CommonDeck, board: CommonBoard): Generator<CommonPlacedCard, void, CommonBoard>
@@ -138,6 +140,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.unhighlightScoring()
     this.emitCurrentCardChange(playerType == PlayerType.Computer ? 'endComputerMove' : 'placeCard')
     this.currentPossibleMove = null
+    this.bestScoreLocationsFound.clear()
   }
 
   private repositionCurrentCardContainer(possibleMove?: CommonPossibleMove): void {
@@ -166,7 +169,10 @@ export abstract class BoardScene extends Phaser.Scene {
       const score = possibleMove.score
       const bestScore = this.possibleMoves[0].score
       if (score == bestScore) {
-        this.sound.play('best-move')
+        if (!this.bestScoreLocationsFound.has(possibleMove)) {
+          this.sound.play('best-move')
+          this.bestScoreLocationsFound.add(possibleMove)
+        }
       }
     }
 
@@ -203,7 +209,10 @@ export abstract class BoardScene extends Phaser.Scene {
             const score = possibleMove.score
             const bestScore = this.possibleMoves[0].score
             if (score == bestScore) {
-              this.sound.play('best-move')
+              if (!this.bestScoreLocationsFound.has(possibleMove)) {
+                this.sound.play('best-move')
+                this.bestScoreLocationsFound.add(possibleMove)
+              }
             }
           }
           this.rotating = false
