@@ -48,7 +48,7 @@ export const createCloseButton = (scene: Phaser.Scene): Phaser.GameObjects.GameO
   const icon = new Phaser.GameObjects.Sprite(scene, 0, 0, 'circlex')
   const arc = new Phaser.GameObjects.Arc(scene, 0, 0, icon.width / 2 - 1)
   arc.name = 'closeButton'
-  arc.setFillStyle(0xFFFFFF)
+  arc.setFillStyle(0x000000)
   arc.setInteractive({ useHandCursor: true })
   const container = new Phaser.GameObjects.Container(scene)
   container.add(arc)
