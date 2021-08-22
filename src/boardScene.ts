@@ -369,6 +369,7 @@ export abstract class BoardScene extends Phaser.Scene {
   private onSettingsChanged() {
     log.debug('[BoardScene#onSettingsChanged]')
     if (this.currentPossibleMove) {
+      this.unhighlightScoring()
       if (this.boardSceneConfig.settings.hintShowScoringHighlights) {
         this.highlightScoring(this.currentPossibleMove)
       } else {
