@@ -193,7 +193,11 @@ export class HUDScene extends Phaser.Scene {
     const score: number = <number>arg.score
     const bestScore: number = <number>arg.bestScore
     const bestScoreLocationCount: number = <number>arg.bestScoreLocationCount
-    this.currentCardScoreText.setText(`${score} (${bestScore}/${bestScoreLocationCount})`)
+    if (this.settings.hintShowBestAvailableScore) {
+      this.currentCardScoreText.setText(`${score} (${bestScore}/${bestScoreLocationCount})`)
+    } else {
+      this.currentCardScoreText.setText(`${score}`)
+    }
   }
 
   private clearCurrentCardScore(): void {

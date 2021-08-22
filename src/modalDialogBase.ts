@@ -34,6 +34,7 @@ export abstract class ModalDialogBaseScene extends Phaser.Scene {
         top: 20,
         bottom: 20,
         content: 25,
+        title: 25,
         action: 25
       }
     }

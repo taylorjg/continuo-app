@@ -64,8 +64,10 @@ export abstract class BoardScene extends Phaser.Scene {
   protected abstract getBoardRange(board: CommonBoard): CommonBoardRange
 
   private highlightScoring(currentPossibleMove: CommonPossibleMove): void {
-    this.scoringHighlights = this.createScoringHighlights(currentPossibleMove)
-    this.scoringHighlights.forEach(highlight => this.add.existing(highlight))
+    if (this.boardSceneConfig.settings.hintShowScoringHighlights) {
+      this.scoringHighlights = this.createScoringHighlights(currentPossibleMove)
+      this.scoringHighlights.forEach(highlight => this.add.existing(highlight))
+    }
   }
 
   private unhighlightScoring(): void {

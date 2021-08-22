@@ -53,7 +53,7 @@ export const createLabel = (scene: SceneWithRexUI, text: string): RexUIPlugin.La
 export const createCheckbox = (scene: SceneWithRexUI, name: string, text: string): RexUIPlugin.Label => {
   return scene.rexUI.add.label({
     name,
-    text: scene.add.text(0, 0, text, { fontFamily: 'Arial', fontSize: '20px' }),
+    text: scene.add.text(0, 0, text, TEXT_STYLE),
     icon: scene.add.container(0, 0, [
       scene.add.rectangle(0, 0, 22, 22).setStrokeStyle(2, 0xFFFFFF).setName('outerRectangle'),
       scene.add.rectangle(0, 0, 16, 16).setName('innerRectangle')
