@@ -24,7 +24,7 @@
   * show toast at end of each turn ?
 * ~~add sounds~~
 * ~~settings dialog:~~
-  * ~~presented via people icon on HUDScene~~
+  * ~~presented via gear icon on HUDScene~~
   * ~~turn individual sounds on/off~~
   * ~~show scoring chains/wedges hint~~
   * ~~show best score hint~~
