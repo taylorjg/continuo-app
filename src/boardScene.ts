@@ -286,6 +286,8 @@ export abstract class BoardScene extends Phaser.Scene {
       this.repositionCurrentCardContainer(possibleMove)
     })
 
+    this.boardSceneConfig.eventEmitter.on('settingsChanged', this.onSettingsChanged, this)
+
     this.events.on(Phaser.Scenes.Events.WAKE, this.onWake, this)
 
     this.input.keyboard.on('keydown-LEFT', () => {
@@ -362,6 +364,17 @@ export abstract class BoardScene extends Phaser.Scene {
     })
 
     this.cameras.main.centerOn(boardRange.centreX, boardRange.centreY)
+  }
+
+  private onSettingsChanged() {
+    log.debug('[BoardScene#onSettingsChanged]')
+    if (this.currentPossibleMove) {
+      if (this.boardSceneConfig.settings.hintShowScoringHighlights) {
+        this.highlightScoring(this.currentPossibleMove)
+      } else {
+        this.unhighlightScoring()
+      }
+    }
   }
 
   private onWake() {

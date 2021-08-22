@@ -133,6 +133,7 @@ export class HUDScene extends Phaser.Scene {
     this.eventEmitter.on('endRotateCard', this.onEndRotateCard, this)
     this.eventEmitter.on('startComputerMove', this.onStartComputerMove, this)
     this.eventEmitter.on('endComputerMove', this.onEndComputerMove, this)
+    this.eventEmitter.on('settingsChanged', this.onSettingsChanged, this)
 
     this.events.on(Phaser.Scenes.Events.WAKE, this.onWake, this)
 
@@ -190,13 +191,21 @@ export class HUDScene extends Phaser.Scene {
   }
 
   private updateCurrentCardScore(arg: any): void {
+
     const score: number = <number>arg.score
     const bestScore: number = <number>arg.bestScore
     const bestScoreLocationCount: number = <number>arg.bestScoreLocationCount
+
+    const textWithHint = `${score} (${bestScore}/${bestScoreLocationCount})`
+    const textWithoutHint = `${score}`
+
+    this.currentCardScoreText.setData('textWithHint', textWithHint)
+    this.currentCardScoreText.setData('textWithoutHint', textWithoutHint)
+
     if (this.settings.hintShowBestAvailableScore) {
-      this.currentCardScoreText.setText(`${score} (${bestScore}/${bestScoreLocationCount})`)
+      this.currentCardScoreText.setText(textWithHint)
     } else {
-      this.currentCardScoreText.setText(`${score}`)
+      this.currentCardScoreText.setText(textWithoutHint)
     }
   }
 
@@ -319,6 +328,17 @@ export class HUDScene extends Phaser.Scene {
     this.endOfTurn(arg)
   }
 
+  private onSettingsChanged(arg: any): void {
+    log.debug('[HUDScene#onSettingsChanged]')
+    const textWithHint = this.currentCardScoreText.getData('textWithHint') || ''
+    const textWithoutHint = this.currentCardScoreText.getData('textWithoutHint') || ''
+    if (this.settings.hintShowBestAvailableScore) {
+      this.currentCardScoreText.setText(textWithHint)
+    } else {
+      this.currentCardScoreText.setText(textWithoutHint)
+    }
+  }
+
   private onScoreboardClick(): void {
     log.debug('[HUDScene#onScoreboardClick]')
     createScoreboardDialog(this)
@@ -326,7 +346,9 @@ export class HUDScene extends Phaser.Scene {
 
   private onSettingsClick(): void {
     log.debug('[HUDScene#onSettingsClick]')
-    createSettingsDialog(this, this.settings)
+    createSettingsDialog(this, this.settings, () => {
+      this.eventEmitter.emit('settingsChanged')
+    })
   }
 
   private onEnterFullscreenClick(): void {

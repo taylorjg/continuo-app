@@ -8,9 +8,11 @@ export abstract class ModalDialogBaseScene extends Phaser.Scene {
   overlay: Phaser.GameObjects.Rectangle
   dialog: RexUIPlugin.Dialog
   closeButton: Phaser.GameObjects.GameObject
+  onCloseDialog?: Function
 
-  constructor(key: string) {
+  constructor(key: string, onCloseDialog?: Function) {
     super(key)
+    this.onCloseDialog = onCloseDialog
   }
 
   protected abstract getDialogConfig(): Dialog.IConfig
@@ -65,6 +67,7 @@ export abstract class ModalDialogBaseScene extends Phaser.Scene {
 
   protected closeDialog(): void {
     this.scene.remove()
+    this.onCloseDialog && this.onCloseDialog()
   }
 
   private resize(): void {
