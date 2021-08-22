@@ -1,4 +1,4 @@
-import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
+import Dialog from 'phaser3-rex-plugins/templates/ui/dialog/Dialog'
 import { ModalDialogBaseScene } from './modalDialogBase'
 import * as ui from './ui'
 
@@ -13,22 +13,14 @@ class ConfirmationDialogScene extends ModalDialogBaseScene {
     this.onNo = onNo
   }
 
-  protected createDialogContent(): RexUIPlugin.Dialog {
-    return this.rexUI.add.dialog({
-      background: ui.createDialogBackground(this),
+  protected getDialogConfig(): Dialog.IConfig {
+    return {
       content: ui.createLabel(this, 'Abandon the current game ?'),
-      actions: [ui.createLabel(this, 'Yes'), ui.createLabel(this, 'No')],
-      space: {
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: 20,
-        content: 25,
-        action: 25
-      },
-      align: { title: 'center', actions: 'right' },
-      click: { mode: 'release' }
-    })
+      actions: [
+        ui.createLabel(this, 'Yes').setInteractive({ useHandCursor: true }),
+        ui.createLabel(this, 'No').setInteractive({ useHandCursor: true })
+      ]
+    }
   }
 
   create() {

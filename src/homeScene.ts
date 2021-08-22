@@ -53,7 +53,7 @@ export class HomeScene extends Phaser.Scene {
     window.addEventListener('orientationchange', onOrientationChange)
 
     this.eventEmitter = new Phaser.Events.EventEmitter()
-    this.settings = new Settings(true, false, false)
+    this.settings = new Settings(true, false, false, true, true)
 
     this.background = this.add.tileSprite(0, 0, window.innerWidth, window.innerHeight, 'linen').setOrigin(0, 0)
 

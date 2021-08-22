@@ -1,12 +1,16 @@
-import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
+import Dialog from 'phaser3-rex-plugins/templates/ui/dialog/Dialog'
 import { ModalDialogBaseScene } from './modalDialogBase'
 import { SceneWithRexUI } from './types'
 import { Settings } from './settings'
 import * as ui from './ui'
 
 const createContent = (scene: SceneWithRexUI, settings: Settings): Phaser.GameObjects.GameObject => {
-  const sizer = scene.rexUI.add.sizer({ orientation: 'vertical' })
-  sizer.add(createSoundsPanel(scene, settings))
+  const sizer = scene.rexUI.add.sizer({
+    orientation: 'vertical',
+    space: { item: 20 }
+  })
+  sizer.add(createSoundsPanel(scene, settings), { align: 'left' })
+  sizer.add(createHintsPanel(scene, settings), { align: 'left' })
   return sizer.layout()
 }
 
@@ -37,11 +41,42 @@ const createSoundsPanel = (scene: SceneWithRexUI, settings: Settings): Phaser.Ga
         }
       }
     },
-    space: { top: 20, item: 10 }
+    space: { top: 10, item: 10 }
   })
   buttons.setData('sound-0', settings.soundBestScoreEnabled)
   buttons.setData('sound-1', settings.soundIllegalMoveEnabled)
   buttons.setData('sound-2', settings.soundRotationEnabled)
+  sizer.add(buttons, { padding: { left: 50 } })
+  return sizer.layout()
+}
+
+const createHintsPanel = (scene: SceneWithRexUI, settings: Settings): Phaser.GameObjects.GameObject => {
+  const sizer = scene.rexUI.add.sizer({ orientation: 'vertical' })
+  sizer.add(scene.add.text(0, 0, 'Hints:', ui.TEXT_STYLE), { align: 'left' })
+  const buttons = scene.rexUI.add.buttons({
+    orientation: 'vertical',
+    buttons: [
+      ui.createCheckbox(scene, 'hint-0', 'Highlight scoring chains/wedges'),
+      ui.createCheckbox(scene, 'hint-1', 'Show best available score')
+    ],
+    type: 'checkboxes',
+    setValueCallback: (gameObject: Phaser.GameObjects.GameObject, value: boolean, previousValue: boolean) => {
+      ui.updateCheckbox(gameObject, value)
+      if (previousValue !== undefined) {
+        switch (gameObject.name) {
+          case 'hint-0':
+            settings.hintShowScoringHighlights = value
+            break
+          case 'hint-1':
+            settings.hintShowBestAvailableScore = value
+            break
+        }
+      }
+    },
+    space: { top: 10, item: 10 }
+  })
+  buttons.setData('hint-0', settings.hintShowScoringHighlights)
+  buttons.setData('hint-1', settings.hintShowBestAvailableScore)
   sizer.add(buttons, { padding: { left: 50 } })
   return sizer.layout()
 }
@@ -55,23 +90,12 @@ class SettingsDialogScene extends ModalDialogBaseScene {
     this.settings = settings
   }
 
-  protected createDialogContent(): RexUIPlugin.Dialog {
-    return this.rexUI.add.dialog({
-      background: ui.createDialogBackground(this),
+  protected getDialogConfig(): Dialog.IConfig {
+    return {
       title: this.add.text(0, 0, 'Settings', ui.TEXT_STYLE),
       content: createContent(this, this.settings),
-      space: {
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: 20,
-        title: 25,
-        content: 25
-      },
-      align: { title: 'center', actions: 'right' },
-      expand: { title: false },
-      click: { mode: 'release' }
-    })
+      expand: { title: false }
+    }
   }
 }
 

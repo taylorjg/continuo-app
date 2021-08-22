@@ -1,3 +1,4 @@
+import Dialog from 'phaser3-rex-plugins/templates/ui/dialog/Dialog'
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import * as ui from './ui'
 
@@ -12,7 +13,7 @@ export abstract class ModalDialogBaseScene extends Phaser.Scene {
     super(key)
   }
 
-  protected abstract createDialogContent(): RexUIPlugin.Dialog
+  protected abstract getDialogConfig(): Dialog.IConfig
 
   create() {
     const onResize = () => this.resize()
@@ -22,7 +23,25 @@ export abstract class ModalDialogBaseScene extends Phaser.Scene {
     window.addEventListener('orientationchange', onOrientationChange)
 
     this.overlay = ui.createDialogOverlay(this)
-    this.dialog = this.createDialogContent().layout().popUp(0)
+    const baseConfig = {
+      align: { title: 'center', actions: 'right' },
+      anchor: { centerX: 'center', centerY: 'center' },
+      background: ui.createDialogBackground(this),
+      click: { mode: 'release' },
+      space: {
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: 20,
+        content: 25,
+        action: 25
+      }
+    }
+    const derivedConfig = this.getDialogConfig()
+    const dialogConfig = <Dialog.IConfig>{ ...baseConfig, ...derivedConfig }
+    this.dialog = this.rexUI.add.dialog(dialogConfig)
+      .layout()
+      .popUp(0)
     this.closeButton = ui.createCloseButton(this)
 
     this.rearrange()
@@ -34,14 +53,11 @@ export abstract class ModalDialogBaseScene extends Phaser.Scene {
     this.input.on(Phaser.Input.Events.GAMEOBJECT_DOWN, (
       _pointer: Phaser.Input.Pointer,
       gameObject: Phaser.GameObjects.GameObject,
-      event: Phaser.Types.Input.EventData) => {
-      if (gameObject.name == 'dialogOverlay') {
-        this.closeDialog()
-        return
-      }
-      if (gameObject.name == 'closeButton') {
-        this.closeDialog()
-        return
+      _event: Phaser.Types.Input.EventData) => {
+      switch (gameObject.name) {
+        case 'dialogOverlay':
+        case 'closeButton':
+          this.closeDialog()
       }
     })
   }
@@ -65,11 +81,10 @@ export abstract class ModalDialogBaseScene extends Phaser.Scene {
     if (this.overlay.visible) {
       this.overlay.setSize(windowWidth, windowHeight)
       // Ensure the hit area covers the new size
-      this.overlay.setInteractive()
+      this.overlay.setInteractive({ cursor: 'unset' })
     }
 
     if (this.dialog.visible) {
-      Phaser.Display.Align.In.Center(this.dialog, this.overlay)
       Phaser.Display.Align.To.RightTop(this.closeButton, this.dialog)
     }
   }
