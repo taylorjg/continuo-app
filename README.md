@@ -7,10 +7,7 @@
 * ~~add dialog to confirm leave game~~
 * ~~home screen buttons HTML => UI components~~
 * HUD buttons HTML => UI components
-* HUD scoreboard => UI components
-* could move current card score into Place Card button
 * ~~remove Restart button~~
-* move Home button/icon to right hand side of HUDScene
 * add a status bar
 * final scoreboard dialog
   * can also be presented during game via an icon on HUDScene
@@ -18,22 +15,22 @@
   * show highest single card score for each player
   * show longest single chain for each player
   * could make player names editable via an edit icon
+* ~~add interesting background to home scene~~
 * add interesting background to main game board scene
-* add interesting background to home scene
 * add more animations:
   * ~~snap to new location~~
   * ~~snap back to previous location~~
   * animate new cards from off screen to initial location
   * show toast at end of each turn ?
-* add sounds
-* settings dialog:
-  * presented via people icon on HUDScene
-  * on/off switch for each sound
-  * volume control slider ?
-  * show best score hint
-  * show scoring aspects hints (chains etc)
+* ~~add sounds~~
+* ~~settings dialog:~~
+  * ~~presented via people icon on HUDScene~~
+  * ~~turn individual sounds on/off~~
+  * ~~show scoring chains/wedges hint~~
+  * ~~show best score hint~~
+* another hint idea:
   * limited number of chances to reveal best place (say 3)
-  * turn timer (say 30s, 60s)
+* optional turn timer (say 30s, 60s)
 * add instructions dialog:
   * Continuo
   * Hexago
