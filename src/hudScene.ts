@@ -6,6 +6,7 @@ import { IBoardScene } from './types'
 import { TurnManager, PlayerScore, Scoreboard, PlayerType } from './turnManager'
 import { createConfirmationDialog } from './confirmationDialog'
 import { createSettingsDialog } from './settingsDialog'
+import { createAboutDialog } from './aboutDialog'
 import { createScoreboardDialog } from './scoreboardDialog'
 import * as ui from './ui'
 
@@ -26,9 +27,6 @@ export class HUDScene extends Phaser.Scene {
   placeCardElement: HTMLButtonElement
 
   rhsButtons: RexUIPlugin.Sizer
-  homeButton: RexUIPlugin.Label
-  scoreboardButton: RexUIPlugin.Label
-  settingsButton: RexUIPlugin.Label
   enterFullscreenButton: RexUIPlugin.Label
   leaveFullscreenButton: RexUIPlugin.Label
 
@@ -99,18 +97,20 @@ export class HUDScene extends Phaser.Scene {
       y += GAP_Y
     })
 
-    this.homeButton = this.createHUDSceneButton('homeButton', 'house')
-    this.scoreboardButton = this.createHUDSceneButton('scoreboardButton', 'bar-chart')
-    this.settingsButton = this.createHUDSceneButton('settingsButton', 'gear')
+    const homeButton = this.createHUDSceneButton('homeButton', 'house')
+    const scoreboardButton = this.createHUDSceneButton('scoreboardButton', 'bar-chart')
+    const settingsButton = this.createHUDSceneButton('settingsButton', 'gear')
+    const aboutButton = this.createHUDSceneButton('aboutButton', 'info')
 
     this.rhsButtons = this.rexUI.add.sizer({
       anchor: { right: 'right-10', top: 'top+10' },
       orientation: 'vertical',
       space: { item: 10 }
     })
-      .add(this.homeButton)
-      .add(this.scoreboardButton)
-      .add(this.settingsButton)
+      .add(homeButton)
+      .add(scoreboardButton)
+      .add(settingsButton)
+      .add(aboutButton)
 
     if (this.sys.game.device.fullscreen.available) {
       if (this.scale.isFullscreen) {
@@ -145,6 +145,7 @@ export class HUDScene extends Phaser.Scene {
         case 'homeButton': return this.onHomeClick()
         case 'scoreboardButton': return this.onScoreboardClick()
         case 'settingsButton': return this.onSettingsClick()
+        case 'aboutButton': return this.onAboutClick()
         case 'enterFullscreenButton': return this.onEnterFullscreenClick()
         case 'leaveFullscreenButton': return this.onLeaveFullscreenClick()
       }
@@ -349,6 +350,11 @@ export class HUDScene extends Phaser.Scene {
     createSettingsDialog(this, this.settings, () => {
       this.eventEmitter.emit('settingsChanged')
     })
+  }
+
+  private onAboutClick(): void {
+    log.debug('[HUDScene#onAboutClick]')
+    createAboutDialog(this)
   }
 
   private onEnterFullscreenClick(): void {
