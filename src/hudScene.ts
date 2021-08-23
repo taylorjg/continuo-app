@@ -22,11 +22,9 @@ export class HUDScene extends Phaser.Scene {
   turnManager: TurnManager
   currentPlayerScore: PlayerScore
 
-  rotateCWElement: HTMLButtonElement
-  rotateCCWElement: HTMLButtonElement
-  placeCardElement: HTMLButtonElement
-
+  lhsButtons: RexUIPlugin.Sizer
   rhsButtons: RexUIPlugin.Sizer
+
   enterFullscreenButton: RexUIPlugin.Label
   leaveFullscreenButton: RexUIPlugin.Label
 
@@ -42,19 +40,6 @@ export class HUDScene extends Phaser.Scene {
     this.currentPlayerScore = null
   }
 
-  private makeButton(y: number, label: string, handler: Function, initiallyDisabled: boolean): HTMLButtonElement {
-    const element = document.createElement('button')
-    element.style.margin = '10px'
-    element.style.width = '120px'
-    element.innerText = label
-    element.disabled = initiallyDisabled
-    const button = this.add.dom(0, y, element)
-    button.setOrigin(0, 0)
-    button.addListener('click')
-    button.on('click', handler, this)
-    return element
-  }
-
   public init() {
     log.debug('[HUDScene#init]')
   }
@@ -68,18 +53,7 @@ export class HUDScene extends Phaser.Scene {
     window.addEventListener('resize', onResize)
     window.addEventListener('orientationchange', onOrientationChange)
 
-    let y = 0
-
-    this.rotateCWElement = this.makeButton(y, 'Rotate CW', this.onRotateCWClick, true)
-    y += GAP_Y
-
-    this.rotateCCWElement = this.makeButton(y, 'Rotate CCW', this.onRotateCCWClick, true)
-    y += GAP_Y
-
-    this.placeCardElement = this.makeButton(y, 'Place Card', this.onPlaceCardClick, true)
-    y += GAP_Y
-
-    y += GAP_Y
+    let y = 150
 
     this.remainingCardsText = this.add.text(10, y, '')
     this.remainingCardsText.setOrigin(0, 0)
@@ -97,10 +71,24 @@ export class HUDScene extends Phaser.Scene {
       y += GAP_Y
     })
 
-    const homeButton = this.createHUDSceneButton('homeButton', 'house')
-    const scoreboardButton = this.createHUDSceneButton('scoreboardButton', 'bar-chart')
-    const settingsButton = this.createHUDSceneButton('settingsButton', 'gear')
-    const aboutButton = this.createHUDSceneButton('aboutButton', 'info')
+    const rotateCWButton = this.createHUDSceneButton('rotateCWButton', 'cw-arrow', .75)
+    const rotateCCWButton = this.createHUDSceneButton('rotateCCWButton', 'ccw-arrow', .75)
+    const placeCardButton = this.createHUDSceneButton('placeCardButton', 'checkmark', .5)
+
+    this.lhsButtons = this.rexUI.add.sizer({
+      anchor: { left: 'left+10', top: 'top+10' },
+      orientation: 'vertical',
+      space: { item: 10 }
+    })
+      .add(rotateCWButton)
+      .add(rotateCCWButton)
+      .add(placeCardButton)
+      .layout()
+
+    const homeButton = this.createHUDSceneButton('homeButton', 'house', .4)
+    const scoreboardButton = this.createHUDSceneButton('scoreboardButton', 'bar-chart', .4)
+    const settingsButton = this.createHUDSceneButton('settingsButton', 'gear', .4)
+    const aboutButton = this.createHUDSceneButton('aboutButton', 'info', .4)
 
     this.rhsButtons = this.rexUI.add.sizer({
       anchor: { right: 'right-10', top: 'top+10' },
@@ -114,10 +102,10 @@ export class HUDScene extends Phaser.Scene {
 
     if (this.sys.game.device.fullscreen.available) {
       if (this.scale.isFullscreen) {
-        this.leaveFullscreenButton = this.createHUDSceneButton('leaveFullscreenButton', 'arrows-in')
+        this.leaveFullscreenButton = this.createHUDSceneButton('leaveFullscreenButton', 'arrows-in', .4)
         this.rhsButtons.add(this.leaveFullscreenButton)
       } else {
-        this.enterFullscreenButton = this.createHUDSceneButton('enterFullscreenButton', 'arrows-out')
+        this.enterFullscreenButton = this.createHUDSceneButton('enterFullscreenButton', 'arrows-out', .4)
         this.rhsButtons.add(this.enterFullscreenButton)
       }
     }
@@ -142,6 +130,9 @@ export class HUDScene extends Phaser.Scene {
       gameObject: Phaser.GameObjects.GameObject,
       _event: Phaser.Types.Input.EventData) => {
       switch (gameObject.name) {
+        case 'rotateCWButton': return this.onRotateCWClick()
+        case 'rotateCCWButton': return this.onRotateCCWClick()
+        case 'placeCardButton': return this.onPlaceCardClick()
         case 'homeButton': return this.onHomeClick()
         case 'scoreboardButton': return this.onScoreboardClick()
         case 'settingsButton': return this.onSettingsClick()
@@ -152,8 +143,8 @@ export class HUDScene extends Phaser.Scene {
     })
   }
 
-  private createHUDSceneButton(name: string, iconTexture: string) {
-    const sprite = new Phaser.GameObjects.Sprite(this, 0, 0, iconTexture).setScale(.4, .4)
+  private createHUDSceneButton(name: string, iconTexture: string, scale: number) {
+    const sprite = new Phaser.GameObjects.Sprite(this, 0, 0, iconTexture).setScale(scale)
     const iconContainer = new Phaser.GameObjects.Container(this, 0, 0, [sprite])
     return this.rexUI.add.label({
       width: 35,
@@ -228,9 +219,9 @@ export class HUDScene extends Phaser.Scene {
   private updateButtonState(): void {
     const isNoMove = this.currentPlayerScore == null
     const isComputerMove = this.currentPlayerScore?.player.type == PlayerType.Computer
-    this.rotateCWElement.disabled = isComputerMove || isNoMove
-    this.rotateCCWElement.disabled = isComputerMove || isNoMove
-    this.placeCardElement.disabled = isComputerMove || isNoMove
+    // this.rotateCWElement.disabled = isComputerMove || isNoMove
+    // this.rotateCCWElement.disabled = isComputerMove || isNoMove
+    // this.placeCardElement.disabled = isComputerMove || isNoMove
   }
 
   private endOfTurn(arg: any): void {
@@ -306,9 +297,9 @@ export class HUDScene extends Phaser.Scene {
 
   private onStartRotateCard(arg: any): void {
     log.debug('[HUDScene#onStartRotateCard]', arg)
-    this.rotateCWElement.disabled = true
-    this.rotateCCWElement.disabled = true
-    this.placeCardElement.disabled = true
+    // this.rotateCWElement.disabled = true
+    // this.rotateCCWElement.disabled = true
+    // this.placeCardElement.disabled = true
   }
 
   private onEndRotateCard(arg: any): void {
@@ -360,7 +351,7 @@ export class HUDScene extends Phaser.Scene {
   private onEnterFullscreenClick(): void {
     log.debug('[HUDScene#onEnterFullscreenClick]')
     this.scale.startFullscreen()
-    this.leaveFullscreenButton = this.createHUDSceneButton('leaveFullscreenButton', 'arrows-in')
+    this.leaveFullscreenButton = this.createHUDSceneButton('leaveFullscreenButton', 'arrows-in', .4)
     this.rhsButtons
       .remove(this.enterFullscreenButton, true)
       .add(this.leaveFullscreenButton)
@@ -370,7 +361,7 @@ export class HUDScene extends Phaser.Scene {
   private onLeaveFullscreenClick(): void {
     log.debug('[HUDScene#onLeaveFullscreenClick]')
     this.scale.stopFullscreen()
-    this.enterFullscreenButton = this.createHUDSceneButton('enterFullscreenButton', 'arrows-out')
+    this.enterFullscreenButton = this.createHUDSceneButton('enterFullscreenButton', 'arrows-out', .4)
     this.rhsButtons
       .remove(this.leaveFullscreenButton, true)
       .add(this.enterFullscreenButton)

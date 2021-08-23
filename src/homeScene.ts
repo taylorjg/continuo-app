@@ -43,7 +43,10 @@ export class HomeScene extends Phaser.Scene {
     this.load.image('info', 'assets/icons/42-info@2x.png')
     this.load.image('house', 'assets/icons/53-house@2x.png')
     this.load.image('group', 'assets/icons/112-group@2x.png')
+    this.load.image('checkmark', 'assets/icons/258-checkmark@2x.png')
     this.load.image('circlex', 'assets/icons/298-circlex@2x.png')
+    this.load.image('cw-arrow', 'assets/icons/cw-arrow.png')
+    this.load.image('ccw-arrow', 'assets/icons/ccw-arrow.png')
   }
 
   create() {
