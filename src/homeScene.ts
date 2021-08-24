@@ -6,6 +6,7 @@ import { HUDScene } from './hudScene'
 import { ContinuoBoardScene, createContinuoCardSprite } from './continuoBoardScene'
 import { HexagoBoardScene, createHexagoCardSprite } from './hexagoBoardScene'
 import { createChoosePlayersDialog } from './choosePlayersDialog'
+import { createSettingsDialog } from './settingsDialog'
 import * as ui from './ui'
 
 const LABEL_WIDTH = 375
@@ -18,9 +19,6 @@ export class HomeScene extends Phaser.Scene {
   eventEmitter: Phaser.Events.EventEmitter
   settings: Settings
   background: Phaser.GameObjects.TileSprite
-  playContinuoButton: RexUIPlugin.Label
-  playHexagoButton: RexUIPlugin.Label
-  choosePlayersButton: RexUIPlugin.Label
   hudScene: Phaser.Scene
   continuoBoardScene: Phaser.Scene
   hexagoBoardScene: Phaser.Scene
@@ -64,12 +62,23 @@ export class HomeScene extends Phaser.Scene {
     const continuoCardSprite = createContinuoCardSprite(this).setScale(.4, .4)
     const hexagoCardSprite = createHexagoCardSprite(this).setScale(.5, .5)
     const groupSprite = new Phaser.GameObjects.Sprite(this, 0, 0, 'group')
+    const gearSprite = new Phaser.GameObjects.Sprite(this, 0, 0, 'gear')
 
-    this.playContinuoButton = this.createHomeSceneButton('playContinuo', 'Play Continuo', continuoCardSprite)
-    this.playHexagoButton = this.createHomeSceneButton('playHexago', 'Play Hexago', hexagoCardSprite)
-    this.choosePlayersButton = this.createHomeSceneButton('choosePlayers', 'Choose Players', groupSprite)
+    const playContinuoButton = this.createHomeSceneButton('playContinuoButton', 'Play Continuo', continuoCardSprite)
+    const playHexagoButton = this.createHomeSceneButton('playHexagoButton', 'Play Hexago', hexagoCardSprite)
+    const choosePlayersButton = this.createHomeSceneButton('choosePlayersButton', 'Choose Players', groupSprite)
+    const settingsButton = this.createHomeSceneButton('settingsButton', 'Settings', gearSprite)
 
-    this.rearrange()
+    this.rexUI.add.sizer({
+      orientation: 'vertical',
+      anchor: { centerX: 'center', centerY: 'center' },
+      space: { item: LABEL_GAP }
+    })
+      .add(playContinuoButton)
+      .add(playHexagoButton)
+      .add(choosePlayersButton)
+      .add(settingsButton)
+      .layout()
 
     this.input.on(Phaser.Input.Events.GAMEOBJECT_DOWN, this.onClick, this)
 
@@ -96,19 +105,10 @@ export class HomeScene extends Phaser.Scene {
   }
 
   private resize(): void {
-    const width = window.innerWidth
-    const height = window.innerHeight
-    this.scale.resize(width, height)
-    this.rearrange()
-  }
-
-  private rearrange(): void {
-    const centreX = window.innerWidth / 2
-    const centreY = window.innerHeight / 2
-    this.playContinuoButton.setPosition(centreX, centreY - LABEL_HEIGHT - LABEL_GAP)
-    this.playHexagoButton.setPosition(centreX, centreY)
-    this.choosePlayersButton.setPosition(centreX, centreY + LABEL_HEIGHT + LABEL_GAP)
-    this.background.setSize(window.innerWidth, window.innerHeight)
+    const windowWidth = window.innerWidth
+    const windowHeight = window.innerHeight
+    this.scale.resize(windowWidth, windowHeight)
+    this.background.setSize(windowWidth, windowHeight)
   }
 
   private onPlayContinuo(): void {
@@ -124,6 +124,11 @@ export class HomeScene extends Phaser.Scene {
   private onChoosePlayers(): void {
     log.debug('[HomeScene#onChoosePlayers]')
     createChoosePlayersDialog(this)
+  }
+
+  private onSettings(): void {
+    log.debug('[HomeScene#onSettings]')
+    createSettingsDialog(this, this.settings)
   }
 
   private onWake(): void {
@@ -159,9 +164,10 @@ export class HomeScene extends Phaser.Scene {
     _event: Phaser.Types.Input.EventData
   ): void {
     switch (gameObject.name) {
-      case 'playContinuo': return this.onPlayContinuo()
-      case 'playHexago': return this.onPlayHexago()
-      case 'choosePlayers': return this.onChoosePlayers()
+      case 'playContinuoButton': return this.onPlayContinuo()
+      case 'playHexagoButton': return this.onPlayHexago()
+      case 'choosePlayersButton': return this.onChoosePlayers()
+      case 'settingsButton': return this.onSettings()
     }
   }
 }
