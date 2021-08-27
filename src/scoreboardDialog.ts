@@ -5,15 +5,36 @@ import { SceneWithRexUI } from './types'
 import { Scoreboard, ScoreboardEntry } from './turnManager'
 import * as ui from './ui'
 
+const addRow = (
+  scene: SceneWithRexUI,
+  sizer: GridSizer,
+  row: number,
+  text: string,
+  scoreboard: Scoreboard,
+  makeText: (entry: ScoreboardEntry) => string) => {
+  addRowLabel(scene, sizer, row, text)
+  addRowValues(scene, sizer, row, scoreboard, makeText)
+}
+
 const addRowLabel = (scene: SceneWithRexUI, sizer: GridSizer, row: number, text: string) => {
-  const child = scene.rexUI.add.label({ text: scene.add.text(0, 0, text, ui.TEXT_STYLE) })
+  const child = scene.rexUI.add.label({
+    text: scene.add.text(0, 0, text, ui.TEXT_STYLE)
+  })
   sizer.add(child, { row, align: 'left' })
 }
 
-const addRowValues = (scene: SceneWithRexUI, sizer: GridSizer, row: number, scoreboard: Scoreboard, makeText: (entry: ScoreboardEntry) => string) => {
+const addRowValues = (
+  scene: SceneWithRexUI,
+  sizer: GridSizer,
+  row: number,
+  scoreboard: Scoreboard,
+  makeText: (entry: ScoreboardEntry) => string) => {
   scoreboard.forEach(entry => {
     const text = makeText(entry)
-    const child = scene.rexUI.add.label({ align: 'center', text: scene.add.text(0, 0, text, ui.TEXT_STYLE) })
+    const child = scene.rexUI.add.label({
+      text: scene.add.text(0, 0, text, ui.TEXT_STYLE),
+      align: 'center'
+    })
     sizer.add(child, { row })
   })
 }
@@ -22,24 +43,14 @@ const createTable = (scene: SceneWithRexUI, scoreboard: Scoreboard): Phaser.Game
 
   const sizer = scene.rexUI.add.gridSizer({
     column: 1 + scoreboard.length,
-    row: 5,
+    row: 4,
     space: { row: 10, column: 40, left: 10, right: 10, top: 10, bottom: 10 }
   })
 
-  addRowLabel(scene, sizer, 0, 'Player name:')
-  addRowValues(scene, sizer, 0, scoreboard, entry => entry.playerName)
-
-  addRowLabel(scene, sizer, 1, 'Score:')
-  addRowValues(scene, sizer, 1, scoreboard, entry => `${entry.score} (${entry.bestScore})`)
-
-  addRowLabel(scene, sizer, 2, 'Highest card score:')
-  addRowValues(scene, sizer, 2, scoreboard, _entry => 'TODO')
-
-  addRowLabel(scene, sizer, 3, 'Longest chain:')
-  addRowValues(scene, sizer, 3, scoreboard, _entry => 'TODO')
-
-  addRowLabel(scene, sizer, 4, 'Number of moves:')
-  addRowValues(scene, sizer, 4, scoreboard, _entry => 'TODO')
+  addRow(scene, sizer, 0, 'Player name:', scoreboard, entry => entry.playerName)
+  addRow(scene, sizer, 1, 'Score:', scoreboard, entry => `${entry.score} (${entry.bestScore})`)
+  addRow(scene, sizer, 2, 'Highest card score:', scoreboard, _entry => 'TODO')
+  addRow(scene, sizer, 3, 'Number of moves:', scoreboard, _entry => 'TODO')
 
   return sizer.layout()
 }

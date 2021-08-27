@@ -241,6 +241,7 @@ export class HUDScene extends Phaser.Scene {
       const numCardsLeft = <number>arg.numCardsLeft
       if (numCardsLeft == 0) {
         this.turnManager.gameOver()
+        this.onScoreboardClick()
       } else {
         this.turnManager.step()
       }
