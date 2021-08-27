@@ -47,26 +47,69 @@ const createTable = (scene: SceneWithRexUI, scoreboard: Scoreboard): Phaser.Game
 class ScoreboardDialogScene extends ModalDialogBaseScene {
 
   scoreboard: Scoreboard
+  isGameOver: boolean
+  onPlayAgain?: Function
+  onHome?: Function
 
-  constructor(scoreboard: Scoreboard) {
+  constructor(scoreboard: Scoreboard, isGameOver: boolean, onPlayAgain?: Function, onHome?: Function) {
     super('ScoreboardDialog')
     this.scoreboard = scoreboard
+    this.isGameOver = isGameOver
+    this.onPlayAgain = onPlayAgain
+    this.onHome = onHome
   }
 
 
   protected getDialogConfig(): Dialog.IConfig {
+
+    const maybeActions = this.isGameOver
+      ? {
+        actions: [
+          ui.createLabel(this, 'Play Again')
+            .setName('playAgainButton')
+            .setInteractive({ useHandCursor: true }),
+          ui.createLabel(this, 'Home')
+            .setName('homeButton')
+            .setInteractive({ useHandCursor: true })
+        ]
+      }
+      : undefined
+
     return {
       title: this.add.text(0, 0, 'Scoreboard', ui.TEXT_STYLE),
       content: createTable(this, this.scoreboard),
       expand: { title: false },
-      actions: [
-        ui.createLabel(this, 'Play Again').setInteractive({ useHandCursor: true }),
-        ui.createLabel(this, 'Home').setInteractive({ useHandCursor: true })
-      ]
+      ...maybeActions
     }
+  }
+
+  create() {
+    super.create()
+    this.dialog.on('button.click', (
+      gameObject: Phaser.GameObjects.GameObject,
+      _groupName: string,
+      _index: number,
+      _pointer: Phaser.Input.Pointer,
+      _event: Phaser.Types.Input.EventData) => {
+      switch (gameObject.name) {
+        case 'playAgainButton':
+          this.closeDialog()
+          this.onPlayAgain && this.onPlayAgain()
+          break
+        case 'homeButton':
+          this.closeDialog()
+          this.onHome && this.onHome()
+          break
+      }
+    })
   }
 }
 
-export const createScoreboardDialog = (parentScene: Phaser.Scene, scoreboard: Scoreboard): void => {
-  parentScene.scene.add(undefined, new ScoreboardDialogScene(scoreboard), true)
+export const createScoreboardDialog = (
+  parentScene: Phaser.Scene,
+  scoreboard: Scoreboard,
+  isGameOver: boolean,
+  onPlayAgain?: Function,
+  onHome?: Function): void => {
+  parentScene.scene.add(undefined, new ScoreboardDialogScene(scoreboard, isGameOver, onPlayAgain, onHome), true)
 }

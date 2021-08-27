@@ -173,7 +173,11 @@ export class HUDScene extends Phaser.Scene {
 
   private onHomeClick(): void {
     log.debug('[HUDScene#onHomeClick]')
-    createConfirmationDialog(this, () => this.game.scene.wake('HomeScene'))
+    if (this.turnManager.isGameOver) {
+      this.game.scene.wake('HomeScene')
+    } else {
+      createConfirmationDialog(this, () => this.game.scene.wake('HomeScene'))
+    }
   }
 
   private updateRemainingCards(arg: any): void {
@@ -336,7 +340,17 @@ export class HUDScene extends Phaser.Scene {
 
   private onScoreboardClick(): void {
     log.debug('[HUDScene#onScoreboardClick]')
-    createScoreboardDialog(this, this.turnManager.scoreboard)
+    createScoreboardDialog(
+      this,
+      this.turnManager.scoreboard,
+      this.turnManager.isGameOver,
+      () => {
+        this.boardScene.onRestart()
+        this.turnManager.reset()
+        this.turnManager.step()
+      },
+      () => { this.onHomeClick() }
+    )
   }
 
   private onSettingsClick(): void {

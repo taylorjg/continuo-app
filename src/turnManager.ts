@@ -59,7 +59,7 @@ export class TurnManager {
   private readonly playerScores: PlayerScore[]
   private nextPlayerIndex: number
   private currentPlayerScore: PlayerScore
-  private isGameOver: boolean
+  private _isGameOver: boolean
 
   constructor(
     private eventEmitter: Phaser.Events.EventEmitter,
@@ -67,11 +67,11 @@ export class TurnManager {
     this.playerScores = this.players.map(player => new PlayerScore(player))
     this.nextPlayerIndex = 0
     this.currentPlayerScore = null
-    this.isGameOver = false
+    this._isGameOver = false
   }
 
   public step(): void {
-    if (this.isGameOver) {
+    if (this._isGameOver) {
       return
     }
     this.currentPlayerScore = this.playerScores[this.nextPlayerIndex]
@@ -86,7 +86,7 @@ export class TurnManager {
     this.playerScores.forEach(playerScore => playerScore.reset())
     this.nextPlayerIndex = 0
     this.currentPlayerScore = null
-    this.isGameOver = false
+    this._isGameOver = false
   }
 
   public addTurnScore(playerScore: PlayerScore, score: number, bestScore: number): void {
@@ -95,7 +95,7 @@ export class TurnManager {
 
   public gameOver() {
     this.currentPlayerScore = null
-    this.isGameOver = true
+    this._isGameOver = true
     this.eventEmitter.emit('finalScores', {
       scoreboard: this.makeScoreboard()
     })
@@ -103,6 +103,10 @@ export class TurnManager {
 
   public get scoreboard(): Scoreboard {
     return this.makeScoreboard()
+  }
+
+  public get isGameOver(): boolean {
+    return this._isGameOver
   }
 
   private makeScoreboard(): Scoreboard {
