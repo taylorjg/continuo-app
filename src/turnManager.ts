@@ -101,6 +101,10 @@ export class TurnManager {
     })
   }
 
+  public get scoreboard(): Scoreboard {
+    return this.makeScoreboard()
+  }
+
   private makeScoreboard(): Scoreboard {
     return this.playerScores.map(playerScore =>
       new ScoreboardEntry(

@@ -10,9 +10,6 @@ import { createAboutDialog } from './aboutDialog'
 import { createScoreboardDialog } from './scoreboardDialog'
 import * as ui from './ui'
 
-const INNER_PADDING = 7
-const GAP_Y = 30
-
 export class HUDScene extends Phaser.Scene {
 
   rexUI: RexUIPlugin
@@ -24,13 +21,14 @@ export class HUDScene extends Phaser.Scene {
 
   lhsButtons: RexUIPlugin.Sizer
   rhsButtons: RexUIPlugin.Sizer
+  statusBarLeft: RexUIPlugin.Sizer
+  statusBarRight: RexUIPlugin.Sizer
 
   enterFullscreenButton: RexUIPlugin.Label
   leaveFullscreenButton: RexUIPlugin.Label
 
-  remainingCardsText: Phaser.GameObjects.Text
-  currentCardScoreText: Phaser.GameObjects.Text
-  scoreboardTexts: Phaser.GameObjects.Text[]
+  currentCardScoreLabel: RexUIPlugin.Label
+  remainingCardsLabel: RexUIPlugin.Label
 
   constructor(eventEmitter: Phaser.Events.EventEmitter, settings: Settings) {
     super('HUDScene')
@@ -52,24 +50,6 @@ export class HUDScene extends Phaser.Scene {
 
     window.addEventListener('resize', onResize)
     window.addEventListener('orientationchange', onOrientationChange)
-
-    let y = 150
-
-    this.remainingCardsText = this.add.text(10, y, '')
-    this.remainingCardsText.setOrigin(0, 0)
-    y += GAP_Y
-
-    this.currentCardScoreText = this.add.text(10, y, '')
-    this.currentCardScoreText.setOrigin(0, 0)
-    y += GAP_Y
-
-    this.scoreboardTexts = []
-    this.turnManager.players.forEach(() => {
-      const scoreboardText = this.add.text(10, y, '')
-      scoreboardText.setOrigin(0, 0)
-      this.scoreboardTexts.push(scoreboardText)
-      y += GAP_Y
-    })
 
     const rotateCWButton = this.createHUDSceneButton('rotateCWButton', 'cw-arrow', .75)
     const rotateCCWButton = this.createHUDSceneButton('rotateCCWButton', 'ccw-arrow', .75)
@@ -111,6 +91,25 @@ export class HUDScene extends Phaser.Scene {
     }
 
     this.rhsButtons.layout()
+
+    this.currentCardScoreLabel = ui.createLabel(this, '')
+    this.remainingCardsLabel = ui.createLabel(this, '')
+
+    this.statusBarLeft = this.rexUI.add.sizer({
+      anchor: { left: 'left', bottom: 'bottom' },
+      orientation: 'horizontal',
+      space: { left: 10, right: 10, top: 10, bottom: 10 }
+    })
+      .add(this.currentCardScoreLabel)
+      .layout()
+
+    this.statusBarRight = this.rexUI.add.sizer({
+      anchor: { right: 'right', bottom: 'bottom' },
+      orientation: 'horizontal',
+      space: { left: 10, right: 10, top: 10, bottom: 10 }
+    })
+      .add(this.remainingCardsLabel)
+      .layout()
 
     this.eventEmitter.on('nextTurn', this.onNextTurn, this)
     this.eventEmitter.on('finalScores', this.onFinalScores, this)
@@ -154,15 +153,15 @@ export class HUDScene extends Phaser.Scene {
       icon: this.add.existing(iconContainer),
       align: 'center'
     })
-      .setInnerPadding(INNER_PADDING)
+      .setInnerPadding(7)
       .setInteractive({ useHandCursor: true })
       .layout()
   }
 
   private resize(): void {
-    const width = window.innerWidth
-    const height = window.innerHeight
-    this.scale.resize(width, height)
+    const windowWidth = window.innerWidth
+    const windowHeight = window.innerHeight
+    this.scale.resize(windowWidth, windowHeight)
   }
 
   private onWake(_thisScene: Phaser.Scene, boardScene: IBoardScene) {
@@ -179,7 +178,8 @@ export class HUDScene extends Phaser.Scene {
 
   private updateRemainingCards(arg: any): void {
     const numCardsLeft: number = <number>arg.numCardsLeft
-    this.remainingCardsText.setText(`Remaining cards: ${numCardsLeft}`)
+    this.remainingCardsLabel.text = `Remaining cards: ${numCardsLeft}`
+    this.statusBarRight.layout()
   }
 
   private updateCurrentCardScore(arg: any): void {
@@ -191,29 +191,31 @@ export class HUDScene extends Phaser.Scene {
     const textWithHint = `${score} (${bestScore}/${bestScoreLocationCount})`
     const textWithoutHint = `${score}`
 
-    this.currentCardScoreText.setData('textWithHint', textWithHint)
-    this.currentCardScoreText.setData('textWithoutHint', textWithoutHint)
+    this.currentCardScoreLabel.setData('textWithHint', textWithHint)
+    this.currentCardScoreLabel.setData('textWithoutHint', textWithoutHint)
 
     if (this.settings.hintShowBestAvailableScore) {
-      this.currentCardScoreText.setText(textWithHint)
+      this.currentCardScoreLabel.text = textWithHint
     } else {
-      this.currentCardScoreText.setText(textWithoutHint)
+      this.currentCardScoreLabel.text = textWithoutHint
     }
+    this.statusBarLeft.setVisible(true)
+    this.statusBarLeft.layout()
   }
 
   private clearCurrentCardScore(): void {
-    this.currentCardScoreText.setText('')
+    this.statusBarLeft.setVisible(false)
   }
 
   private updateScoreboardTexts(arg: any): void {
-    const scoreboard: Scoreboard = <Scoreboard>arg.scoreboard
-    scoreboard.forEach((entry, index) => {
-      const value = `${entry.playerName}: ${entry.score} (${entry.bestScore})`
-      const scoreboardText = this.scoreboardTexts[index]
-      scoreboardText.setText(value)
-      scoreboardText.setColor(entry.isCurrentPlayer ? 'red' : 'white')
-      scoreboardText.setFontStyle(entry.isCurrentPlayer ? 'bold' : '')
-    })
+    // const scoreboard: Scoreboard = <Scoreboard>arg.scoreboard
+    // scoreboard.forEach((entry, index) => {
+    //   const value = `${entry.playerName}: ${entry.score} (${entry.bestScore})`
+    //   const scoreboardText = this.scoreboardTexts[index]
+    //   scoreboardText.setText(value)
+    //   scoreboardText.setColor(entry.isCurrentPlayer ? 'red' : 'white')
+    //   scoreboardText.setFontStyle(entry.isCurrentPlayer ? 'bold' : '')
+    // })
   }
 
   private updateButtonState(): void {
@@ -322,18 +324,19 @@ export class HUDScene extends Phaser.Scene {
 
   private onSettingsChanged(arg: any): void {
     log.debug('[HUDScene#onSettingsChanged]')
-    const textWithHint = this.currentCardScoreText.getData('textWithHint') || ''
-    const textWithoutHint = this.currentCardScoreText.getData('textWithoutHint') || ''
+    const textWithHint = this.currentCardScoreLabel.getData('textWithHint') || ''
+    const textWithoutHint = this.currentCardScoreLabel.getData('textWithoutHint') || ''
     if (this.settings.hintShowBestAvailableScore) {
-      this.currentCardScoreText.setText(textWithHint)
+      this.currentCardScoreLabel.text = textWithHint
     } else {
-      this.currentCardScoreText.setText(textWithoutHint)
+      this.currentCardScoreLabel.text = textWithoutHint
     }
+    this.statusBarLeft.layout()
   }
 
   private onScoreboardClick(): void {
     log.debug('[HUDScene#onScoreboardClick]')
-    createScoreboardDialog(this)
+    createScoreboardDialog(this, this.turnManager.scoreboard)
   }
 
   private onSettingsClick(): void {
