@@ -18,6 +18,11 @@ export const TEXT_STYLE = {
   fontSize: '24px'
 }
 
+export const TEXT_STYLE_SMALL = {
+  fontFamily: 'Verdana',
+  fontSize: '12px'
+}
+
 export const createDialogOverlay = (scene: Phaser.Scene): Phaser.GameObjects.Rectangle => {
   return scene.add.rectangle(0, 0, 0, 0, DIALOG_OVERLAY_COLOUR, DIALOG_OVERLAY_ALPHA)
     .setName('dialogOverlay')

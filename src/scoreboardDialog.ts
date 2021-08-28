@@ -18,9 +18,7 @@ const addColumn = (
 
 const addColumnHeading = (scene: SceneWithRexUI, gridSizer: GridSizer, column: number, text: string) => {
   const child = scene.rexUI.add.label({
-    // background: ui.createLabelBackground(scene),
     text: scene.add.text(0, 0, text, ui.TEXT_STYLE),
-    // space: { left: 10, right: 10, top: 10, bottom: 10 }
     space: { bottom: 15 }
   })
   gridSizer.add(child, { column })
