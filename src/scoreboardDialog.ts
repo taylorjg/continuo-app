@@ -45,14 +45,15 @@ const addColumnValues = (
 const createTable = (scene: SceneWithRexUI, scoreboard: Scoreboard): Phaser.GameObjects.GameObject => {
 
   const gridSizer = scene.rexUI.add.gridSizer({
-    column: 3,
+    column: 4,
     row: 1 + scoreboard.length,
     space: { row: 10, column: 40, left: 10, right: 10, top: 10, bottom: 10 }
   })
 
   addColumn(scene, gridSizer, 0, 'Player', scoreboard, entry => entry.playerName)
   addColumn(scene, gridSizer, 1, 'Score', scoreboard, entry => `${entry.score} (${entry.bestScore})`)
-  addColumn(scene, gridSizer, 2, 'Best card', scoreboard, _entry => 'TODO')
+  addColumn(scene, gridSizer, 2, 'Best card', scoreboard, entry => `${entry.bestCard}`)
+  addColumn(scene, gridSizer, 3, 'Cards placed', scoreboard, entry => `${entry.cardsPlaced}`)
 
   return gridSizer.layout()
 }

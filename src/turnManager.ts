@@ -19,35 +19,51 @@ export class PlayerScore {
 
   private _score: number
   private _bestScore: number
+  private _scores: number[]
 
   constructor(public readonly player: Player) {
+    this._scores = []
   }
 
-  public get score() {
+  public get score(): number {
     return this._score
   }
 
-  public get bestScore() {
+  public get bestScore(): number {
     return this._bestScore
+  }
+
+  public get bestCard(): number {
+    return this._scores.length > 0
+      ? Math.max(...this._scores)
+      : 0
+  }
+
+  public get cardsPlaced(): number {
+    return this._scores.length
   }
 
   public addTurnScore(score: number, bestScore: number) {
     this._score += score
     this._bestScore += bestScore
+    this._scores.push(score)
   }
 
   public reset(): void {
     this._score = 0
     this._bestScore = 0
+    this._scores = []
   }
 }
 
 export class ScoreboardEntry {
   constructor(
-    public playerName: string,
-    public score: number,
-    public bestScore: number,
-    public isCurrentPlayer: boolean
+    public readonly playerName: string,
+    public readonly score: number,
+    public readonly bestScore: number,
+    public readonly bestCard: number,
+    public readonly cardsPlaced: number,
+    public readonly isCurrentPlayer: boolean
   ) {
   }
 }
@@ -115,6 +131,8 @@ export class TurnManager {
         playerScore.player.name,
         playerScore.score,
         playerScore.bestScore,
+        playerScore.bestCard,
+        playerScore.cardsPlaced,
         playerScore == this.currentPlayerScore
       )
     )
