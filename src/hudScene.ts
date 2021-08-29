@@ -3,13 +3,15 @@ import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import log from 'loglevel'
 import { Settings } from './settings'
 import { IBoardScene } from './types'
-import { TurnManager, PlayerScore, PlayerType } from './turnManager'
+import { TurnManager, Player, PlayerScore, PlayerType, DEFAULT_PLAYERS_1, DEFAULT_PLAYERS_2 } from './turnManager'
 import { MiniScoreboard } from './miniScoreboard'
 import { createConfirmationDialog } from './confirmationDialog'
 import { createSettingsDialog } from './settingsDialog'
 import { createAboutDialog } from './aboutDialog'
 import { createScoreboardDialog } from './scoreboardDialog'
 import * as ui from './ui'
+import { HexagoBoardScene } from './hexagoBoardScene'
+import { ContinuoBoardScene } from './continuoBoardScene'
 
 export class HUDScene extends Phaser.Scene {
 
@@ -37,7 +39,7 @@ export class HUDScene extends Phaser.Scene {
     super('HUDScene')
     this.eventEmitter = eventEmitter
     this.settings = settings
-    this.turnManager = new TurnManager(this.eventEmitter)
+    this.miniScoreboard = null
     this.currentPlayerScore = null
   }
 
@@ -67,8 +69,6 @@ export class HUDScene extends Phaser.Scene {
       .add(rotateCCWButton)
       .add(placeCardButton)
       .layout()
-
-    this.miniScoreboard = new MiniScoreboard(this, this.turnManager.scoreboard, this.lhsButtons.y + this.lhsButtons.height / 2 + 10)
 
     const homeButton = this.createHUDSceneButton('homeButton', 'house', .4)
     const scoreboardButton = this.createHUDSceneButton('scoreboardButton', 'bar-chart', .4)
@@ -169,9 +169,24 @@ export class HUDScene extends Phaser.Scene {
     this.scale.resize(windowWidth, windowHeight)
   }
 
+  // Eventually, we will get players via the ChoosePlayersDialog
+  private getPlayersTemporary(): Player[] {
+    return this.boardScene instanceof ContinuoBoardScene
+      ? DEFAULT_PLAYERS_2
+      : DEFAULT_PLAYERS_1
+  }
+
   private onWake(_thisScene: Phaser.Scene, boardScene: IBoardScene) {
     log.debug('[HUDScene#onWake]')
     this.boardScene = boardScene
+    const players = this.getPlayersTemporary()
+    this.turnManager = new TurnManager(this.eventEmitter, players)
+    if (this.miniScoreboard) {
+      this.miniScoreboard.destroy()
+      this.miniScoreboard = null
+    }
+    const miniScoreboardY = this.lhsButtons.getBounds().bottom + 10
+    this.miniScoreboard = new MiniScoreboard(this, this.turnManager.scoreboard, miniScoreboardY)
     this.turnManager.reset()
     this.turnManager.step()
   }
@@ -216,16 +231,8 @@ export class HUDScene extends Phaser.Scene {
     this.statusBarLeft.setVisible(false)
   }
 
-  private updateScoreboardTexts(arg: any): void {
+  private updateScoreboardTexts(): void {
     this.miniScoreboard.update(this.turnManager.scoreboard)
-    // const scoreboard: Scoreboard = <Scoreboard>arg.scoreboard
-    // scoreboard.forEach((entry, index) => {
-    //   const value = `${entry.playerName}: ${entry.score} (${entry.bestScore})`
-    //   const scoreboardText = this.scoreboardTexts[index]
-    //   scoreboardText.setText(value)
-    //   scoreboardText.setColor(entry.isCurrentPlayer ? 'red' : 'white')
-    //   scoreboardText.setFontStyle(entry.isCurrentPlayer ? 'bold' : '')
-    // })
   }
 
   private updateButtonState(): void {
@@ -272,7 +279,7 @@ export class HUDScene extends Phaser.Scene {
   private onNextTurn(arg: any): void {
     log.debug('[HUDScene#onNextTurn]', arg)
     this.currentPlayerScore = <PlayerScore>arg.currentPlayerScore
-    this.updateScoreboardTexts(arg)
+    this.updateScoreboardTexts()
     this.updateButtonState()
     switch (this.currentPlayerScore.player.type) {
       case PlayerType.Human:
@@ -287,7 +294,7 @@ export class HUDScene extends Phaser.Scene {
   private onFinalScores(arg: any): void {
     log.debug('[HUDScene#onFinalScores]', arg)
     this.currentPlayerScore = null
-    this.updateScoreboardTexts(arg)
+    this.updateScoreboardTexts()
     this.updateButtonState()
   }
 

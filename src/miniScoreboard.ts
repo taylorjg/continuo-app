@@ -33,7 +33,7 @@ const addColumnValues = (
     })
     child.setData('column', column)
     child.setData('index', index)
-    gridSizer.add(child, { column, align: column == 0 ? 'left' : 'center' })
+    gridSizer.add(child, { column, align: column == 1 ? 'left' : 'center' })
   })
 }
 
@@ -77,5 +77,9 @@ export class MiniScoreboard {
       }
     })
     this.gridSizer.layout()
+  }
+
+  public destroy() {
+    this.gridSizer.destroy()
   }
 }
