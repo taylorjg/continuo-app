@@ -1,7 +1,8 @@
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
+import { Player } from './turnManager'
 
 export interface IBoardScene {
-  onRestart(): void
+  onRestart(players: readonly Player[]): void
   onNextCard(): void
   onComputerMove(): void
   onRotateCW(): void

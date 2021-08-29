@@ -229,7 +229,7 @@ export class HexagoBoardScene extends BoardScene {
     super('HexagoBoardScene', boardSceneConfig, adapter)
   }
 
-  protected *getInitialPlacedCards(deck: Deck, board: Board) {
+  protected *getInitialPlacedCards(deck: Deck, board: Board, numPlayers: number) {
 
     const card1 = deck.nextCard()
     const rotation1 = findRotationWhereSixIsAtWedgeIndex(card1, 1)

@@ -93,7 +93,7 @@ export class ContinuoBoardScene extends BoardScene {
     super('ContinuoBoardScene', boardSceneConfig, adapter)
   }
 
-  protected *getInitialPlacedCards(deck: Deck, board: Board) {
+  protected *getInitialPlacedCards(deck: Deck, board: Board, numPlayers: number) {
 
     const card1 = deck.nextCard()
     const orientation1 = this.chooseRandomOrientation()
@@ -103,6 +103,12 @@ export class ContinuoBoardScene extends BoardScene {
     const card2 = deck.nextCard()
     const placedCard2 = this.chooseRandomBestScoreMove(evaluateCard(board, card2)).placedCard
     board = yield placedCard2
+
+    if (numPlayers == 3) {
+      const card3 = deck.nextCard()
+      const placedCard3 = this.chooseRandomBestScoreMove(evaluateCard(board, card3)).placedCard
+      board = yield placedCard3
+    }
   }
 
   protected getCardPosition(row: number, col: number): Phaser.Geom.Point {

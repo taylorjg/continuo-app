@@ -14,7 +14,7 @@ import {
   CommonPossibleMove
 } from './types'
 
-import { PlayerType } from './turnManager'
+import { Player, PlayerType } from './turnManager'
 
 export const CURRENT_CARD_DEPTH = 1
 export const HIGHLIGHT_DEPTH = 2
@@ -54,7 +54,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.bestScoreLocationsFound = new Set()
   }
 
-  protected abstract getInitialPlacedCards(deck: CommonDeck, board: CommonBoard): Generator<CommonPlacedCard, void, CommonBoard>
+  protected abstract getInitialPlacedCards(deck: CommonDeck, board: CommonBoard, numPlayers: number): Generator<CommonPlacedCard, void, CommonBoard>
   protected abstract getCardPosition(row: number, col: number): Phaser.Geom.Point
   protected abstract getSnapPosition(x: number, y: number): CommonCell
   protected abstract drawCard(graphics: Phaser.GameObjects.Graphics, card: CommonCard): void
@@ -322,7 +322,7 @@ export abstract class BoardScene extends Phaser.Scene {
     return Phaser.Utils.Array.GetRandom(worstScoreMoves)
   }
 
-  private startNewGame(): void {
+  private startNewGame(players: readonly Player[]): void {
 
     this.cardSpritesMap.forEach(cardSprite => cardSprite.setVisible(false))
     this.currentCardContainer.setVisible(false)
@@ -332,7 +332,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.possibleMoves = []
     this.currentPossibleMove = null
 
-    const iter = this.getInitialPlacedCards(this.deck, this.board)
+    const iter = this.getInitialPlacedCards(this.deck, this.board, players.length)
 
     for (let curr = iter.next(); curr.value; curr = iter.next(this.board)) {
       this.placeInitialCard(curr.value)
@@ -378,14 +378,14 @@ export abstract class BoardScene extends Phaser.Scene {
     }
   }
 
-  private onWake() {
+  private onWake(_scene: Phaser.Scene, data: { players: readonly Player[] }) {
     log.debug('[BoardScene#onWake]')
-    this.startNewGame()
+    this.startNewGame(data.players)
   }
 
-  public onRestart(): void {
+  public onRestart(players: readonly Player[]): void {
     log.debug('[BoardScene#onRestart]')
-    this.startNewGame()
+    this.startNewGame(players)
   }
 
   public onNextCard(): void {

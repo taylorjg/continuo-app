@@ -5,6 +5,7 @@ import { Settings } from './settings'
 import { HUDScene } from './hudScene'
 import { ContinuoBoardScene, createContinuoCardSprite } from './continuoBoardScene'
 import { HexagoBoardScene, createHexagoCardSprite } from './hexagoBoardScene'
+import { Player, PlayerType } from './turnManager'
 import { createChoosePlayersDialog } from './choosePlayersDialog'
 import { createSettingsDialog } from './settingsDialog'
 import * as ui from './ui'
@@ -18,6 +19,7 @@ export class HomeScene extends Phaser.Scene {
   rexUI: RexUIPlugin
   eventEmitter: Phaser.Events.EventEmitter
   settings: Settings
+  players: Player[]
   background: Phaser.GameObjects.TileSprite
   hudScene: Phaser.Scene
   continuoBoardScene: Phaser.Scene
@@ -57,6 +59,10 @@ export class HomeScene extends Phaser.Scene {
 
     this.eventEmitter = new Phaser.Events.EventEmitter()
     this.settings = new Settings(true, false, false, true, true)
+    this.players = [
+      new Player('You', PlayerType.Human),
+      new Player('Computer', PlayerType.Computer)
+    ]
 
     this.background = this.add.tileSprite(0, 0, window.innerWidth, window.innerHeight, 'linen').setOrigin(0, 0)
 
@@ -143,8 +149,9 @@ export class HomeScene extends Phaser.Scene {
     this.scene.sleep()
     this.launchIfNotSleeping(boardScene)
     this.launchIfNotSleeping(this.hudScene)
-    this.scene.wake(boardScene)
-    this.scene.wake(this.hudScene, boardScene)
+    const players = this.players
+    this.scene.wake(boardScene, { players })
+    this.scene.wake(this.hudScene, { boardScene, players })
   }
 
   private sleepIfActive(scene: Phaser.Scene): void {

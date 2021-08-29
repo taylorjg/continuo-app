@@ -11,17 +11,6 @@ export class Player {
   }
 }
 
-export const DEFAULT_PLAYERS_1 = [
-  new Player('You', PlayerType.Human),
-  new Player('Computer', PlayerType.Computer)
-]
-
-export const DEFAULT_PLAYERS_2 = [
-  new Player('Player 1', PlayerType.Human),
-  new Player('Player 2', PlayerType.Human),
-  new Player('Player 3', PlayerType.Human)
-]
-
 export class PlayerScore {
 
   private _score: number
@@ -86,7 +75,7 @@ export class TurnManager {
 
   constructor(
     private eventEmitter: Phaser.Events.EventEmitter,
-    public readonly players: readonly Player[] = DEFAULT_PLAYERS_1
+    public readonly players: readonly Player[]
   ) {
     this.playerScores = this.players.map(player => new PlayerScore(player))
     this.nextPlayerIndex = 0

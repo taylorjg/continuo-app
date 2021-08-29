@@ -3,15 +3,13 @@ import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import log from 'loglevel'
 import { Settings } from './settings'
 import { IBoardScene } from './types'
-import { TurnManager, Player, PlayerScore, PlayerType, DEFAULT_PLAYERS_1, DEFAULT_PLAYERS_2 } from './turnManager'
+import { TurnManager, Player, PlayerScore, PlayerType } from './turnManager'
 import { MiniScoreboard } from './miniScoreboard'
 import { createConfirmationDialog } from './confirmationDialog'
 import { createSettingsDialog } from './settingsDialog'
 import { createAboutDialog } from './aboutDialog'
 import { createScoreboardDialog } from './scoreboardDialog'
 import * as ui from './ui'
-import { HexagoBoardScene } from './hexagoBoardScene'
-import { ContinuoBoardScene } from './continuoBoardScene'
 
 export class HUDScene extends Phaser.Scene {
 
@@ -169,18 +167,16 @@ export class HUDScene extends Phaser.Scene {
     this.scale.resize(windowWidth, windowHeight)
   }
 
-  // Eventually, we will get players via the ChoosePlayersDialog
-  private getPlayersTemporary(): Player[] {
-    return this.boardScene instanceof ContinuoBoardScene
-      ? DEFAULT_PLAYERS_2
-      : DEFAULT_PLAYERS_1
-  }
-
-  private onWake(_thisScene: Phaser.Scene, boardScene: IBoardScene) {
+  private onWake(
+    _scene: Phaser.Scene,
+    data: {
+      boardScene: IBoardScene,
+      players: Player[]
+    }
+  ) {
     log.debug('[HUDScene#onWake]')
-    this.boardScene = boardScene
-    const players = this.getPlayersTemporary()
-    this.turnManager = new TurnManager(this.eventEmitter, players)
+    this.boardScene = data.boardScene
+    this.turnManager = new TurnManager(this.eventEmitter, data.players)
     if (this.miniScoreboard) {
       this.miniScoreboard.destroy()
       this.miniScoreboard = null
@@ -359,7 +355,7 @@ export class HUDScene extends Phaser.Scene {
       this.turnManager.scoreboard,
       this.turnManager.isGameOver,
       () => {
-        this.boardScene.onRestart()
+        this.boardScene.onRestart(this.turnManager.players)
         this.turnManager.reset()
         this.turnManager.step()
       },
