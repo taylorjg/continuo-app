@@ -1,69 +1,15 @@
 import * as Phaser from 'phaser'
-import GridSizer from 'phaser3-rex-plugins/templates/ui/gridsizer/GridSizer'
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import log from 'loglevel'
 import { Settings } from './settings'
-import { IBoardScene, SceneWithRexUI } from './types'
-import { TurnManager, PlayerScore, Scoreboard, ScoreboardEntry, PlayerType } from './turnManager'
+import { IBoardScene } from './types'
+import { TurnManager, PlayerScore, PlayerType } from './turnManager'
+import { MiniScoreboard } from './miniScoreboard'
 import { createConfirmationDialog } from './confirmationDialog'
 import { createSettingsDialog } from './settingsDialog'
 import { createAboutDialog } from './aboutDialog'
 import { createScoreboardDialog } from './scoreboardDialog'
 import * as ui from './ui'
-
-const addColumnValues = (
-  scene: SceneWithRexUI,
-  gridSizer: GridSizer,
-  column: number,
-  scoreboard: Scoreboard,
-  makeText: (entry: ScoreboardEntry) => string) => {
-  scoreboard.forEach((entry, index) => {
-    const text = makeText(entry)
-    const child = scene.rexUI.add.label({
-      text: scene.add.text(0, 0, text, ui.TEXT_STYLE_SMALL)
-    })
-    child.setData('column', column)
-    child.setData('index', index)
-    gridSizer.add(child, { column, align: column == 0 ? 'left' : 'center' })
-  })
-}
-
-class MiniScoreboard {
-
-  gridSizer: GridSizer
-
-  public constructor(scene: SceneWithRexUI, scoreboard: Scoreboard, y: number) {
-    this.gridSizer = scene.rexUI.add.gridSizer({
-      x: 0,
-      y,
-      column: 2,
-      row: scoreboard.length,
-      space: { row: 10, column: 10, left: 10, right: 10, top: 10, bottom: 10 },
-      anchor: { left: 'left+10' }
-    })
-
-    this.gridSizer.addBackground(ui.createLabelBackgroundWithBorder(scene))
-
-    addColumnValues(scene, this.gridSizer, 0, scoreboard, entry => entry.playerName)
-    addColumnValues(scene, this.gridSizer, 1, scoreboard, _entry => '')
-
-    this.gridSizer
-      .setInteractive({ useHandCursor: true })
-      .setOrigin(.5, 0)
-      .layout()
-  }
-
-  public update(scoreboard: Scoreboard) {
-    scoreboard.forEach((entry, index) => {
-      const childGameObject = this.gridSizer.getAllChildren().find(c => c.getData('column') == 1 && c.getData('index') == index)
-      if (childGameObject) {
-        const label = <RexUIPlugin.Label>childGameObject
-        label.text = `${entry.score} (${entry.bestScore})`
-      }
-    })
-    this.gridSizer.layout()
-  }
-}
 
 export class HUDScene extends Phaser.Scene {
 

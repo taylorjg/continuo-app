@@ -6,13 +6,13 @@
 
 * ~~add dialog to confirm leave game~~
 * ~~home screen buttons HTML => UI components~~
-* HUD buttons HTML => UI components
+* ~~HUD buttons HTML => UI components~~
 * ~~remove Restart button~~
-* add a status bar
+* ~~add a status bar~~
 * final scoreboard dialog
-  * can also be presented during game via an icon on HUDScene
-  * score for each player
-  * show highest single card score for each player
+  * ~~can also be presented during game via an icon on HUDScene~~
+  * ~~score for each player~~
+  * ~~show highest single card score for each player~~
   * show longest single chain for each player
   * could make player names editable via an edit icon
 * ~~add interesting background to home scene~~
@@ -52,8 +52,9 @@
   * try to find a good example
 * best practices
   * try to find a good example
-* controllers ?
+* controllers / MVC ?
   * try to find a good example
+* adjustments to support small screens
 * a11y ?
   * https://www.a11yproject.com/
 
