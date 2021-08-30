@@ -14,19 +14,20 @@ export class Fullscreen {
     this.scene = scene
     this.sizer = sizer
 
-    if (scene.sys.game.device.fullscreen.available) {
-      if (scene.scale.isFullscreen) {
-        this.leaveFullscreenButton = ui.createHUDSceneButton(scene, 'leaveFullscreenButton', 'arrows-in', .4)
-        sizer.add(this.leaveFullscreenButton)
+    if (this.scene.sys.game.device.fullscreen.available) {
+      if (this.scene.scale.isFullscreen) {
+        this.leaveFullscreenButton = this.makeLeaveFullscreenButton()
+        this.sizer.add(this.leaveFullscreenButton)
       } else {
-        this.enterFullscreenButton = ui.createHUDSceneButton(scene, 'enterFullscreenButton', 'arrows-out', .4)
-        sizer.add(this.enterFullscreenButton)
+        this.enterFullscreenButton = this.makeEnterFullscreenButton()
+        this.sizer.add(this.enterFullscreenButton)
       }
 
       this.scene.input.on(Phaser.Input.Events.GAMEOBJECT_DOWN, (
         _pointer: Phaser.Input.Pointer,
         gameObject: Phaser.GameObjects.GameObject,
-        _event: Phaser.Types.Input.EventData) => {
+        _event: Phaser.Types.Input.EventData
+      ) => {
         switch (gameObject.name) {
           case 'enterFullscreenButton': return this.onEnterFullscreenClick()
           case 'leaveFullscreenButton': return this.onLeaveFullscreenClick()
@@ -35,9 +36,17 @@ export class Fullscreen {
     }
   }
 
+  private makeEnterFullscreenButton(): RexUIPlugin.Label {
+    return ui.createHUDSceneButton(this.scene, 'enterFullscreenButton', 'arrows-out', .4)
+  }
+
+  private makeLeaveFullscreenButton(): RexUIPlugin.Label {
+    return ui.createHUDSceneButton(this.scene, 'leaveFullscreenButton', 'arrows-in', .4)
+  }
+
   private onEnterFullscreenClick(): void {
     this.scene.scale.startFullscreen()
-    this.leaveFullscreenButton = ui.createHUDSceneButton(this.scene, 'leaveFullscreenButton', 'arrows-in', .4)
+    this.leaveFullscreenButton = this.makeLeaveFullscreenButton()
     this.sizer
       .remove(this.enterFullscreenButton, true)
       .add(this.leaveFullscreenButton)
@@ -46,7 +55,7 @@ export class Fullscreen {
 
   private onLeaveFullscreenClick(): void {
     this.scene.scale.stopFullscreen()
-    this.enterFullscreenButton = ui.createHUDSceneButton(this.scene, 'enterFullscreenButton', 'arrows-out', .4)
+    this.enterFullscreenButton = this.makeEnterFullscreenButton()
     this.sizer
       .remove(this.leaveFullscreenButton, true)
       .add(this.enterFullscreenButton)
