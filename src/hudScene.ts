@@ -110,7 +110,6 @@ export class HUDScene extends Phaser.Scene {
     this.eventEmitter.on('nextCard', this.onNextCard, this)
     this.eventEmitter.on('moveCard', this.onMoveCard, this)
     this.eventEmitter.on('placeCard', this.onPlaceCard, this)
-    this.eventEmitter.on('startRotateCard', this.onStartRotateCard, this)
     this.eventEmitter.on('endRotateCard', this.onEndRotateCard, this)
     this.eventEmitter.on('startComputerMove', this.onStartComputerMove, this)
     this.eventEmitter.on('endComputerMove', this.onEndComputerMove, this)
@@ -204,21 +203,12 @@ export class HUDScene extends Phaser.Scene {
     this.miniScoreboard.update(this.turnManager.scoreboard)
   }
 
-  private updateButtonState(): void {
-    const isNoMove = this.currentPlayerScore == null
-    const isComputerMove = this.currentPlayerScore?.player.type == PlayerType.Computer
-    // this.rotateCWElement.disabled = isComputerMove || isNoMove
-    // this.rotateCCWElement.disabled = isComputerMove || isNoMove
-    // this.placeCardElement.disabled = isComputerMove || isNoMove
-  }
-
   private endOfTurn(arg: any): void {
     const score = <number>arg.score
     const bestScore = <number>arg.bestScore
     this.turnManager.addTurnScore(this.currentPlayerScore, score, bestScore)
     this.currentPlayerScore = null
     this.clearCurrentCardScore()
-    this.updateButtonState()
     setTimeout(() => {
       const numCardsLeft = <number>arg.numCardsLeft
       if (numCardsLeft == 0) {
@@ -230,26 +220,31 @@ export class HUDScene extends Phaser.Scene {
     }, 1000)
   }
 
+  private ifHumanMove(action: () => void) {
+    if (this.currentPlayerScore?.player?.type == PlayerType.Human) {
+      action()
+    }
+  }
+
   private onRotateCWClick(): void {
     log.debug('[HUDScene#onRotateCWClick]')
-    this.boardScene.onRotateCW()
+    this.ifHumanMove(() => this.boardScene.onRotateCW())
   }
 
   private onRotateCCWClick(): void {
     log.debug('[HUDScene#onRotateCCWClick]')
-    this.boardScene.onRotateCCW()
+    this.ifHumanMove(() => this.boardScene.onRotateCCW())
   }
 
   private onPlaceCardClick(): void {
     log.debug('[HUDScene#onPlaceCardClick]')
-    this.boardScene.onPlaceCard()
+    this.ifHumanMove(() => this.boardScene.onPlaceCard())
   }
 
   private onNextTurn(arg: any): void {
     log.debug('[HUDScene#onNextTurn]', arg)
     this.currentPlayerScore = <PlayerScore>arg.currentPlayerScore
     this.updateScoreboardTexts()
-    this.updateButtonState()
     switch (this.currentPlayerScore.player.type) {
       case PlayerType.Human:
         this.boardScene.onNextCard()
@@ -264,14 +259,12 @@ export class HUDScene extends Phaser.Scene {
     log.debug('[HUDScene#onFinalScores]', arg)
     this.currentPlayerScore = null
     this.updateScoreboardTexts()
-    this.updateButtonState()
   }
 
   private onNextCard(arg: any): void {
     log.debug('[HUDScene#onNextCard]', arg)
     this.updateRemainingCards(arg)
     this.updateCurrentCardScore(arg)
-    this.updateButtonState()
   }
 
   private onMoveCard(arg: any): void {
@@ -284,24 +277,15 @@ export class HUDScene extends Phaser.Scene {
     this.endOfTurn(arg)
   }
 
-  private onStartRotateCard(arg: any): void {
-    log.debug('[HUDScene#onStartRotateCard]', arg)
-    // this.rotateCWElement.disabled = true
-    // this.rotateCCWElement.disabled = true
-    // this.placeCardElement.disabled = true
-  }
-
   private onEndRotateCard(arg: any): void {
     log.debug('[HUDScene#onEndRotateCard]', arg)
     this.updateCurrentCardScore(arg)
-    this.updateButtonState()
   }
 
   private onStartComputerMove(arg: any): void {
     log.debug('[HUDScene#onStartComputerMove]', arg)
     this.updateRemainingCards(arg)
     this.updateCurrentCardScore(arg)
-    this.updateButtonState()
   }
 
   private onEndComputerMove(arg: any): void {

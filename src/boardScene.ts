@@ -36,6 +36,7 @@ export abstract class BoardScene extends Phaser.Scene {
   private board: CommonBoard
   private possibleMoves: CommonPossibleMove[]
   private currentPossibleMove: CommonPossibleMove
+  private currentPlayerType: PlayerType
   private cardSpritesMap: Map<CommonCard, Phaser.GameObjects.Sprite>
   private currentCardContainer: Phaser.GameObjects.Container
   private scoringHighlights: Phaser.GameObjects.Shape[]
@@ -128,6 +129,7 @@ export abstract class BoardScene extends Phaser.Scene {
 
   private placeCurrentCardTentative(possibleMove: CommonPossibleMove, playerType: PlayerType): void {
     this.currentPossibleMove = possibleMove
+    this.currentPlayerType = playerType
     const placedCard = this.currentPossibleMove.placedCard
     this.rescale(this.board.placeCard(placedCard))
     this.showCardSpriteInContainer(placedCard, playerType)
@@ -142,6 +144,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.unhighlightScoring()
     this.emitCurrentCardChange(playerType == PlayerType.Computer ? 'endComputerMove' : 'placeCard')
     this.currentPossibleMove = null
+    this.currentPlayerType = null
     this.bestScoreLocationsFound.clear()
   }
 
@@ -184,7 +187,7 @@ export abstract class BoardScene extends Phaser.Scene {
   }
 
   private rotateCurrentCardContainer(rotationAngle: number): void {
-    if (this.rotating) {
+    if (this.rotating || this.currentPlayerType != PlayerType.Human) {
       return
     }
     const newPlacedCard = rotationAngle > 0
@@ -331,6 +334,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.board = this.adapter.emptyBoard
     this.possibleMoves = []
     this.currentPossibleMove = null
+    this.currentPlayerType = null
 
     const iter = this.getInitialPlacedCards(this.deck, this.board, players.length)
 

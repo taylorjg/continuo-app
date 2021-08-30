@@ -1,6 +1,6 @@
 {
   "name": "continuo-app",
-  "version": "0.0.38",
+  "version": "0.0.39",
   "description": "Continuo and Hexago game using Phaser 3 and TypeScript",
   "main": "index.js",
   "scripts": {
