@@ -1,4 +1,3 @@
-import RoundRecrangle from 'phaser3-rex-plugins/plugins/roundrectanglecanvas'
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import { SceneWithRexUI } from './types'
 
@@ -86,4 +85,43 @@ export const createCloseButton = (scene: Phaser.Scene): Phaser.GameObjects.GameO
   container.add(icon)
   scene.add.existing(container)
   return container
+}
+
+export const createHomeSceneButton = (
+  scene: SceneWithRexUI,
+  name: string,
+  text: string,
+  sprite: Phaser.GameObjects.Sprite
+): RexUIPlugin.Label => {
+  const iconContainer = new Phaser.GameObjects.Container(scene, 0, 0, [sprite]).setSize(125, 75)
+  return scene.rexUI.add.label({
+    width: 375,
+    height: 130,
+    background: createLabelBackgroundWithBorder(scene),
+    text: scene.add.text(0, 0, text, TEXT_STYLE),
+    icon: scene.add.existing(iconContainer),
+    space: { left: 10, right: 10, top: 10, bottom: 10, icon: 10 }
+  })
+    .setName(name)
+    .setInteractive({ useHandCursor: true })
+}
+
+export const createHUDSceneButton = (
+  scene: SceneWithRexUI,
+  name: string,
+  iconTexture: string,
+  scale: number
+): RexUIPlugin.Label => {
+  const sprite = new Phaser.GameObjects.Sprite(scene, 0, 0, iconTexture).setScale(scale)
+  const iconContainer = new Phaser.GameObjects.Container(scene, 0, 0, [sprite])
+  return scene.rexUI.add.label({
+    width: 35,
+    height: 35,
+    name,
+    background: createLabelBackgroundWithBorder(scene),
+    icon: scene.add.existing(iconContainer),
+    align: 'center'
+  })
+    .setInnerPadding(7)
+    .setInteractive({ useHandCursor: true })
 }

@@ -10,10 +10,6 @@ import { createChoosePlayersDialog } from './choosePlayersDialog'
 import { createSettingsDialog } from './settingsDialog'
 import * as ui from './ui'
 
-const LABEL_WIDTH = 375
-const LABEL_HEIGHT = 130
-const LABEL_GAP = 20
-
 export class HomeScene extends Phaser.Scene {
 
   rexUI: RexUIPlugin
@@ -35,7 +31,6 @@ export class HomeScene extends Phaser.Scene {
     this.load.audio('rotate-card', 'assets/sounds/rotate-card.wav')
 
     this.load.image('linen', 'assets/images/linen.png')
-
     this.load.image('arrows-in', 'assets/icons/10-arrows-in@2x.png')
     this.load.image('arrows-out', 'assets/icons/11-arrows-out@2x.png')
     this.load.image('bar-chart', 'assets/icons/17-bar-chart@2x.png')
@@ -71,15 +66,15 @@ export class HomeScene extends Phaser.Scene {
     const groupSprite = new Phaser.GameObjects.Sprite(this, 0, 0, 'group')
     const gearSprite = new Phaser.GameObjects.Sprite(this, 0, 0, 'gear')
 
-    const playContinuoButton = this.createHomeSceneButton('playContinuoButton', 'Play Continuo', continuoCardSprite)
-    const playHexagoButton = this.createHomeSceneButton('playHexagoButton', 'Play Hexago', hexagoCardSprite)
-    const choosePlayersButton = this.createHomeSceneButton('choosePlayersButton', 'Choose Players', groupSprite)
-    const settingsButton = this.createHomeSceneButton('settingsButton', 'Settings', gearSprite)
+    const playContinuoButton = ui.createHomeSceneButton(this, 'playContinuoButton', 'Play Continuo', continuoCardSprite)
+    const playHexagoButton = ui.createHomeSceneButton(this, 'playHexagoButton', 'Play Hexago', hexagoCardSprite)
+    const choosePlayersButton = ui.createHomeSceneButton(this, 'choosePlayersButton', 'Choose Players', groupSprite)
+    const settingsButton = ui.createHomeSceneButton(this, 'settingsButton', 'Settings', gearSprite)
 
     this.rexUI.add.sizer({
       orientation: 'vertical',
       anchor: { centerX: 'center', centerY: 'center' },
-      space: { item: LABEL_GAP }
+      space: { item: 20 }
     })
       .add(playContinuoButton)
       .add(playHexagoButton)
@@ -94,21 +89,6 @@ export class HomeScene extends Phaser.Scene {
     this.hexagoBoardScene = this.game.scene.add('HexagoBoardScene', new HexagoBoardScene(this.eventEmitter, this.settings))
 
     this.events.on(Phaser.Scenes.Events.WAKE, this.onWake, this)
-  }
-
-  private createHomeSceneButton(name: string, text: string, sprite: Phaser.GameObjects.Sprite) {
-    const iconContainer = new Phaser.GameObjects.Container(this, 0, 0, [sprite]).setSize(125, 75)
-    return this.rexUI.add.label({
-      width: LABEL_WIDTH,
-      height: LABEL_HEIGHT,
-      background: ui.createLabelBackgroundWithBorder(this),
-      text: this.add.text(0, 0, text, ui.TEXT_STYLE),
-      icon: this.add.existing(iconContainer),
-      space: { left: 10, right: 10, top: 10, bottom: 10, icon: 10 }
-    })
-      .setName(name)
-      .setInteractive({ useHandCursor: true })
-      .layout()
   }
 
   private resize(): void {
