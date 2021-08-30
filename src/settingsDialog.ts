@@ -85,7 +85,7 @@ class SettingsDialogScene extends ModalDialogBaseScene {
 
   settings: Settings
 
-  constructor(settings: Settings, onCloseDialog?: Function) {
+  constructor(settings: Settings, onCloseDialog?: () => void) {
     super('SettingsDialog', onCloseDialog)
     this.settings = settings
   }
@@ -99,6 +99,13 @@ class SettingsDialogScene extends ModalDialogBaseScene {
   }
 }
 
-export const createSettingsDialog = (parentScene: Phaser.Scene, settings: Settings, onCloseDialog?: Function): void => {
-  parentScene.scene.add(undefined, new SettingsDialogScene(settings, onCloseDialog), true)
+export const createSettingsDialog = (
+  parentScene: Phaser.Scene,
+  settings: Settings,
+  onCloseDialog?: () => void
+): void => {
+  parentScene.scene.add(
+    undefined,
+    new SettingsDialogScene(settings, onCloseDialog),
+    true)
 }

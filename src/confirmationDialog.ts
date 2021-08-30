@@ -4,10 +4,10 @@ import * as ui from './ui'
 
 class ConfirmationDialogScene extends ModalDialogBaseScene {
 
-  onYes?: Function
-  onNo?: Function
+  onYes?: () => void
+  onNo?: () => void
 
-  constructor(onYes?: Function, onNo?: Function) {
+  constructor(onYes?: () => void, onNo?: () => void) {
     super('ConfirmationDialog')
     this.onYes = onYes
     this.onNo = onNo
@@ -17,8 +17,12 @@ class ConfirmationDialogScene extends ModalDialogBaseScene {
     return {
       content: ui.createLabel(this, 'Abandon the current game ?'),
       actions: [
-        ui.createLabel(this, 'Yes').setInteractive({ useHandCursor: true }),
-        ui.createLabel(this, 'No').setInteractive({ useHandCursor: true })
+        ui.createLabel(this, 'Yes')
+          .setName('yesButton')
+          .setInteractive({ useHandCursor: true }),
+        ui.createLabel(this, 'No')
+          .setName('noButton')
+          .setInteractive({ useHandCursor: true })
       ]
     }
   }
@@ -26,17 +30,18 @@ class ConfirmationDialogScene extends ModalDialogBaseScene {
   create() {
     super.create()
     this.dialog.on('button.click', (
-      _button: Phaser.GameObjects.GameObject,
+      gameObject: Phaser.GameObjects.GameObject,
       _groupName: string,
-      index: number,
+      _index: number,
       _pointer: Phaser.Input.Pointer,
       _event: Phaser.Types.Input.EventData) => {
-      this.closeDialog()
-      switch (index) {
-        case 0:
+      switch (gameObject.name) {
+        case 'yesButton':
+          this.closeDialog()
           this.onYes && this.onYes()
           break
-        case 1:
+        case 'noButton':
+          this.closeDialog()
           this.onNo && this.onNo()
           break
       }
@@ -44,6 +49,13 @@ class ConfirmationDialogScene extends ModalDialogBaseScene {
   }
 }
 
-export const createConfirmationDialog = (parentScene: Phaser.Scene, onYes?: Function, onNo?: Function) => {
-  parentScene.scene.add(undefined, new ConfirmationDialogScene(onYes, onNo), true)
+export const createConfirmationDialog = (
+  parentScene: Phaser.Scene,
+  onYes?: () => void,
+  onNo?: () => void
+) => {
+  parentScene.scene.add(
+    undefined,
+    new ConfirmationDialogScene(onYes, onNo),
+    true)
 }
