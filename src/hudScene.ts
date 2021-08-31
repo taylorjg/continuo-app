@@ -154,7 +154,7 @@ export class HUDScene extends Phaser.Scene {
       this.miniScoreboard = null
     }
     const miniScoreboardY = this.lhsButtons.getBounds().bottom + 10
-    this.miniScoreboard = new MiniScoreboard(this, this.turnManager.scoreboard, miniScoreboardY)
+    this.miniScoreboard = new MiniScoreboard(this, this.eventEmitter, this.turnManager.scoreboard, miniScoreboardY)
     this.turnManager.reset()
     this.turnManager.step()
   }
@@ -199,10 +199,6 @@ export class HUDScene extends Phaser.Scene {
     this.statusBarLeft.setVisible(false)
   }
 
-  private updateScoreboardTexts(): void {
-    this.miniScoreboard.update(this.turnManager.scoreboard)
-  }
-
   private endOfTurn(arg: any): void {
     const score = <number>arg.score
     const bestScore = <number>arg.bestScore
@@ -244,7 +240,6 @@ export class HUDScene extends Phaser.Scene {
   private onNextTurn(arg: any): void {
     log.debug('[HUDScene#onNextTurn]', arg)
     this.currentPlayerScore = <PlayerScore>arg.currentPlayerScore
-    this.updateScoreboardTexts()
     switch (this.currentPlayerScore.player.type) {
       case PlayerType.Human:
         this.boardScene.onNextCard()
@@ -258,7 +253,6 @@ export class HUDScene extends Phaser.Scene {
   private onFinalScores(arg: any): void {
     log.debug('[HUDScene#onFinalScores]', arg)
     this.currentPlayerScore = null
-    this.updateScoreboardTexts()
   }
 
   private onNextCard(arg: any): void {

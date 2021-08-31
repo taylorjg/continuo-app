@@ -39,9 +39,16 @@ const addColumnValues = (
 
 export class MiniScoreboard {
 
+  eventEmitter: Phaser.Events.EventEmitter
   gridSizer: GridSizer
 
-  public constructor(scene: SceneWithRexUI, scoreboard: Scoreboard, y: number) {
+  public constructor(
+    scene: SceneWithRexUI,
+    eventEmitter: Phaser.Events.EventEmitter,
+    scoreboard: Scoreboard,
+    y: number
+  ) {
+    this.eventEmitter = eventEmitter
     this.gridSizer = scene.rexUI.add.gridSizer({
       x: 0,
       y,
@@ -61,9 +68,11 @@ export class MiniScoreboard {
       // .setInteractive({ useHandCursor: true })
       .setOrigin(.5, 0)
       .layout()
+
+    this.eventEmitter.on('updateScoreboard', this.onUpdateScoreboard, this)
   }
 
-  public update(scoreboard: Scoreboard): void {
+  private onUpdateScoreboard(scoreboard: Scoreboard) {
     scoreboard.forEach((entry, index) => {
       const childGameObject1 = this.gridSizer.getAllChildren().find(c => c.getData('column') == 0 && c.getData('index') == index)
       if (childGameObject1) {

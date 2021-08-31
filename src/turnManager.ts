@@ -100,10 +100,12 @@ export class TurnManager {
     this.nextPlayerIndex = 0
     this.currentPlayerScore = null
     this._isGameOver = false
+    this.eventEmitter.emit('updateScoreboard', this.scoreboard)
   }
 
   public addTurnScore(playerScore: PlayerScore, score: number, bestScore: number): void {
     playerScore.addTurnScore(score, bestScore)
+    this.eventEmitter.emit('updateScoreboard', this.scoreboard)
   }
 
   public gameOver() {
