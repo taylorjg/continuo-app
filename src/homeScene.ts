@@ -6,8 +6,10 @@ import { HUDScene } from './hudScene'
 import { ContinuoBoardScene, createContinuoCardSprite } from './continuoBoardScene'
 import { HexagoBoardScene, createHexagoCardSprite } from './hexagoBoardScene'
 import { Player, PlayerType } from './turnManager'
+import { createAboutDialog } from './aboutDialog'
 import { createChoosePlayersDialog } from './choosePlayersDialog'
 import { createSettingsDialog } from './settingsDialog'
+import { Fullscreen } from './fullscreen'
 import * as ui from './ui'
 
 export class HomeScene extends Phaser.Scene {
@@ -69,7 +71,6 @@ export class HomeScene extends Phaser.Scene {
     const playContinuoButton = ui.createHomeSceneButton(this, 'playContinuoButton', 'Play Continuo', continuoCardSprite)
     const playHexagoButton = ui.createHomeSceneButton(this, 'playHexagoButton', 'Play Hexago', hexagoCardSprite)
     const choosePlayersButton = ui.createHomeSceneButton(this, 'choosePlayersButton', 'Choose Players', groupSprite)
-    const settingsButton = ui.createHomeSceneButton(this, 'settingsButton', 'Settings', gearSprite)
 
     this.rexUI.add.sizer({
       orientation: 'vertical',
@@ -79,8 +80,20 @@ export class HomeScene extends Phaser.Scene {
       .add(playContinuoButton)
       .add(playHexagoButton)
       .add(choosePlayersButton)
-      .add(settingsButton)
       .layout()
+
+    const settingsButton = ui.createHUDSceneButton(this, 'settingsButton', 'gear', .4)
+    const aboutButton = ui.createHUDSceneButton(this, 'aboutButton', 'info', .4)
+
+    const rhsButtons = this.rexUI.add.sizer({
+      anchor: { right: 'right-10', top: 'top+10' },
+      orientation: 'vertical',
+      space: { item: 10 }
+    })
+      .add(settingsButton)
+      .add(aboutButton)
+    new Fullscreen(this, rhsButtons)
+    rhsButtons.layout()
 
     this.input.on(Phaser.Input.Events.GAMEOBJECT_DOWN, this.onClick, this)
 
@@ -156,6 +169,11 @@ export class HomeScene extends Phaser.Scene {
       case 'playHexagoButton': return this.onPlayHexago()
       case 'choosePlayersButton': return this.onChoosePlayers()
       case 'settingsButton': return this.onSettings()
+      case 'aboutButton': return this.onAbout()
     }
+  }
+
+  private onAbout(): void {
+    createAboutDialog(this)
   }
 }
