@@ -40,7 +40,7 @@ export abstract class BoardScene extends Phaser.Scene {
   private cardSpritesMap: Map<CommonCard, Phaser.GameObjects.Sprite>
   private currentCardContainer: Phaser.GameObjects.Container
   private scoringHighlights: Phaser.GameObjects.Shape[]
-  private rotating: boolean
+  private animating: boolean
   private bestScoreLocationsFound: Set<CommonPossibleMove>
 
   constructor(sceneName: string, boardSceneConfig: BoardSceneConfig, adapter: CommonAdapter) {
@@ -51,7 +51,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.board = this.adapter.emptyBoard
     this.cardSpritesMap = new Map<CommonCard, Phaser.GameObjects.Sprite>()
     this.scoringHighlights = []
-    this.rotating = false
+    this.animating = false
     this.bestScoreLocationsFound = new Set()
   }
 
@@ -164,9 +164,13 @@ export abstract class BoardScene extends Phaser.Scene {
       duration,
       x: cardPosition.x,
       y: cardPosition.y,
+      onStart: () => {
+        this.animating = true
+      },
       onComplete: () => {
         this.highlightScoring(this.currentPossibleMove)
         this.emitCurrentCardChange('moveCard')
+        this.animating = false
       }
     })
 
@@ -187,7 +191,7 @@ export abstract class BoardScene extends Phaser.Scene {
   }
 
   private rotateCurrentCardContainer(rotationAngle: number): void {
-    if (this.rotating || this.currentPlayerType != PlayerType.Human) {
+    if (this.animating || this.currentPlayerType != PlayerType.Human) {
       return
     }
     const newPlacedCard = rotationAngle > 0
@@ -198,14 +202,16 @@ export abstract class BoardScene extends Phaser.Scene {
       if (this.boardSceneConfig.settings.soundRotationEnabled) {
         this.sound.play('rotate-card')
       }
-      this.boardSceneConfig.eventEmitter.emit('startRotateCard')
-      this.unhighlightScoring()
-      this.rotating = true
       this.tweens.add({
         targets: this.currentCardContainer,
         angle: this.currentCardContainer.angle + rotationAngle,
         duration: 300,
         ease: 'Sine.InOut',
+        onStart: () => {
+          this.boardSceneConfig.eventEmitter.emit('startRotateCard')
+          this.unhighlightScoring()
+          this.animating = true
+        },
         onComplete: () => {
           this.currentPossibleMove = possibleMove
           this.highlightScoring(this.currentPossibleMove)
@@ -220,7 +226,7 @@ export abstract class BoardScene extends Phaser.Scene {
               }
             }
           }
-          this.rotating = false
+          this.animating = false
         }
       })
     }
