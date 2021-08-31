@@ -154,7 +154,7 @@ export class HUDScene extends Phaser.Scene {
       this.miniScoreboard = null
     }
     const miniScoreboardY = this.lhsButtons.getBounds().bottom + 10
-    this.miniScoreboard = new MiniScoreboard(this, this.eventEmitter, this.turnManager.scoreboard, miniScoreboardY)
+    this.miniScoreboard = new MiniScoreboard(this.eventEmitter, this, this.turnManager.scoreboard, miniScoreboardY)
     this.turnManager.reset()
     this.turnManager.step()
   }

@@ -93,6 +93,7 @@ export class TurnManager {
       currentPlayerScore: this.currentPlayerScore,
       scoreboard: this.makeScoreboard()
     })
+    this.eventEmitter.emit('updateScoreboard', this.scoreboard)
   }
 
   public reset(): void {
