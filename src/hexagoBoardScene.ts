@@ -6,15 +6,22 @@ import { ContinuoAppScenes } from './constants'
 import { BoardScene, BoardSceneConfig, HIGHLIGHT_DEPTH, HIGHLIGHT_COLOUR } from './boardScene'
 import { CommonAdapter, CommonBoardRange } from './types'
 
-import { Board } from './hexago-lib/board'
-import { Card } from './hexago-lib/card'
-import { Cell } from './hexago-lib/cell'
-import { Deck } from './hexago-lib/deck'
-import { Colour, HexagoNumber, Rotation, allRotations, rotationRotateCW, rotationRotateCCW } from './hexago-lib/enums'
-import { evaluateCard } from './hexago-lib/evaluate'
-import { PlacedCard } from './hexago-lib/placedCard'
-import { PossibleMove } from './hexago-lib/possibleMove'
-import { Match } from './hexago-lib/match'
+import {
+  Board,
+  Card,
+  Cell,
+  Colour,
+  Deck,
+  HexagoNumber,
+  Match,
+  PlacedCard,
+  PossibleMove,
+  Rotation,
+  allRotations,
+  evaluateCard,
+  rotationRotateCCW,
+  rotationRotateCW
+} from './hexago-lib'
 
 const TAN_30 = Math.tan(Phaser.Math.DegToRad(30))
 

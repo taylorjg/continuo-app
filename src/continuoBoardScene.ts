@@ -6,14 +6,18 @@ import { ContinuoAppScenes } from './constants'
 import { BoardScene, BoardSceneConfig, HIGHLIGHT_DEPTH, HIGHLIGHT_COLOUR } from './boardScene'
 import { CommonAdapter, CommonBoardRange } from './types'
 
-import { Board } from './continuo-lib/board'
-import { Card } from './continuo-lib/card'
-import { Cell } from './continuo-lib/cell'
-import { Deck } from './continuo-lib/deck'
-import { Colour, Orientation, switchOrientation } from './continuo-lib/enums'
-import { evaluateCard } from './continuo-lib/evaluate'
-import { PlacedCard } from './continuo-lib/placedCard'
-import { PossibleMove } from './continuo-lib/possibleMove'
+import {
+  Board,
+  Card,
+  Cell,
+  Colour,
+  Deck,
+  Orientation,
+  PlacedCard,
+  PossibleMove,
+  evaluateCard,
+  switchOrientation
+} from './continuo-lib'
 
 const CELL_SIZE = 28 * 2
 const GAP_SIZE = 2
