@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser'
 
 import { Settings } from './settings'
+import { ContinuoAppScenes } from './constants'
 
 import { BoardScene, BoardSceneConfig, HIGHLIGHT_DEPTH, HIGHLIGHT_COLOUR } from './boardScene'
 import { CommonAdapter, CommonBoardRange } from './types'
@@ -90,7 +91,7 @@ export class ContinuoBoardScene extends BoardScene {
       CARD_HEIGHT: CARD_SIZE,
       ROTATION_ANGLE: 90
     }
-    super('ContinuoBoardScene', boardSceneConfig, adapter)
+    super(ContinuoAppScenes.ContinuoBoard, boardSceneConfig, adapter)
   }
 
   protected *getInitialPlacedCards(deck: Deck, board: Board, numPlayers: number) {

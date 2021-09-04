@@ -1,6 +1,7 @@
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import { SceneWithRexUI } from './types'
 import { Scoreboard, ScoreboardEntry } from './turnManager'
+import { ContinuoAppEvents } from './constants'
 import * as ui from './ui'
 
 export class MiniScoreboard {
@@ -39,11 +40,11 @@ export class MiniScoreboard {
       .setOrigin(.5, 0)
       .layout()
 
-    this.eventEmitter.on('updateScoreboard', this.onUpdateScoreboard, this)
+    this.eventEmitter.on(ContinuoAppEvents.UpdateScoreboard, this.onUpdateScoreboard, this)
   }
 
   public destroy() {
-    this.eventEmitter.off('updateScoreboard', this.onUpdateScoreboard, this)
+    this.eventEmitter.off(ContinuoAppEvents.UpdateScoreboard, this.onUpdateScoreboard, this)
     this.gridSizer.destroy()
   }
 

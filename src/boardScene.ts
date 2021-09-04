@@ -2,6 +2,7 @@ import * as Phaser from 'phaser'
 import log from 'loglevel'
 
 import { Settings } from './settings'
+import { ContinuoAppEvents } from './constants'
 
 import {
   CommonAdapter,
@@ -134,7 +135,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.rescale(this.board.placeCard(placedCard))
     this.showCardSpriteInContainer(placedCard, playerType)
     this.highlightScoring(this.currentPossibleMove)
-    this.emitCurrentCardChange(playerType == PlayerType.Computer ? 'startComputerMove' : 'nextCard')
+    this.emitCurrentCardChange(playerType == PlayerType.Computer ? ContinuoAppEvents.StartComputerMove : ContinuoAppEvents.NextCard)
   }
 
   private placeCurrentCardFinal(playerType: PlayerType): void {
@@ -142,7 +143,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.board = this.board.placeCard(placedCard)
     this.showCardSpriteDirectly(placedCard)
     this.unhighlightScoring()
-    this.emitCurrentCardChange(playerType == PlayerType.Computer ? 'endComputerMove' : 'placeCard')
+    this.emitCurrentCardChange(playerType == PlayerType.Computer ? ContinuoAppEvents.EndComputerMove : ContinuoAppEvents.PlaceCard)
     this.currentPossibleMove = null
     this.currentPlayerType = null
     this.bestScoreLocationsFound.clear()
@@ -169,7 +170,7 @@ export abstract class BoardScene extends Phaser.Scene {
       },
       onComplete: () => {
         this.highlightScoring(this.currentPossibleMove)
-        this.emitCurrentCardChange('moveCard')
+        this.emitCurrentCardChange(ContinuoAppEvents.MoveCard)
         this.animating = false
       }
     })
@@ -208,14 +209,14 @@ export abstract class BoardScene extends Phaser.Scene {
         duration: 300,
         ease: 'Sine.InOut',
         onStart: () => {
-          this.boardSceneConfig.eventEmitter.emit('startRotateCard')
+          this.boardSceneConfig.eventEmitter.emit(ContinuoAppEvents.StartRotateCard)
           this.unhighlightScoring()
           this.animating = true
         },
         onComplete: () => {
           this.currentPossibleMove = possibleMove
           this.highlightScoring(this.currentPossibleMove)
-          this.emitCurrentCardChange('endRotateCard')
+          this.emitCurrentCardChange(ContinuoAppEvents.EndRotateCard)
           if (this.boardSceneConfig.settings.soundBestScoreEnabled) {
             const score = possibleMove.score
             const bestScore = this.possibleMoves[0].score
@@ -295,7 +296,7 @@ export abstract class BoardScene extends Phaser.Scene {
       this.repositionCurrentCardContainer(possibleMove)
     })
 
-    this.boardSceneConfig.eventEmitter.on('settingsChanged', this.onSettingsChanged, this)
+    this.boardSceneConfig.eventEmitter.on(ContinuoAppEvents.SettingsChanged, this.onSettingsChanged, this)
 
     this.events.on(Phaser.Scenes.Events.WAKE, this.onWake, this)
 

@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser'
 
 import { Settings } from './settings'
+import { ContinuoAppScenes } from './constants'
 
 import { BoardScene, BoardSceneConfig, HIGHLIGHT_DEPTH, HIGHLIGHT_COLOUR } from './boardScene'
 import { CommonAdapter, CommonBoardRange } from './types'
@@ -226,7 +227,7 @@ export class HexagoBoardScene extends BoardScene {
       CARD_HEIGHT,
       ROTATION_ANGLE: 60
     }
-    super('HexagoBoardScene', boardSceneConfig, adapter)
+    super(ContinuoAppScenes.HexagoBoard, boardSceneConfig, adapter)
   }
 
   protected *getInitialPlacedCards(deck: Deck, board: Board, numPlayers: number) {

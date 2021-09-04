@@ -10,6 +10,7 @@ import { createAboutDialog } from './aboutDialog'
 import { createChoosePlayersDialog } from './choosePlayersDialog'
 import { createSettingsDialog } from './settingsDialog'
 import { Fullscreen } from './fullscreen'
+import { ContinuoAppScenes } from './constants'
 import * as ui from './ui'
 
 export class HomeScene extends Phaser.Scene {
@@ -24,7 +25,7 @@ export class HomeScene extends Phaser.Scene {
   hexagoBoardScene: Phaser.Scene
 
   constructor() {
-    super('HomeScene')
+    super(ContinuoAppScenes.Home)
   }
 
   preload() {
@@ -97,9 +98,9 @@ export class HomeScene extends Phaser.Scene {
 
     this.input.on(Phaser.Input.Events.GAMEOBJECT_DOWN, this.onClick, this)
 
-    this.hudScene = this.game.scene.add('HUDScene', new HUDScene(this.eventEmitter, this.settings))
-    this.continuoBoardScene = this.game.scene.add('ContinuoBoardScene', new ContinuoBoardScene(this.eventEmitter, this.settings))
-    this.hexagoBoardScene = this.game.scene.add('HexagoBoardScene', new HexagoBoardScene(this.eventEmitter, this.settings))
+    this.hudScene = this.game.scene.add(undefined, new HUDScene(this.eventEmitter, this.settings))
+    this.continuoBoardScene = this.game.scene.add(undefined, new ContinuoBoardScene(this.eventEmitter, this.settings))
+    this.hexagoBoardScene = this.game.scene.add(undefined, new HexagoBoardScene(this.eventEmitter, this.settings))
 
     this.events.on(Phaser.Scenes.Events.WAKE, this.onWake, this)
   }

@@ -10,6 +10,7 @@ import { createSettingsDialog } from './settingsDialog'
 import { createAboutDialog } from './aboutDialog'
 import { createScoreboardDialog } from './scoreboardDialog'
 import { Fullscreen } from './fullscreen'
+import { ContinuoAppScenes, ContinuoAppEvents } from './constants'
 import * as ui from './ui'
 
 export class HUDScene extends Phaser.Scene {
@@ -33,7 +34,7 @@ export class HUDScene extends Phaser.Scene {
   remainingCardsLabel: RexUIPlugin.Label
 
   constructor(eventEmitter: Phaser.Events.EventEmitter, settings: Settings) {
-    super('HUDScene')
+    super(ContinuoAppScenes.HUD)
     this.eventEmitter = eventEmitter
     this.settings = settings
     this.miniScoreboard = null
@@ -105,15 +106,15 @@ export class HUDScene extends Phaser.Scene {
       .add(this.remainingCardsLabel)
       .layout()
 
-    this.eventEmitter.on('nextTurn', this.onNextTurn, this)
-    this.eventEmitter.on('finalScores', this.onFinalScores, this)
-    this.eventEmitter.on('nextCard', this.onNextCard, this)
-    this.eventEmitter.on('moveCard', this.onMoveCard, this)
-    this.eventEmitter.on('placeCard', this.onPlaceCard, this)
-    this.eventEmitter.on('endRotateCard', this.onEndRotateCard, this)
-    this.eventEmitter.on('startComputerMove', this.onStartComputerMove, this)
-    this.eventEmitter.on('endComputerMove', this.onEndComputerMove, this)
-    this.eventEmitter.on('settingsChanged', this.onSettingsChanged, this)
+    this.eventEmitter.on(ContinuoAppEvents.NextTurn, this.onNextTurn, this)
+    this.eventEmitter.on(ContinuoAppEvents.FinalScores, this.onFinalScores, this)
+    this.eventEmitter.on(ContinuoAppEvents.NextCard, this.onNextCard, this)
+    this.eventEmitter.on(ContinuoAppEvents.MoveCard, this.onMoveCard, this)
+    this.eventEmitter.on(ContinuoAppEvents.PlaceCard, this.onPlaceCard, this)
+    this.eventEmitter.on(ContinuoAppEvents.EndRotateCard, this.onEndRotateCard, this)
+    this.eventEmitter.on(ContinuoAppEvents.StartComputerMove, this.onStartComputerMove, this)
+    this.eventEmitter.on(ContinuoAppEvents.EndComputerMove, this.onEndComputerMove, this)
+    this.eventEmitter.on(ContinuoAppEvents.SettingsChanged, this.onSettingsChanged, this)
 
     this.events.on(Phaser.Scenes.Events.WAKE, this.onWake, this)
 
@@ -162,9 +163,9 @@ export class HUDScene extends Phaser.Scene {
   private onHomeClick(): void {
     log.debug('[HUDScene#onHomeClick]')
     if (this.turnManager.isGameOver) {
-      this.game.scene.wake('HomeScene')
+      this.game.scene.wake(ContinuoAppScenes.Home)
     } else {
-      createConfirmationDialog(this, () => this.game.scene.wake('HomeScene'))
+      createConfirmationDialog(this, () => this.game.scene.wake(ContinuoAppScenes.Home))
     }
   }
 
@@ -317,7 +318,7 @@ export class HUDScene extends Phaser.Scene {
   private onSettingsClick(): void {
     log.debug('[HUDScene#onSettingsClick]')
     createSettingsDialog(this, this.settings, () => {
-      this.eventEmitter.emit('settingsChanged')
+      this.eventEmitter.emit(ContinuoAppEvents.SettingsChanged)
     })
   }
 

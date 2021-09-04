@@ -1,3 +1,5 @@
+import { ContinuoAppEvents } from './constants'
+
 export enum PlayerType {
   Human,
   Computer
@@ -89,11 +91,11 @@ export class TurnManager {
     }
     this.currentPlayerScore = this.playerScores[this.nextPlayerIndex]
     this.nextPlayerIndex = (this.nextPlayerIndex + 1) % this.playerScores.length
-    this.eventEmitter.emit('nextTurn', {
+    this.eventEmitter.emit(ContinuoAppEvents.NextTurn, {
       currentPlayerScore: this.currentPlayerScore,
       scoreboard: this.makeScoreboard()
     })
-    this.eventEmitter.emit('updateScoreboard', this.scoreboard)
+    this.eventEmitter.emit(ContinuoAppEvents.UpdateScoreboard, this.scoreboard)
   }
 
   public reset(): void {
@@ -101,18 +103,18 @@ export class TurnManager {
     this.nextPlayerIndex = 0
     this.currentPlayerScore = null
     this._isGameOver = false
-    this.eventEmitter.emit('updateScoreboard', this.scoreboard)
+    this.eventEmitter.emit(ContinuoAppEvents.UpdateScoreboard, this.scoreboard)
   }
 
   public addTurnScore(playerScore: PlayerScore, score: number, bestScore: number): void {
     playerScore.addTurnScore(score, bestScore)
-    this.eventEmitter.emit('updateScoreboard', this.scoreboard)
+    this.eventEmitter.emit(ContinuoAppEvents.UpdateScoreboard, this.scoreboard)
   }
 
   public gameOver() {
     this.currentPlayerScore = null
     this._isGameOver = true
-    this.eventEmitter.emit('finalScores', {
+    this.eventEmitter.emit(ContinuoAppEvents.FinalScores, {
       scoreboard: this.makeScoreboard()
     })
   }
