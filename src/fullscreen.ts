@@ -13,15 +13,10 @@ export class Fullscreen {
 
     this.scene = scene
     this.sizer = sizer
+    this.enterFullscreenButton = null
+    this.leaveFullscreenButton = null
 
     if (this.scene.sys.game.device.fullscreen.available) {
-      if (this.scene.scale.isFullscreen) {
-        this.leaveFullscreenButton = this.makeLeaveFullscreenButton()
-        this.sizer.add(this.leaveFullscreenButton)
-      } else {
-        this.enterFullscreenButton = this.makeEnterFullscreenButton()
-        this.sizer.add(this.enterFullscreenButton)
-      }
 
       this.scene.input.on(Phaser.Input.Events.GAMEOBJECT_DOWN, (
         _pointer: Phaser.Input.Pointer,
@@ -33,6 +28,59 @@ export class Fullscreen {
           case 'leaveFullscreenButton': return this.onLeaveFullscreenClick()
         }
       })
+
+      const onResize = () => this.resize()
+      window.addEventListener('resize', onResize)
+
+      this.resize()
+    }
+  }
+
+  private isFullscreen() {
+    const windowWidth = window.innerWidth
+    const windowHeight = window.innerHeight
+    const screenWidth = window.screen.availWidth
+    const screenHeight = window.screen.availHeight
+    return windowWidth == screenWidth || windowHeight == screenHeight
+  }
+
+  private resize(): void {
+    if (this.isFullscreen() != this.scene.scale.isFullscreen) {
+      if (this.isFullscreen()) {
+        // Looks like we have entered fullscreen via F11/browser menu
+        this.hideButtons()
+      } else {
+        // Looks like we have exited fullscreen via F11/browser menu
+        this.showButtons()
+      }
+    } else {
+      this.showButtons()
+    }
+  }
+
+  private showButtons() {
+    this.hideButtons()
+    if (this.scene.scale.isFullscreen) {
+      if (!this.leaveFullscreenButton) {
+        this.leaveFullscreenButton = this.makeLeaveFullscreenButton()
+        this.sizer.add(this.leaveFullscreenButton).layout()
+      }
+    } else {
+      if (!this.enterFullscreenButton) {
+        this.enterFullscreenButton = this.makeEnterFullscreenButton()
+        this.sizer.add(this.enterFullscreenButton).layout()
+      }
+    }
+  }
+
+  private hideButtons() {
+    if (this.enterFullscreenButton) {
+      this.sizer.remove(this.enterFullscreenButton, true).layout()
+      this.enterFullscreenButton = null
+    }
+    if (this.leaveFullscreenButton) {
+      this.sizer.remove(this.leaveFullscreenButton, true).layout()
+      this.leaveFullscreenButton = null
     }
   }
 
@@ -51,6 +99,7 @@ export class Fullscreen {
       .remove(this.enterFullscreenButton, true)
       .add(this.leaveFullscreenButton)
       .layout()
+    this.enterFullscreenButton = null
   }
 
   private onLeaveFullscreenClick(): void {
@@ -60,5 +109,6 @@ export class Fullscreen {
       .remove(this.leaveFullscreenButton, true)
       .add(this.enterFullscreenButton)
       .layout()
+    this.leaveFullscreenButton = null
   }
 }
