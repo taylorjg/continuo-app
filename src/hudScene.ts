@@ -3,7 +3,7 @@ import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import log from 'loglevel'
 import { Settings } from './settings'
 import { IBoardScene } from './types'
-import { TurnManager, Player, PlayerScore, PlayerType } from './turnManager'
+import { TurnManager, Player, PlayerType } from './turnManager'
 import { MiniScoreboard } from './miniScoreboard'
 import { createConfirmationDialog } from './confirmationDialog'
 import { createSettingsDialog } from './settingsDialog'
@@ -16,29 +16,28 @@ import * as ui from './ui'
 export class HUDScene extends Phaser.Scene {
 
   rexUI: RexUIPlugin
-  eventEmitter: Phaser.Events.EventEmitter
-  settings: Settings
-  boardScene: IBoardScene
-  turnManager: TurnManager
-  currentPlayerScore: PlayerScore
+  private eventEmitter: Phaser.Events.EventEmitter
+  private settings: Settings
+  private boardScene: IBoardScene
+  private turnManager: TurnManager
+  private currentPlayer: Player
 
-  lhsButtons: RexUIPlugin.Sizer
-  rhsButtons: RexUIPlugin.Sizer
-  statusBarLeft: RexUIPlugin.Sizer
-  statusBarRight: RexUIPlugin.Sizer
+  private lhsButtons: RexUIPlugin.Sizer
+  private rhsButtons: RexUIPlugin.Sizer
+  private statusBarLeft: RexUIPlugin.Sizer
+  private statusBarRight: RexUIPlugin.Sizer
 
-  miniScoreboard: MiniScoreboard
-  fullscreen: Fullscreen
+  private miniScoreboard: MiniScoreboard
 
-  currentCardScoreLabel: RexUIPlugin.Label
-  remainingCardsLabel: RexUIPlugin.Label
+  private currentCardScoreLabel: RexUIPlugin.Label
+  private remainingCardsLabel: RexUIPlugin.Label
 
-  constructor(eventEmitter: Phaser.Events.EventEmitter, settings: Settings) {
+  public constructor(eventEmitter: Phaser.Events.EventEmitter, settings: Settings) {
     super(ContinuoAppScenes.HUD)
     this.eventEmitter = eventEmitter
     this.settings = settings
     this.miniScoreboard = null
-    this.currentPlayerScore = null
+    this.currentPlayer = null
   }
 
   public init() {
@@ -83,7 +82,7 @@ export class HUDScene extends Phaser.Scene {
       .add(settingsButton)
       .add(aboutButton)
 
-    this.fullscreen = new Fullscreen(this, this.rhsButtons)
+    new Fullscreen(this, this.rhsButtons)
 
     this.rhsButtons.layout()
 
@@ -203,8 +202,8 @@ export class HUDScene extends Phaser.Scene {
   private endOfTurn(arg: any): void {
     const score = <number>arg.score
     const bestScore = <number>arg.bestScore
-    this.turnManager.addTurnScore(this.currentPlayerScore, score, bestScore)
-    this.currentPlayerScore = null
+    this.turnManager.addTurnScore(this.currentPlayer, score, bestScore)
+    this.currentPlayer = null
     this.clearCurrentCardScore()
     setTimeout(() => {
       const numCardsLeft = <number>arg.numCardsLeft
@@ -218,7 +217,7 @@ export class HUDScene extends Phaser.Scene {
   }
 
   private ifHumanMove(action: () => void) {
-    if (this.currentPlayerScore?.player?.type == PlayerType.Human) {
+    if (this.currentPlayer?.type == PlayerType.Human) {
       action()
     }
   }
@@ -240,8 +239,8 @@ export class HUDScene extends Phaser.Scene {
 
   private onNextTurn(arg: any): void {
     log.debug('[HUDScene#onNextTurn]', arg)
-    this.currentPlayerScore = <PlayerScore>arg.currentPlayerScore
-    switch (this.currentPlayerScore.player.type) {
+    this.currentPlayer = <Player>arg.currentPlayer
+    switch (this.currentPlayer.type) {
       case PlayerType.Human:
         this.boardScene.onNextCard()
         break
@@ -253,7 +252,7 @@ export class HUDScene extends Phaser.Scene {
 
   private onFinalScores(arg: any): void {
     log.debug('[HUDScene#onFinalScores]', arg)
-    this.currentPlayerScore = null
+    this.currentPlayer = null
   }
 
   private onNextCard(arg: any): void {

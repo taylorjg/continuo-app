@@ -13,7 +13,7 @@ export class Player {
   }
 }
 
-export class PlayerScore {
+class PlayerScore {
 
   private _score: number
   private _bestScore: number
@@ -92,7 +92,7 @@ export class TurnManager {
     this.currentPlayerScore = this.playerScores[this.nextPlayerIndex]
     this.nextPlayerIndex = (this.nextPlayerIndex + 1) % this.playerScores.length
     this.eventEmitter.emit(ContinuoAppEvents.NextTurn, {
-      currentPlayerScore: this.currentPlayerScore,
+      currentPlayer: this.currentPlayerScore.player,
       scoreboard: this.makeScoreboard()
     })
     this.eventEmitter.emit(ContinuoAppEvents.UpdateScoreboard, this.scoreboard)
@@ -106,9 +106,12 @@ export class TurnManager {
     this.eventEmitter.emit(ContinuoAppEvents.UpdateScoreboard, this.scoreboard)
   }
 
-  public addTurnScore(playerScore: PlayerScore, score: number, bestScore: number): void {
-    playerScore.addTurnScore(score, bestScore)
-    this.eventEmitter.emit(ContinuoAppEvents.UpdateScoreboard, this.scoreboard)
+  public addTurnScore(player: Player, score: number, bestScore: number): void {
+    const playerScore = this.playerScores.find(playerScore => playerScore.player == player)
+    if (playerScore) {
+      playerScore.addTurnScore(score, bestScore)
+      this.eventEmitter.emit(ContinuoAppEvents.UpdateScoreboard, this.scoreboard)
+    }
   }
 
   public gameOver() {
