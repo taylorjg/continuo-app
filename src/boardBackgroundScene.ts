@@ -15,7 +15,7 @@ export class BoardBackgroundScene extends Phaser.Scene {
 
     const windowWidth = window.innerWidth
     const windowHeight = window.innerHeight
-    this.background = this.add.tileSprite(0, 0, windowWidth, windowHeight, 'apple-wood').setOrigin(0, 0)
+    this.background = this.add.tileSprite(0, 0, windowWidth, windowHeight, 'melamine-wood').setOrigin(0, 0)
   }
 
   private resize(): void {

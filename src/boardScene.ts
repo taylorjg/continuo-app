@@ -276,6 +276,7 @@ export abstract class BoardScene extends Phaser.Scene {
       _pointer: Phaser.Input.Pointer,
       _gameObject: Phaser.GameObjects.GameObject) => {
       this.unhighlightScoring()
+      this.animating = true
     })
 
     this.input.on(Phaser.Input.Events.DRAG, (

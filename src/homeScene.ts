@@ -36,7 +36,7 @@ export class HomeScene extends Phaser.Scene {
     this.load.audio('rotate-card', 'assets/sounds/rotate-card.wav')
 
     this.load.image('linen', 'assets/images/linen.png')
-    this.load.image('apple-wood', 'assets/images/apple-wood.png')
+    this.load.image('melamine-wood', 'assets/images/Melamine-wood-005-rotated.png')
     this.load.image('arrows-in', 'assets/icons/10-arrows-in@2x.png')
     this.load.image('arrows-out', 'assets/icons/11-arrows-out@2x.png')
     this.load.image('bar-chart', 'assets/icons/17-bar-chart@2x.png')
