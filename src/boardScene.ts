@@ -44,7 +44,7 @@ export abstract class BoardScene extends Phaser.Scene {
   private animating: boolean
   private bestScoreLocationsFound: Set<CommonPossibleMove>
 
-  constructor(sceneName: string, boardSceneConfig: BoardSceneConfig, adapter: CommonAdapter) {
+  public constructor(sceneName: string, boardSceneConfig: BoardSceneConfig, adapter: CommonAdapter) {
     super(sceneName)
     this.boardSceneConfig = boardSceneConfig
     this.adapter = adapter
@@ -352,7 +352,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.resize()
   }
 
-  protected resize(): void {
+  private resize(): void {
     const width = window.innerWidth
     const height = window.innerHeight
     this.scale.resize(width, height)

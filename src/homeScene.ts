@@ -2,6 +2,7 @@ import * as Phaser from 'phaser'
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import log from 'loglevel'
 import { Settings } from './settings'
+import { BoardBackgroundScene } from './boardBackgroundScene'
 import { HUDScene } from './hudScene'
 import { ContinuoBoardScene, createContinuoCardSprite } from './continuoBoardScene'
 import { HexagoBoardScene, createHexagoCardSprite } from './hexagoBoardScene'
@@ -20,6 +21,7 @@ export class HomeScene extends Phaser.Scene {
   settings: Settings
   players: Player[]
   background: Phaser.GameObjects.TileSprite
+  boardBackgroundScene: Phaser.Scene
   hudScene: Phaser.Scene
   continuoBoardScene: Phaser.Scene
   hexagoBoardScene: Phaser.Scene
@@ -34,6 +36,7 @@ export class HomeScene extends Phaser.Scene {
     this.load.audio('rotate-card', 'assets/sounds/rotate-card.wav')
 
     this.load.image('linen', 'assets/images/linen.png')
+    this.load.image('apple-wood', 'assets/images/apple-wood.png')
     this.load.image('arrows-in', 'assets/icons/10-arrows-in@2x.png')
     this.load.image('arrows-out', 'assets/icons/11-arrows-out@2x.png')
     this.load.image('bar-chart', 'assets/icons/17-bar-chart@2x.png')
@@ -67,7 +70,6 @@ export class HomeScene extends Phaser.Scene {
     const continuoCardSprite = createContinuoCardSprite(this).setScale(.4, .4)
     const hexagoCardSprite = createHexagoCardSprite(this).setScale(.5, .5)
     const groupSprite = new Phaser.GameObjects.Sprite(this, 0, 0, 'group')
-    const gearSprite = new Phaser.GameObjects.Sprite(this, 0, 0, 'gear')
 
     const playContinuoButton = ui.createHomeSceneButton(this, 'playContinuoButton', 'Play Continuo', continuoCardSprite)
     const playHexagoButton = ui.createHomeSceneButton(this, 'playHexagoButton', 'Play Hexago', hexagoCardSprite)
@@ -98,6 +100,7 @@ export class HomeScene extends Phaser.Scene {
 
     this.input.on(Phaser.Input.Events.GAMEOBJECT_DOWN, this.onClick, this)
 
+    this.boardBackgroundScene = this.game.scene.add(undefined, new BoardBackgroundScene())
     this.hudScene = this.game.scene.add(undefined, new HUDScene(this.eventEmitter, this.settings))
     this.continuoBoardScene = this.game.scene.add(undefined, new ContinuoBoardScene(this.eventEmitter, this.settings))
     this.hexagoBoardScene = this.game.scene.add(undefined, new HexagoBoardScene(this.eventEmitter, this.settings))
@@ -134,6 +137,7 @@ export class HomeScene extends Phaser.Scene {
 
   private onWake(): void {
     log.debug('[HomeScene#onWake]')
+    this.sleepIfActive(this.boardBackgroundScene)
     this.sleepIfActive(this.hudScene)
     this.sleepIfActive(this.continuoBoardScene)
     this.sleepIfActive(this.hexagoBoardScene)
@@ -141,9 +145,11 @@ export class HomeScene extends Phaser.Scene {
 
   private play(boardScene: Phaser.Scene): void {
     this.scene.sleep()
-    this.launchIfNotSleeping(boardScene)
+    this.launchIfNotSleeping(this.boardBackgroundScene)
     this.launchIfNotSleeping(this.hudScene)
+    this.launchIfNotSleeping(boardScene)
     const players = this.players
+    this.scene.wake(this.boardBackgroundScene)
     this.scene.wake(boardScene, { players })
     this.scene.wake(this.hudScene, { boardScene, players })
   }

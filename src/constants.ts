@@ -1,5 +1,6 @@
 export const enum ContinuoAppScenes {
   Home = 'HomeScene',
+  BoardBackground = 'BoardBackgroundScene',
   HUD = 'HUDScene',
   ContinuoBoard = 'ContinuoBoardScene',
   HexagoBoard = 'HexagoBoardScene'
