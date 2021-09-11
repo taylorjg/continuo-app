@@ -1,18 +1,43 @@
 import Dialog from 'phaser3-rex-plugins/templates/ui/dialog/Dialog'
 import Sizer from 'phaser3-rex-plugins/templates/ui/sizer/Sizer'
 import { ModalDialogBaseScene } from './modalDialogBase'
+import { Player, PlayerType } from './turnManager'
 import * as ui from './ui'
 
 const TITLE_STEP1 = 'Choose Players (Step 1)'
 const TITLE_STEP2 = 'Choose Players (Step 2)'
 
+const TEXTBOX_WIDTH = 250
+
 class ChoosePlayersDialogScene extends ModalDialogBaseScene {
 
-  title: Phaser.GameObjects.Text
-  contentSizer: Sizer
+  private title: Phaser.GameObjects.Text
+  private contentSizer: Sizer
+  private singlePlayerName: string = 'You'
+  private multiPlayerNames: [string, string, string, string] = [
+    'Player 1',
+    'Player 2',
+    'Player 3',
+    'Player 4'
+  ]
+  private getPlayers: () => readonly Player[]
 
-  constructor() {
+  constructor(
+    private players: readonly Player[],
+    private onDone: (players: readonly Player[]) => void
+  ) {
     super('ChoosePlayersDialog')
+  }
+
+  private getPlayersSingle(): readonly Player[] {
+    return [
+      new Player(this.singlePlayerName, PlayerType.Human),
+      new Player('Computer', PlayerType.Computer)
+    ]
+  }
+
+  private getPlayersMultiLocal(): readonly Player[] {
+    return this.multiPlayerNames.map(playerName => new Player(playerName, PlayerType.Human))
   }
 
   private onStep1() {
@@ -51,32 +76,59 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
     })
       .add(ui.createLabel(this, 'Your name:'))
       .add(this.rexUI.add.textBox({
-        text: this.add.text(0, 0, 'You', ui.TEXT_STYLE)
+        text: this.add.text(0, 0, 'You', ui.TEXT_STYLE),
+        width: TEXTBOX_WIDTH
       }))
     this.contentSizer.add(innerSizer)
+    this.getPlayers = this.getPlayersSingle
   }
 
   private onStep2MultiLocal() {
+    const buttonsSizer = this.rexUI.add.sizer({
+      orientation: 'horizontal',
+      space: { item: 10, bottom: 20 }
+    })
+    const buttons = this.rexUI.add.buttons({
+      orientation: 'horizontal',
+      buttons: [
+        ui.createRadioButton(this, '2-players', '2'),
+        ui.createRadioButton(this, '3-players', '3'),
+        ui.createRadioButton(this, '4-players', '4')
+      ],
+      space: { item: 20 },
+      type: 'radio',
+      setValueCallback: (gameObject: Phaser.GameObjects.GameObject, value: boolean, _previousValue: boolean) => {
+        ui.updateRadioButton(gameObject, value)
+      }
+    })
+    const NUM_PLAYERS = 4
+    buttons.setData(`${NUM_PLAYERS}-players`, true)
+    buttonsSizer.add(ui.createLabel(this, 'Number of players:'))
+    buttonsSizer.add(buttons)
     const gridSizer = this.rexUI.add.gridSizer({
       column: 2,
-      row: 2,
-      space: { row: 10, column: 40, left: 10, right: 10, top: 10, bottom: 10 }
+      row: NUM_PLAYERS,
+      space: { row: 10, column: 10, left: 10, right: 10, top: 10, bottom: 10 }
     })
-    const label1 = ui.createLabel(this, 'Player 1 name:')
-    const textBox1 = this.rexUI.add.textBox({ text: this.add.text(0, 0, 'Player 1', ui.TEXT_STYLE) })
-    const label2 = ui.createLabel(this, 'Player 2 name:')
-    const textBox2 = this.rexUI.add.textBox({ text: this.add.text(0, 0, 'Player 2', ui.TEXT_STYLE) })
-    gridSizer.add(label1, { row: 0 })
-    gridSizer.add(textBox1, { row: 0 })
-    gridSizer.add(label2, { row: 1 })
-    gridSizer.add(textBox2, { row: 1 })
+    for (const index of Array.from(Array(NUM_PLAYERS).keys())) {
+      const label = ui.createLabel(this, `Player ${index + 1} name:`)
+      const textBox = this.rexUI.add.textBox({
+        text: this.add.text(0, 0, this.multiPlayerNames[index], ui.TEXT_STYLE),
+        width: TEXTBOX_WIDTH
+      })
+      gridSizer.add(label, { row: index })
+      gridSizer.add(textBox, { row: index })
+    }
+    this.contentSizer.add(buttonsSizer)
     this.contentSizer.add(gridSizer)
+    this.getPlayers = this.getPlayersMultiLocal
   }
 
   private onStep2MultiRemote() {
     const message = 'Sorry - this feature has not been implemented yet.'
     const text = this.add.text(0, 0, message, ui.TEXT_STYLE)
     this.contentSizer.add(text)
+    this.getPlayers = () => []
   }
 
   private wrapStep1(fn: () => void) {
@@ -102,7 +154,9 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
 
   protected getDialogConfig(): Dialog.IConfig {
     this.title = this.add.text(0, 0, '', ui.TEXT_STYLE)
-    this.contentSizer = this.rexUI.add.sizer()
+    this.contentSizer = this.rexUI.add.sizer({
+      orientation: 'vertical'
+    })
     this.onStep1()
     return {
       title: this.title,
@@ -129,6 +183,7 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
           break
         case 'multiRemoteButton':
           this.wrapStep2(() => this.onStep2MultiRemote())
+          this.dialog.setActionEnable(1, false)
           break
       }
     })
@@ -146,12 +201,17 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
           break
         case 'doneButton':
           this.closeDialog()
+          this.onDone(this.getPlayers())
           break
       }
     })
   }
 }
 
-export const createChoosePlayersDialog = (parentScene: Phaser.Scene) => {
-  parentScene.scene.add(undefined, new ChoosePlayersDialogScene(), true)
+export const createChoosePlayersDialog = (
+  parentScene: Phaser.Scene,
+  players: readonly Player[],
+  onDone: (players: readonly Player[]) => void
+) => {
+  parentScene.scene.add(undefined, new ChoosePlayersDialogScene(players, onDone), true)
 }

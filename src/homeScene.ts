@@ -16,15 +16,15 @@ import * as ui from './ui'
 
 export class HomeScene extends Phaser.Scene {
 
-  rexUI: RexUIPlugin
-  eventEmitter: Phaser.Events.EventEmitter
-  settings: Settings
-  players: Player[]
-  background: Phaser.GameObjects.TileSprite
-  boardBackgroundScene: Phaser.Scene
-  hudScene: Phaser.Scene
-  continuoBoardScene: Phaser.Scene
-  hexagoBoardScene: Phaser.Scene
+  public rexUI: RexUIPlugin
+  private eventEmitter: Phaser.Events.EventEmitter
+  private settings: Settings
+  private players: readonly Player[]
+  private background: Phaser.GameObjects.TileSprite
+  private boardBackgroundScene: Phaser.Scene
+  private hudScene: Phaser.Scene
+  private continuoBoardScene: Phaser.Scene
+  private hexagoBoardScene: Phaser.Scene
 
   constructor() {
     super(ContinuoAppScenes.Home)
@@ -127,7 +127,9 @@ export class HomeScene extends Phaser.Scene {
 
   private onChoosePlayers(): void {
     log.debug('[HomeScene#onChoosePlayers]')
-    createChoosePlayersDialog(this)
+    createChoosePlayersDialog(this, this.players, newPlayers => {
+      this.players = newPlayers
+    })
   }
 
   private onSettings(): void {

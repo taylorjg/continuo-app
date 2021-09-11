@@ -75,6 +75,26 @@ export const updateCheckbox = (gameObject: Phaser.GameObjects.GameObject, value:
   innerRectangle.setFillStyle(value ? 0xFFFFFF : undefined)
 }
 
+export const createRadioButton = (scene: SceneWithRexUI, name: string, text: string): RexUIPlugin.Label => {
+  return scene.rexUI.add.label({
+    name,
+    text: scene.add.text(0, 0, text, TEXT_STYLE),
+    icon: scene.add.container(0, 0, [
+      scene.add.arc(0, 0, 22 / 2).setStrokeStyle(2, 0xFFFFFF).setName('outerCircle'),
+      scene.add.arc(0, 0, 16 / 2).setName('innerCircle')
+    ]).setSize(22, 22),
+    space: { icon: 15 }
+  })
+    .setInteractive({ useHandCursor: true })
+}
+
+export const updateRadioButton = (gameObject: Phaser.GameObjects.GameObject, value: boolean) => {
+  const radioButton = <RexUIPlugin.Label>gameObject
+  const container = <Phaser.GameObjects.Container>radioButton.getElement('icon')
+  const innerCircle = <Phaser.GameObjects.Arc>container.getByName('innerCircle')
+  innerCircle.setFillStyle(value ? 0xFFFFFF : undefined)
+}
+
 export const createCloseButton = (scene: Phaser.Scene): Phaser.GameObjects.GameObject => {
   const icon = new Phaser.GameObjects.Sprite(scene, 0, 0, 'circlex')
   const arc = new Phaser.GameObjects.Arc(scene, 0, 0, icon.width / 2 - 1)
