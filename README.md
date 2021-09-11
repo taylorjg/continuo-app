@@ -39,7 +39,7 @@
 * players dialog:
   * presented via people icon on HomeScene
   * play computer
-  * play other people (Continuo: 2-5, Hexago: 2-4)
+  * play other people locally (2, 3, or 4 players)
 * support full Hexago rules
   * 4 cards in play
 * add support for high scores / leaderboard
@@ -54,7 +54,7 @@
   * try to find a good example
 * controllers / MVC ?
   * try to find a good example
-* adjustments to support small screens
+* make it playable on small screens
 * a11y ?
   * https://www.a11yproject.com/
 

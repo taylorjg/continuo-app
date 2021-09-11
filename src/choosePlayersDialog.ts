@@ -1,6 +1,6 @@
-import BBCodeText from 'phaser3-rex-plugins/plugins/bbcodetext'
 import Dialog from 'phaser3-rex-plugins/templates/ui/dialog/Dialog'
 import GridSizer from 'phaser3-rex-plugins/templates/ui/gridsizer/GridSizer'
+import Label from 'phaser3-rex-plugins/templates/ui/label/Label'
 import Sizer from 'phaser3-rex-plugins/templates/ui/sizer/Sizer'
 import { ModalDialogBaseScene } from './modalDialogBase'
 import { Player, PlayerType } from './turnManager'
@@ -77,29 +77,46 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
     this.contentSizer.add(innerSizer)
   }
 
-  private onStep2Single() {
+  private makeTextField(getText: () => string, setText: (text: string) => void): Label {
 
-    const label = ui.createLabel(this, 'Your name:')
-    const textbox = this.rexUI.add.BBCodeText(0, 0, this.singlePlayerName, ui.TEXT_STYLE)
+    const background = ui.createLabelBackgroundWithBorder(this)
+    const textbox = this.rexUI.add.BBCodeText(0, 0, getText(), { ...ui.TEXT_STYLE, fixedWidth: TEXTBOX_WIDTH })
 
-    textbox
+    const textField = this.rexUI.add.label({
+      orientation: 'horizontal',
+      background,
+      text: textbox,
+      space: { top: 5, bottom: 5, left: 5, right: 5 }
+    })
+
+    // https://codepen.io/rexrainbow/pen/YbvwBw
+    textField
       .setInteractive()
       .on(Phaser.Input.Events.POINTER_DOWN, () => {
-        var config = {
+        const config = {
           onTextChanged: (_textObject: Phaser.GameObjects.GameObject, text: string) => {
-            this.singlePlayerName = text
+            setText(text)
             textbox.text = text
           }
         }
         this.rexUI.edit(textbox, config)
       })
 
+    return textField
+  }
+
+  private onStep2Single() {
+    const label = ui.createLabel(this, 'Your name:')
+    const textField = this.makeTextField(
+      () => this.singlePlayerName,
+      text => this.singlePlayerName = text
+    )
     const innerSizer = this.rexUI.add.sizer({
       orientation: 'horizontal',
       space: { item: 10 }
     })
       .add(label)
-      .add(textbox)
+      .add(textField)
 
     this.contentSizer.add(innerSizer)
     this.getPlayers = this.getPlayersSingle
@@ -113,20 +130,12 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
     })
     for (const index of Array.from(Array(this.numPlayers).keys())) {
       const label = ui.createLabel(this, `Player ${index + 1} name:`)
-      const textbox = this.rexUI.add.BBCodeText(0, 0, this.multiPlayerNames[index], ui.TEXT_STYLE)
-      textbox
-        .setInteractive()
-        .on(Phaser.Input.Events.POINTER_DOWN, () => {
-          var config = {
-            onTextChanged: (_textObject: Phaser.GameObjects.GameObject, text: string) => {
-              this.multiPlayerNames[index] = text
-              textbox.text = text
-            }
-          }
-          this.rexUI.edit(textbox, config)
-        })
+      const textField = this.makeTextField(
+        () => this.multiPlayerNames[index],
+        text => this.multiPlayerNames[index] = text
+      )
       gridSizer.add(label, { row: index })
-      gridSizer.add(textbox, { row: index })
+      gridSizer.add(textField, { row: index })
     }
     return gridSizer.setName('playersGridSizer')
   }
