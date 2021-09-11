@@ -1,3 +1,4 @@
+import BBCodeText from 'phaser3-rex-plugins/plugins/bbcodetext'
 import Dialog from 'phaser3-rex-plugins/templates/ui/dialog/Dialog'
 import GridSizer from 'phaser3-rex-plugins/templates/ui/gridsizer/GridSizer'
 import Sizer from 'phaser3-rex-plugins/templates/ui/sizer/Sizer'
@@ -52,17 +53,17 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
   }
 
   private onStep1() {
-    const minWidth = 400
+    const minButtonWidth = 400
     const button1 = ui.createLabel(this, 'Play against the computer', true)
-      .setMinWidth(minWidth)
+      .setMinWidth(minButtonWidth)
       .setName('singleButton')
       .setInteractive({ useHandCursor: true })
     const button2 = ui.createLabel(this, 'Multiplayer (local)', true)
-      .setMinWidth(minWidth)
+      .setMinWidth(minButtonWidth)
       .setName('multiLocalButton')
       .setInteractive({ useHandCursor: true })
     const button3 = ui.createLabel(this, 'Multiplayer (remote)', true)
-      .setMinWidth(minWidth)
+      .setMinWidth(minButtonWidth)
       .setName('multiRemoteButton')
       .setInteractive({ useHandCursor: true })
     const innerSizer = this.rexUI.add.sizer({
@@ -73,23 +74,33 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
       .add(button1)
       .add(button2)
       .add(button3)
-    this.title.text = TITLE_STEP1
-    this.contentSizer
-      .removeAll(true)
-      .add(innerSizer)
-      .layout()
+    this.contentSizer.add(innerSizer)
   }
 
   private onStep2Single() {
+
+    const label = ui.createLabel(this, 'Your name:')
+    const textbox = this.rexUI.add.BBCodeText(0, 0, this.singlePlayerName, ui.TEXT_STYLE)
+
+    textbox
+      .setInteractive()
+      .on(Phaser.Input.Events.POINTER_DOWN, () => {
+        var config = {
+          onTextChanged: (_textObject: Phaser.GameObjects.GameObject, text: string) => {
+            this.singlePlayerName = text
+            textbox.text = text
+          }
+        }
+        this.rexUI.edit(textbox, config)
+      })
+
     const innerSizer = this.rexUI.add.sizer({
       orientation: 'horizontal',
       space: { item: 10 }
     })
-      .add(ui.createLabel(this, 'Your name:'))
-      .add(this.rexUI.add.textBox({
-        text: this.add.text(0, 0, 'You', ui.TEXT_STYLE),
-        width: TEXTBOX_WIDTH
-      }))
+      .add(label)
+      .add(textbox)
+
     this.contentSizer.add(innerSizer)
     this.getPlayers = this.getPlayersSingle
   }
@@ -102,12 +113,20 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
     })
     for (const index of Array.from(Array(this.numPlayers).keys())) {
       const label = ui.createLabel(this, `Player ${index + 1} name:`)
-      const textBox = this.rexUI.add.textBox({
-        text: this.add.text(0, 0, this.multiPlayerNames[index], ui.TEXT_STYLE),
-        width: TEXTBOX_WIDTH
-      })
+      const textbox = this.rexUI.add.BBCodeText(0, 0, this.multiPlayerNames[index], ui.TEXT_STYLE)
+      textbox
+        .setInteractive()
+        .on(Phaser.Input.Events.POINTER_DOWN, () => {
+          var config = {
+            onTextChanged: (_textObject: Phaser.GameObjects.GameObject, text: string) => {
+              this.multiPlayerNames[index] = text
+              textbox.text = text
+            }
+          }
+          this.rexUI.edit(textbox, config)
+        })
       gridSizer.add(label, { row: index })
-      gridSizer.add(textBox, { row: index })
+      gridSizer.add(textbox, { row: index })
     }
     return gridSizer.setName('playersGridSizer')
   }
