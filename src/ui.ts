@@ -44,13 +44,14 @@ export const createLabelBackgroundWithBorder = (scene: SceneWithRexUI): Phaser.G
     .setStrokeStyle(BORDER_WIDTH, BORDER_COLOUR)
 }
 
-export const createLabel = (scene: SceneWithRexUI, text: string): RexUIPlugin.Label => {
+export const createLabel = (scene: SceneWithRexUI, text: string, alignCenter: boolean = false): RexUIPlugin.Label => {
   return scene.rexUI.add.label({
     width: 40,
     height: 40,
     background: createLabelBackground(scene),
     text: scene.add.text(0, 0, text, TEXT_STYLE),
-    space: { left: 10, right: 10, top: 10, bottom: 10 }
+    space: { left: 10, right: 10, top: 10, bottom: 10 },
+    align: alignCenter ? 'center' : 'left'
   })
 }
 
