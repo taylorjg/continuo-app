@@ -84,10 +84,7 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
     fn()
     this.contentSizer.layout()
     this.title.text = TITLE_STEP1
-    this.dialog
-      .hideAction(0)
-      .hideAction(1)
-      .layout()
+    this.dialog.clearActions(true).layout()
     this.forceResize()
   }
 
@@ -97,8 +94,8 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
     this.contentSizer.layout()
     this.title.text = TITLE_STEP2
     this.dialog
-      .showAction(0)
-      .showAction(1)
+      .addAction(ui.createLabel(this, 'Back').setName('backButton').setInteractive({ useHandCursor: true }))
+      .addAction(ui.createLabel(this, 'Done').setName('doneButton').setInteractive({ useHandCursor: true }))
       .layout()
     this.forceResize()
   }
@@ -110,20 +107,13 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
     return {
       title: this.title,
       content: this.contentSizer,
-      actions: [
-        ui.createLabel(this, 'Back').setName('backButton').setInteractive({ useHandCursor: true }),
-        ui.createLabel(this, 'Done').setName('doneButton').setInteractive({ useHandCursor: true })
-      ],
+      actions: [],
       expand: { title: false }
     }
   }
 
   create() {
     super.create()
-
-    this.dialog
-      .hideAction(0)
-      .hideAction(1)
 
     this.input.on(Phaser.Input.Events.GAMEOBJECT_DOWN, (
       _pointer: Phaser.Input.Pointer,
