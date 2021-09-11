@@ -1,4 +1,5 @@
 import Dialog from 'phaser3-rex-plugins/templates/ui/dialog/Dialog'
+import GridSizer from 'phaser3-rex-plugins/templates/ui/gridsizer/GridSizer'
 import Sizer from 'phaser3-rex-plugins/templates/ui/sizer/Sizer'
 import { ModalDialogBaseScene } from './modalDialogBase'
 import { Player, PlayerType } from './turnManager'
@@ -13,7 +14,8 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
 
   private title: Phaser.GameObjects.Text
   private contentSizer: Sizer
-  private singlePlayerName: string = 'You'
+  private singlePlayerName = 'You'
+  private numPlayers = 2
   private multiPlayerNames: [string, string, string, string] = [
     'Player 1',
     'Player 2',
@@ -27,6 +29,13 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
     private onDone: (players: readonly Player[]) => void
   ) {
     super('ChoosePlayersDialog')
+    if (this.players.length == 2 && this.players[0].type == PlayerType.Human && this.players[1].type == PlayerType.Computer) {
+      this.singlePlayerName = this.players[0].name
+    } else {
+      const safePlayers = this.players.slice(0, this.multiPlayerNames.length)
+      this.numPlayers = safePlayers.length
+      safePlayers.forEach((player, index) => this.multiPlayerNames[index] = player.name)
+    }
   }
 
   private getPlayersSingle(): readonly Player[] {
@@ -37,7 +46,9 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
   }
 
   private getPlayersMultiLocal(): readonly Player[] {
-    return this.multiPlayerNames.map(playerName => new Player(playerName, PlayerType.Human))
+    return this.multiPlayerNames
+      .slice(0, this.numPlayers)
+      .map(playerName => new Player(playerName, PlayerType.Human))
   }
 
   private onStep1() {
@@ -83,34 +94,13 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
     this.getPlayers = this.getPlayersSingle
   }
 
-  private onStep2MultiLocal() {
-    const buttonsSizer = this.rexUI.add.sizer({
-      orientation: 'horizontal',
-      space: { item: 10, bottom: 20 }
-    })
-    const buttons = this.rexUI.add.buttons({
-      orientation: 'horizontal',
-      buttons: [
-        ui.createRadioButton(this, '2-players', '2'),
-        ui.createRadioButton(this, '3-players', '3'),
-        ui.createRadioButton(this, '4-players', '4')
-      ],
-      space: { item: 20 },
-      type: 'radio',
-      setValueCallback: (gameObject: Phaser.GameObjects.GameObject, value: boolean, _previousValue: boolean) => {
-        ui.updateRadioButton(gameObject, value)
-      }
-    })
-    const NUM_PLAYERS = 4
-    buttons.setData(`${NUM_PLAYERS}-players`, true)
-    buttonsSizer.add(ui.createLabel(this, 'Number of players:'))
-    buttonsSizer.add(buttons)
+  private makePlayersGridSizer(): GridSizer {
     const gridSizer = this.rexUI.add.gridSizer({
       column: 2,
-      row: NUM_PLAYERS,
+      row: this.numPlayers,
       space: { row: 10, column: 10, left: 10, right: 10, top: 10, bottom: 10 }
     })
-    for (const index of Array.from(Array(NUM_PLAYERS).keys())) {
+    for (const index of Array.from(Array(this.numPlayers).keys())) {
       const label = ui.createLabel(this, `Player ${index + 1} name:`)
       const textBox = this.rexUI.add.textBox({
         text: this.add.text(0, 0, this.multiPlayerNames[index], ui.TEXT_STYLE),
@@ -119,8 +109,47 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
       gridSizer.add(label, { row: index })
       gridSizer.add(textBox, { row: index })
     }
+    return gridSizer.setName('playersGridSizer')
+  }
+
+  private onStep2MultiLocal() {
+    const buttonsSizer = this.rexUI.add.sizer({
+      orientation: 'horizontal',
+      space: { item: 10, bottom: 20 }
+    })
+    const buttons = this.rexUI.add.buttons({
+      orientation: 'horizontal',
+      buttons: [
+        ui.createRadioButton(this, '2-players', '2').setData('numPlayers', 2),
+        ui.createRadioButton(this, '3-players', '3').setData('numPlayers', 3),
+        ui.createRadioButton(this, '4-players', '4').setData('numPlayers', 4)
+      ],
+      space: { item: 20 },
+      type: 'radio',
+      setValueCallback: (gameObject: Phaser.GameObjects.GameObject, value: boolean, previousValue: boolean) => {
+        ui.updateRadioButton(gameObject, value)
+        if (previousValue !== undefined) {
+          if (value) {
+            const gridSizerOld = this.contentSizer.getChildren().find(({ name }) => name == 'playersGridSizer')
+            if (gridSizerOld) {
+              this.contentSizer.remove(gridSizerOld, true)
+            }
+            this.numPlayers = gameObject.getData('numPlayers')
+            const gridSizer = this.makePlayersGridSizer()
+            this.contentSizer.add(gridSizer).layout()
+            this.dialog.layout()
+            this.forceResize()
+          }
+        }
+      }
+    })
+
+    buttonsSizer.add(ui.createLabel(this, 'Number of players:'))
+    buttonsSizer.add(buttons)
     this.contentSizer.add(buttonsSizer)
-    this.contentSizer.add(gridSizer)
+
+    buttons.setData(`${this.numPlayers}-players`, true)
+
     this.getPlayers = this.getPlayersMultiLocal
   }
 
