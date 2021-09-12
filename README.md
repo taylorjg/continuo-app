@@ -36,10 +36,10 @@
   * Hexago
 * add splash/loading dialog
 * add tutorial/in-play suggestions/nudges
-* players dialog:
-  * presented via people icon on HomeScene
-  * play computer
-  * play other people locally (2, 3, or 4 players)
+* ~~players dialog:~~
+  * ~~presented via people icon on HomeScene~~
+  * ~~play against the computer~~
+  * ~~multiple players locally (2, 3 or 4 players)~~
 * support full Hexago rules
   * 4 cards in play
 * add support for high scores / leaderboard

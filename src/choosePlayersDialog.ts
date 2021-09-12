@@ -54,15 +54,15 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
 
   private onStep1() {
     const minButtonWidth = 400
-    const button1 = ui.createLabel(this, 'Play against the computer', true)
+    const button1 = ui.createLabel(this, 'Play against the computer', { alignCenter: true })
       .setMinWidth(minButtonWidth)
       .setName('singleButton')
       .setInteractive({ useHandCursor: true })
-    const button2 = ui.createLabel(this, 'Multiplayer (local)', true)
+    const button2 = ui.createLabel(this, 'Multiplayer (local)', { alignCenter: true })
       .setMinWidth(minButtonWidth)
       .setName('multiLocalButton')
       .setInteractive({ useHandCursor: true })
-    const button3 = ui.createLabel(this, 'Multiplayer (remote)', true)
+    const button3 = ui.createLabel(this, 'Multiplayer (remote)', { alignCenter: true })
       .setMinWidth(minButtonWidth)
       .setName('multiRemoteButton')
       .setInteractive({ useHandCursor: true })
@@ -106,7 +106,7 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
   }
 
   private onStep2Single() {
-    const label = ui.createLabel(this, 'Your name:')
+    const label = ui.createLabel(this, 'Your name:', { background: false })
     const textField = this.makeTextField(
       () => this.singlePlayerName,
       text => this.singlePlayerName = text
@@ -129,7 +129,7 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
       space: { row: 10, column: 10, left: 10, right: 10, top: 10, bottom: 10 }
     })
     for (const index of Array.from(Array(this.numPlayers).keys())) {
-      const label = ui.createLabel(this, `Player ${index + 1} name:`)
+      const label = ui.createLabel(this, `Player ${index + 1} name:`, { background: false })
       const textField = this.makeTextField(
         () => this.multiPlayerNames[index],
         text => this.multiPlayerNames[index] = text
@@ -172,7 +172,7 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
       }
     })
 
-    buttonsSizer.add(ui.createLabel(this, 'Number of players:'))
+    buttonsSizer.add(ui.createLabel(this, 'Number of players:', { background: false }))
     buttonsSizer.add(buttons)
     this.contentSizer.add(buttonsSizer)
 
@@ -210,7 +210,7 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
   }
 
   protected getDialogConfig(): Dialog.IConfig {
-    this.title = this.add.text(0, 0, '', ui.TEXT_STYLE)
+    this.title = this.add.text(0, 0, TITLE_STEP1, ui.TEXT_STYLE)
     this.contentSizer = this.rexUI.add.sizer({
       orientation: 'vertical'
     })
