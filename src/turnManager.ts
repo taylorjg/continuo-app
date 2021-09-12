@@ -117,9 +117,6 @@ export class TurnManager {
   public gameOver() {
     this.currentPlayerScore = null
     this._isGameOver = true
-    this.eventEmitter.emit(ContinuoAppEvents.FinalScores, {
-      scoreboard: this.makeScoreboard()
-    })
   }
 
   public get scoreboard(): Scoreboard {

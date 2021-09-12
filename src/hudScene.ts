@@ -106,13 +106,10 @@ export class HUDScene extends Phaser.Scene {
       .layout()
 
     this.eventEmitter.on(ContinuoAppEvents.NextTurn, this.onNextTurn, this)
-    this.eventEmitter.on(ContinuoAppEvents.FinalScores, this.onFinalScores, this)
-    this.eventEmitter.on(ContinuoAppEvents.NextCard, this.onNextCard, this)
-    this.eventEmitter.on(ContinuoAppEvents.MoveCard, this.onMoveCard, this)
-    this.eventEmitter.on(ContinuoAppEvents.PlaceCard, this.onPlaceCard, this)
-    this.eventEmitter.on(ContinuoAppEvents.EndRotateCard, this.onEndRotateCard, this)
-    this.eventEmitter.on(ContinuoAppEvents.StartComputerMove, this.onStartComputerMove, this)
-    this.eventEmitter.on(ContinuoAppEvents.EndComputerMove, this.onEndComputerMove, this)
+    this.eventEmitter.on(ContinuoAppEvents.CardMoved, this.onCardMovedOrRotated, this)
+    this.eventEmitter.on(ContinuoAppEvents.CardRotated, this.onCardMovedOrRotated, this)
+    this.eventEmitter.on(ContinuoAppEvents.StartMove, this.onStartMove, this)
+    this.eventEmitter.on(ContinuoAppEvents.EndMove, this.onEndMove, this)
     this.eventEmitter.on(ContinuoAppEvents.SettingsChanged, this.onSettingsChanged, this)
 
     this.events.on(Phaser.Scenes.Events.WAKE, this.onWake, this)
@@ -199,23 +196,6 @@ export class HUDScene extends Phaser.Scene {
     this.statusBarLeft.setVisible(false)
   }
 
-  private endOfTurn(arg: any): void {
-    const score = <number>arg.score
-    const bestScore = <number>arg.bestScore
-    this.turnManager.addTurnScore(this.currentPlayer, score, bestScore)
-    this.currentPlayer = null
-    this.clearCurrentCardScore()
-    setTimeout(() => {
-      const numCardsLeft = <number>arg.numCardsLeft
-      if (numCardsLeft == 0) {
-        this.turnManager.gameOver()
-        this.onScoreboardClick()
-      } else {
-        this.turnManager.step()
-      }
-    }, 1000)
-  }
-
   private ifHumanMove(action: () => void) {
     if (this.currentPlayer?.type == PlayerType.Human) {
       action()
@@ -240,51 +220,35 @@ export class HUDScene extends Phaser.Scene {
   private onNextTurn(arg: any): void {
     log.debug('[HUDScene#onNextTurn]', arg)
     this.currentPlayer = <Player>arg.currentPlayer
-    switch (this.currentPlayer.type) {
-      case PlayerType.Human:
-        this.boardScene.onNextCard()
-        break
-      case PlayerType.Computer:
-        this.boardScene.onComputerMove()
-        break
-    }
   }
 
-  private onFinalScores(arg: any): void {
-    log.debug('[HUDScene#onFinalScores]', arg)
+  private onStartMove(arg: any): void {
+    log.debug('[HUDScene#onStartMove]', arg)
+    this.updateRemainingCards(arg)
+    this.updateCurrentCardScore(arg)
+  }
+
+  private onEndMove(arg: any): void {
+    log.debug('[HUDScene#onEndMove]', arg)
+    const score = <number>arg.score
+    const bestScore = <number>arg.bestScore
+    this.turnManager.addTurnScore(this.currentPlayer, score, bestScore)
     this.currentPlayer = null
+    this.clearCurrentCardScore()
+    setTimeout(() => {
+      const numCardsLeft = <number>arg.numCardsLeft
+      if (numCardsLeft == 0) {
+        this.turnManager.gameOver()
+        this.onScoreboardClick()
+      } else {
+        this.turnManager.step()
+      }
+    }, 1000)
   }
 
-  private onNextCard(arg: any): void {
-    log.debug('[HUDScene#onNextCard]', arg)
-    this.updateRemainingCards(arg)
+  private onCardMovedOrRotated(arg: any): void {
+    log.debug('[HUDScene#onCardMovedOrRotated]', arg)
     this.updateCurrentCardScore(arg)
-  }
-
-  private onMoveCard(arg: any): void {
-    log.debug('[HUDScene#onMoveCard]', arg)
-    this.updateCurrentCardScore(arg)
-  }
-
-  private onPlaceCard(arg: any): void {
-    log.debug('[HUDScene#onPlaceCard]', arg)
-    this.endOfTurn(arg)
-  }
-
-  private onEndRotateCard(arg: any): void {
-    log.debug('[HUDScene#onEndRotateCard]', arg)
-    this.updateCurrentCardScore(arg)
-  }
-
-  private onStartComputerMove(arg: any): void {
-    log.debug('[HUDScene#onStartComputerMove]', arg)
-    this.updateRemainingCards(arg)
-    this.updateCurrentCardScore(arg)
-  }
-
-  private onEndComputerMove(arg: any): void {
-    log.debug('[HUDScene#onEndComputerMove]', arg)
-    this.endOfTurn(arg)
   }
 
   private onSettingsChanged(arg: any): void {

@@ -11,7 +11,10 @@ export class BoardBackgroundScene extends Phaser.Scene {
 
   create() {
     const onResize = () => this.resize()
+    const onOrientationChange = () => this.resize()
+
     window.addEventListener('resize', onResize)
+    window.addEventListener('orientationchange', onOrientationChange)
 
     const windowWidth = window.innerWidth
     const windowHeight = window.innerHeight
@@ -21,6 +24,7 @@ export class BoardBackgroundScene extends Phaser.Scene {
   private resize(): void {
     const windowWidth = window.innerWidth
     const windowHeight = window.innerHeight
+    this.scale.resize(windowWidth, windowHeight)
     this.background.setSize(windowWidth, windowHeight)
   }
 }

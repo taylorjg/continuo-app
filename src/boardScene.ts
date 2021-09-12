@@ -135,7 +135,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.rescale(this.board.placeCard(placedCard))
     this.showCardSpriteInContainer(placedCard, playerType)
     this.highlightScoring(this.currentPossibleMove)
-    this.emitCurrentCardChange(playerType == PlayerType.Computer ? ContinuoAppEvents.StartComputerMove : ContinuoAppEvents.NextCard)
+    this.emitCurrentCardChange(ContinuoAppEvents.StartMove)
   }
 
   private placeCurrentCardFinal(playerType: PlayerType): void {
@@ -143,7 +143,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.board = this.board.placeCard(placedCard)
     this.showCardSpriteDirectly(placedCard)
     this.unhighlightScoring()
-    this.emitCurrentCardChange(playerType == PlayerType.Computer ? ContinuoAppEvents.EndComputerMove : ContinuoAppEvents.PlaceCard)
+    this.emitCurrentCardChange(ContinuoAppEvents.EndMove)
     this.currentPossibleMove = null
     this.currentPlayerType = null
     this.bestScoreLocationsFound.clear()
@@ -170,7 +170,7 @@ export abstract class BoardScene extends Phaser.Scene {
       },
       onComplete: () => {
         this.highlightScoring(this.currentPossibleMove)
-        this.emitCurrentCardChange(ContinuoAppEvents.MoveCard)
+        this.emitCurrentCardChange(ContinuoAppEvents.CardMoved)
         this.animating = false
       }
     })
@@ -209,14 +209,13 @@ export abstract class BoardScene extends Phaser.Scene {
         duration: 300,
         ease: 'Sine.InOut',
         onStart: () => {
-          this.boardSceneConfig.eventEmitter.emit(ContinuoAppEvents.StartRotateCard)
           this.unhighlightScoring()
           this.animating = true
         },
         onComplete: () => {
           this.currentPossibleMove = possibleMove
           this.highlightScoring(this.currentPossibleMove)
-          this.emitCurrentCardChange(ContinuoAppEvents.EndRotateCard)
+          this.emitCurrentCardChange(ContinuoAppEvents.CardRotated)
           if (this.boardSceneConfig.settings.soundBestScoreEnabled) {
             const score = possibleMove.score
             const bestScore = this.possibleMoves[0].score
@@ -297,6 +296,7 @@ export abstract class BoardScene extends Phaser.Scene {
       this.repositionCurrentCardContainer(possibleMove)
     })
 
+    this.boardSceneConfig.eventEmitter.on(ContinuoAppEvents.NextTurn, this.onNextTurn, this)
     this.boardSceneConfig.eventEmitter.on(ContinuoAppEvents.SettingsChanged, this.onSettingsChanged, this)
 
     this.events.on(Phaser.Scenes.Events.WAKE, this.onWake, this)
@@ -400,21 +400,26 @@ export abstract class BoardScene extends Phaser.Scene {
     this.startNewGame(players)
   }
 
-  public onNextCard(): void {
-    log.debug('[BoardScene#onNextCard]')
+  private onNextTurn(arg: any): void {
+    log.debug('[BoardScene#onNextTurn]')
+    const currentPlayer = <Player>arg.currentPlayer
     const card = this.deck.nextCard()
     this.possibleMoves = this.adapter.evaluateCard(this.board, card)
-    const possibleMove = this.chooseRandomWorstScoreMove(this.possibleMoves)
-    this.placeCurrentCardTentative(possibleMove, PlayerType.Human)
-  }
-
-  public onComputerMove(): void {
-    log.debug('[BoardScene#onComputerMove]')
-    const card = this.deck.nextCard()
-    this.possibleMoves = this.adapter.evaluateCard(this.board, card)
-    const possibleMove = this.chooseRandomBestScoreMove(this.possibleMoves)
-    this.placeCurrentCardTentative(possibleMove, PlayerType.Computer)
-    this.time.delayedCall(2000, () => this.placeCurrentCardFinal(PlayerType.Computer))
+    switch (currentPlayer.type) {
+      case PlayerType.Human:
+        {
+          const possibleMove = this.chooseRandomWorstScoreMove(this.possibleMoves)
+          this.placeCurrentCardTentative(possibleMove, PlayerType.Human)
+          break
+        }
+      case PlayerType.Computer:
+        {
+          const possibleMove = this.chooseRandomBestScoreMove(this.possibleMoves)
+          this.placeCurrentCardTentative(possibleMove, PlayerType.Computer)
+          this.time.delayedCall(2000, () => this.placeCurrentCardFinal(PlayerType.Computer))
+          break
+        }
+    }
   }
 
   public onRotateCW(): void {

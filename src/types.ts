@@ -3,8 +3,6 @@ import { Player } from './turnManager'
 
 export interface IBoardScene {
   onRestart(players: readonly Player[]): void
-  onNextCard(): void
-  onComputerMove(): void
   onRotateCW(): void
   onRotateCCW(): void
   onPlaceCard(): void
