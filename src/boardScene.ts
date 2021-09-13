@@ -296,11 +296,6 @@ export abstract class BoardScene extends Phaser.Scene {
       this.repositionCurrentCardContainer(possibleMove)
     })
 
-    this.boardSceneConfig.eventEmitter.on(ContinuoAppEvents.NextTurn, this.onNextTurn, this)
-    this.boardSceneConfig.eventEmitter.on(ContinuoAppEvents.SettingsChanged, this.onSettingsChanged, this)
-
-    this.events.on(Phaser.Scenes.Events.WAKE, this.onWake, this)
-
     this.input.keyboard.on('keydown-LEFT', () => {
       this.onRotateCCW()
     })
@@ -308,6 +303,9 @@ export abstract class BoardScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-RIGHT', () => {
       this.onRotateCW()
     })
+
+    this.events.on(Phaser.Scenes.Events.WAKE, this.onWake, this)
+    this.events.on(Phaser.Scenes.Events.SLEEP, this.onSleep, this)
   }
 
   private findPossibleMove(placedCard: CommonPlacedCard): CommonPossibleMove {
@@ -392,7 +390,15 @@ export abstract class BoardScene extends Phaser.Scene {
 
   private onWake(_scene: Phaser.Scene, data: { players: readonly Player[] }) {
     log.debug('[BoardScene#onWake]')
+    this.boardSceneConfig.eventEmitter.on(ContinuoAppEvents.NextTurn, this.onNextTurn, this)
+    this.boardSceneConfig.eventEmitter.on(ContinuoAppEvents.SettingsChanged, this.onSettingsChanged, this)
     this.startNewGame(data.players)
+  }
+
+  private onSleep(_scene: Phaser.Scene) {
+    log.debug('[BoardScene#onSleep]')
+    this.boardSceneConfig.eventEmitter.off(ContinuoAppEvents.NextTurn, this.onNextTurn, this)
+    this.boardSceneConfig.eventEmitter.off(ContinuoAppEvents.SettingsChanged, this.onSettingsChanged, this)
   }
 
   public onRestart(players: readonly Player[]): void {
