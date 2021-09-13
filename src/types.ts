@@ -1,12 +1,4 @@
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
-import { Player } from './turnManager'
-
-export interface IBoardScene {
-  onRestart(players: readonly Player[]): void
-  onRotateCW(): void
-  onRotateCCW(): void
-  onPlaceCard(): void
-}
 
 export type SceneWithRexUI = Phaser.Scene & { rexUI: RexUIPlugin }
 

@@ -2,7 +2,6 @@ import * as Phaser from 'phaser'
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import log from 'loglevel'
 import { Settings } from './settings'
-import { IBoardScene } from './types'
 import { TurnManager, Player, PlayerType } from './turnManager'
 import { MiniScoreboard } from './miniScoreboard'
 import { createConfirmationDialog } from './confirmationDialog'
@@ -18,7 +17,6 @@ export class HUDScene extends Phaser.Scene {
   rexUI: RexUIPlugin
   private eventEmitter: Phaser.Events.EventEmitter
   private settings: Settings
-  private boardScene: IBoardScene
   private turnManager: TurnManager
   private currentPlayer: Player
 
@@ -139,12 +137,10 @@ export class HUDScene extends Phaser.Scene {
   private onWake(
     _scene: Phaser.Scene,
     data: {
-      boardScene: IBoardScene,
       players: Player[]
     }
   ) {
     log.debug('[HUDScene#onWake]')
-    this.boardScene = data.boardScene
     this.turnManager = new TurnManager(this.eventEmitter, data.players)
     if (this.miniScoreboard) {
       this.miniScoreboard.destroy()
@@ -152,8 +148,7 @@ export class HUDScene extends Phaser.Scene {
     }
     const miniScoreboardY = this.lhsButtons.getBounds().bottom + 10
     this.miniScoreboard = new MiniScoreboard(this.eventEmitter, this, this.turnManager.scoreboard, miniScoreboardY)
-    this.turnManager.reset()
-    this.turnManager.step()
+    this.eventEmitter.emit(ContinuoAppEvents.NewGame, data.players)
   }
 
   private onHomeClick(): void {
@@ -204,17 +199,17 @@ export class HUDScene extends Phaser.Scene {
 
   private onRotateCWClick(): void {
     log.debug('[HUDScene#onRotateCWClick]')
-    this.ifHumanMove(() => this.boardScene.onRotateCW())
+    this.ifHumanMove(() => this.eventEmitter.emit(ContinuoAppEvents.RotateCW))
   }
 
   private onRotateCCWClick(): void {
     log.debug('[HUDScene#onRotateCCWClick]')
-    this.ifHumanMove(() => this.boardScene.onRotateCCW())
+    this.ifHumanMove(() => this.eventEmitter.emit(ContinuoAppEvents.RotateCCW))
   }
 
   private onPlaceCardClick(): void {
     log.debug('[HUDScene#onPlaceCardClick]')
-    this.ifHumanMove(() => this.boardScene.onPlaceCard())
+    this.ifHumanMove(() => this.eventEmitter.emit(ContinuoAppEvents.PlaceCard))
   }
 
   private onNextTurn(arg: any): void {
@@ -270,11 +265,11 @@ export class HUDScene extends Phaser.Scene {
       this.turnManager.scoreboard,
       this.turnManager.isGameOver,
       () => {
-        this.boardScene.onRestart(this.turnManager.players)
-        this.turnManager.reset()
-        this.turnManager.step()
+        this.eventEmitter.emit(ContinuoAppEvents.NewGame, this.turnManager.players)
       },
-      () => { this.onHomeClick() }
+      () => {
+        this.onHomeClick()
+      }
     )
   }
 

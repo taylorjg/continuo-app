@@ -7,9 +7,9 @@ export const enum ContinuoAppScenes {
 }
 
 export const enum ContinuoAppEvents {
-  // RotateCW = 'rotateCW',
-  // RotateCCW = 'rotateCCW',
-  // PlaceCard = 'placeCard',
+  RotateCW = 'rotateCW',
+  RotateCCW = 'rotateCCW',
+  PlaceCard = 'placeCard',
   NewGame = 'newGame',
   NextTurn = 'nextTurn',
   StartMove = 'startMove',

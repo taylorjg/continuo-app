@@ -153,7 +153,7 @@ export class HomeScene extends Phaser.Scene {
     const players = this.players
     this.scene.wake(this.boardBackgroundScene)
     this.scene.wake(boardScene, { players })
-    this.scene.wake(this.hudScene, { boardScene, players })
+    this.scene.wake(this.hudScene, { players })
   }
 
   private sleepIfActive(scene: Phaser.Scene): void {

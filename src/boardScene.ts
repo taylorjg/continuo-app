@@ -331,26 +331,6 @@ export abstract class BoardScene extends Phaser.Scene {
     return Phaser.Utils.Array.GetRandom(worstScoreMoves)
   }
 
-  private startNewGame(players: readonly Player[]): void {
-
-    this.cardSpritesMap.forEach(cardSprite => cardSprite.setVisible(false))
-    this.currentCardContainer.setVisible(false)
-    this.unhighlightScoring()
-    this.deck.reset()
-    this.board = this.adapter.emptyBoard
-    this.possibleMoves = []
-    this.currentPossibleMove = null
-    this.currentPlayerType = null
-
-    const iter = this.getInitialPlacedCards(this.deck, this.board, players.length)
-
-    for (let curr = iter.next(); curr.value; curr = iter.next(this.board)) {
-      this.placeInitialCard(curr.value)
-    }
-
-    this.resize()
-  }
-
   private resize(): void {
     const width = window.innerWidth
     const height = window.innerHeight
@@ -390,20 +370,39 @@ export abstract class BoardScene extends Phaser.Scene {
 
   private onWake(_scene: Phaser.Scene, data: { players: readonly Player[] }) {
     log.debug('[BoardScene#onWake]')
+    this.boardSceneConfig.eventEmitter.on(ContinuoAppEvents.NewGame, this.onNewGame, this)
     this.boardSceneConfig.eventEmitter.on(ContinuoAppEvents.NextTurn, this.onNextTurn, this)
+    this.boardSceneConfig.eventEmitter.on(ContinuoAppEvents.RotateCW, this.onRotateCW, this)
+    this.boardSceneConfig.eventEmitter.on(ContinuoAppEvents.RotateCCW, this.onRotateCCW, this)
+    this.boardSceneConfig.eventEmitter.on(ContinuoAppEvents.PlaceCard, this.onPlaceCard, this)
     this.boardSceneConfig.eventEmitter.on(ContinuoAppEvents.SettingsChanged, this.onSettingsChanged, this)
-    this.startNewGame(data.players)
   }
 
   private onSleep(_scene: Phaser.Scene) {
     log.debug('[BoardScene#onSleep]')
+    this.boardSceneConfig.eventEmitter.off(ContinuoAppEvents.NewGame, this.onNewGame, this)
     this.boardSceneConfig.eventEmitter.off(ContinuoAppEvents.NextTurn, this.onNextTurn, this)
+    this.boardSceneConfig.eventEmitter.off(ContinuoAppEvents.RotateCW, this.onRotateCW, this)
+    this.boardSceneConfig.eventEmitter.off(ContinuoAppEvents.RotateCCW, this.onRotateCCW, this)
+    this.boardSceneConfig.eventEmitter.off(ContinuoAppEvents.PlaceCard, this.onPlaceCard, this)
     this.boardSceneConfig.eventEmitter.off(ContinuoAppEvents.SettingsChanged, this.onSettingsChanged, this)
   }
 
-  public onRestart(players: readonly Player[]): void {
-    log.debug('[BoardScene#onRestart]')
-    this.startNewGame(players)
+  private onNewGame(players: readonly Player[]) {
+    log.debug('[BoardScene#onNewGame]', players)
+    this.cardSpritesMap.forEach(cardSprite => cardSprite.setVisible(false))
+    this.currentCardContainer.setVisible(false)
+    this.unhighlightScoring()
+    this.deck.reset()
+    this.board = this.adapter.emptyBoard
+    this.possibleMoves = []
+    this.currentPossibleMove = null
+    this.currentPlayerType = null
+    const iter = this.getInitialPlacedCards(this.deck, this.board, players.length)
+    for (let curr = iter.next(); curr.value; curr = iter.next(this.board)) {
+      this.placeInitialCard(curr.value)
+    }
+    this.resize()
   }
 
   private onNextTurn(arg: any): void {
@@ -428,17 +427,17 @@ export abstract class BoardScene extends Phaser.Scene {
     }
   }
 
-  public onRotateCW(): void {
+  private onRotateCW(): void {
     log.debug('[BoardScene#onRotateCW]')
     this.rotateCurrentCardContainer(+this.boardSceneConfig.ROTATION_ANGLE)
   }
 
-  public onRotateCCW(): void {
+  private onRotateCCW(): void {
     log.debug('[BoardScene#onRotateCCW]')
     this.rotateCurrentCardContainer(-this.boardSceneConfig.ROTATION_ANGLE)
   }
 
-  public onPlaceCard(): void {
+  private onPlaceCard(): void {
     log.debug('[BoardScene#onPlaceCard]')
     this.placeCurrentCardFinal(PlayerType.Human)
   }

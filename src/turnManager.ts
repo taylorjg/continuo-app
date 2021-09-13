@@ -1,3 +1,4 @@
+import log from 'loglevel'
 import { ContinuoAppEvents } from './constants'
 
 export enum PlayerType {
@@ -83,6 +84,7 @@ export class TurnManager {
     this.nextPlayerIndex = 0
     this.currentPlayerScore = null
     this._isGameOver = false
+    this.eventEmitter.on(ContinuoAppEvents.NewGame, this.onNewGame, this)
   }
 
   public step(): void {
@@ -125,6 +127,12 @@ export class TurnManager {
 
   public get isGameOver(): boolean {
     return this._isGameOver
+  }
+
+  private onNewGame() {
+    log.debug('[TurnManager#onNewGame]')
+    this.reset()
+    this.step()
   }
 
   private makeScoreboard(): Scoreboard {
