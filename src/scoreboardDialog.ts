@@ -111,11 +111,11 @@ class ScoreboardDialogScene extends ModalDialogBaseScene {
       switch (gameObject.name) {
         case 'playAgainButton':
           this.closeDialog()
-          this.onPlayAgain && this.onPlayAgain()
+          this.onPlayAgain?.()
           break
         case 'homeButton':
           this.closeDialog()
-          this.onHome && this.onHome()
+          this.onHome?.()
           break
       }
     })

@@ -38,11 +38,11 @@ class ConfirmationDialogScene extends ModalDialogBaseScene {
       switch (gameObject.name) {
         case 'yesButton':
           this.closeDialog()
-          this.onYes && this.onYes()
+          this.onYes?.()
           break
         case 'noButton':
           this.closeDialog()
-          this.onNo && this.onNo()
+          this.onNo?.()
           break
       }
     })
