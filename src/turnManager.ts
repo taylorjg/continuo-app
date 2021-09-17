@@ -21,6 +21,12 @@ class PlayerScore {
   private _scores: number[]
 
   constructor(public readonly player: Player) {
+    this.reset()
+  }
+
+  public reset(): void {
+    this._score = 0
+    this._bestScore = 0
     this._scores = []
   }
 
@@ -46,12 +52,6 @@ class PlayerScore {
     this._score += score
     this._bestScore += bestScore
     this._scores.push(score)
-  }
-
-  public reset(): void {
-    this._score = 0
-    this._bestScore = 0
-    this._scores = []
   }
 }
 

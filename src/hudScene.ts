@@ -22,10 +22,9 @@ export class HUDScene extends Phaser.Scene {
 
   private lhsButtons: RexUIPlugin.Sizer
   private rhsButtons: RexUIPlugin.Sizer
+  private miniScoreboard: MiniScoreboard
   private statusBarLeft: RexUIPlugin.Sizer
   private statusBarRight: RexUIPlugin.Sizer
-
-  private miniScoreboard: MiniScoreboard
 
   private currentCardScoreLabel: RexUIPlugin.Label
   private remainingCardsLabel: RexUIPlugin.Label
@@ -64,6 +63,9 @@ export class HUDScene extends Phaser.Scene {
       .add(rotateCCWButton)
       .add(placeCardButton)
       .layout()
+
+    const miniScoreboardY = this.lhsButtons.getBounds().bottom + 10
+    this.miniScoreboard = new MiniScoreboard(this.eventEmitter, this, miniScoreboardY)
 
     const homeButton = ui.createHUDSceneButton(this, 'homeButton', 'house', .4)
     const scoreboardButton = ui.createHUDSceneButton(this, 'scoreboardButton', 'bar-chart', .4)
@@ -136,18 +138,11 @@ export class HUDScene extends Phaser.Scene {
 
   private onWake(
     _scene: Phaser.Scene,
-    data: {
-      players: Player[]
-    }
+    data: { players: Player[] }
   ) {
     log.debug('[HUDScene#onWake]')
     this.turnManager = new TurnManager(this.eventEmitter, data.players)
-    if (this.miniScoreboard) {
-      this.miniScoreboard.destroy()
-      this.miniScoreboard = null
-    }
-    const miniScoreboardY = this.lhsButtons.getBounds().bottom + 10
-    this.miniScoreboard = new MiniScoreboard(this.eventEmitter, this, this.turnManager.scoreboard, miniScoreboardY)
+    this.miniScoreboard.updatePlayers(data.players)
     this.eventEmitter.emit(ContinuoAppEvents.NewGame, data.players)
   }
 
