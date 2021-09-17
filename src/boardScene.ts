@@ -40,7 +40,6 @@ export abstract class BoardScene extends Phaser.Scene {
   private currentPlayerType: PlayerType
   private cardSpritesMap: Map<CommonCard, Phaser.GameObjects.Sprite>
   private currentCardContainer: Phaser.GameObjects.Container
-  private scoringHighlights: Phaser.GameObjects.Shape[]
   private animating: boolean
   private bestScoreLocationsFound: Set<CommonPossibleMove>
 
@@ -51,7 +50,6 @@ export abstract class BoardScene extends Phaser.Scene {
     this.deck = this.adapter.deck
     this.board = this.adapter.emptyBoard
     this.cardSpritesMap = new Map<CommonCard, Phaser.GameObjects.Sprite>()
-    this.scoringHighlights = []
     this.animating = false
     this.bestScoreLocationsFound = new Set()
   }
@@ -67,14 +65,17 @@ export abstract class BoardScene extends Phaser.Scene {
 
   private highlightScoring(currentPossibleMove: CommonPossibleMove): void {
     if (this.boardSceneConfig.settings.hintShowScoringHighlights) {
-      this.scoringHighlights = this.createScoringHighlights(currentPossibleMove)
-      this.scoringHighlights.forEach(highlight => this.add.existing(highlight))
+      const scoringHighlights = this.createScoringHighlights(currentPossibleMove)
+      scoringHighlights.forEach(highlight => {
+        highlight.setData('isScoringHighlight', true)
+        this.add.existing(highlight)
+      })
     }
   }
 
   private unhighlightScoring(): void {
-    this.scoringHighlights.forEach(highlight => highlight.destroy())
-    this.scoringHighlights = []
+    const scoringHighlights = this.children.getChildren().filter(child => child.getData('isScoringHighlight') == true)
+    scoringHighlights.forEach(highlight => highlight.destroy())
   }
 
   private emitCurrentCardChange(eventName: string): void {
