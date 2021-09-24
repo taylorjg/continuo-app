@@ -369,7 +369,7 @@ export abstract class BoardScene extends Phaser.Scene {
     }
   }
 
-  private onWake(_scene: Phaser.Scene, data: { players: readonly Player[] }) {
+  private onWake(_scene: Phaser.Scene) {
     log.debug('[BoardScene#onWake]')
     this.boardSceneConfig.eventEmitter.on(ContinuoAppEvents.NewGame, this.onNewGame, this)
     this.boardSceneConfig.eventEmitter.on(ContinuoAppEvents.NextTurn, this.onNextTurn, this)
@@ -406,9 +406,8 @@ export abstract class BoardScene extends Phaser.Scene {
     this.resize()
   }
 
-  private onNextTurn(arg: any): void {
-    log.debug('[BoardScene#onNextTurn]')
-    const currentPlayer = <Player>arg.currentPlayer
+  private onNextTurn(currentPlayer: Player): void {
+    log.debug('[BoardScene#onNextTurn]', currentPlayer)
     const card = this.deck.nextCard()
     this.possibleMoves = this.adapter.evaluateCard(this.board, card)
     switch (currentPlayer.type) {

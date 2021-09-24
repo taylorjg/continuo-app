@@ -71,19 +71,13 @@ export type Scoreboard = ScoreboardEntry[]
 
 export class TurnManager {
 
-  private readonly playerScores: PlayerScore[]
+  private playerScores: PlayerScore[]
   private nextPlayerIndex: number
   private currentPlayerScore: PlayerScore
   private _isGameOver: boolean
 
-  constructor(
-    private eventEmitter: Phaser.Events.EventEmitter,
-    public readonly players: readonly Player[]
-  ) {
-    this.playerScores = this.players.map(player => new PlayerScore(player))
-    this.nextPlayerIndex = 0
-    this.currentPlayerScore = null
-    this._isGameOver = false
+  constructor(private eventEmitter: Phaser.Events.EventEmitter) {
+    this.reset([])
     this.eventEmitter.on(ContinuoAppEvents.NewGame, this.onNewGame, this)
   }
 
@@ -93,15 +87,14 @@ export class TurnManager {
     }
     this.currentPlayerScore = this.playerScores[this.nextPlayerIndex]
     this.nextPlayerIndex = (this.nextPlayerIndex + 1) % this.playerScores.length
-    this.eventEmitter.emit(ContinuoAppEvents.NextTurn, {
-      currentPlayer: this.currentPlayerScore.player,
-      scoreboard: this.makeScoreboard()
+    setTimeout(() => {
+      this.eventEmitter.emit(ContinuoAppEvents.NextTurn, this.currentPlayerScore.player)
+      this.eventEmitter.emit(ContinuoAppEvents.UpdateScoreboard, this.scoreboard)
     })
-    this.eventEmitter.emit(ContinuoAppEvents.UpdateScoreboard, this.scoreboard)
   }
 
-  public reset(): void {
-    this.playerScores.forEach(playerScore => playerScore.reset())
+  public reset(players: readonly Player[]): void {
+    this.playerScores = players.map(player => new PlayerScore(player))
     this.nextPlayerIndex = 0
     this.currentPlayerScore = null
     this._isGameOver = false
@@ -129,9 +122,9 @@ export class TurnManager {
     return this._isGameOver
   }
 
-  private onNewGame() {
-    log.debug('[TurnManager#onNewGame]')
-    this.reset()
+  private onNewGame(players: readonly Player[]) {
+    log.debug('[TurnManager#onNewGame]', players)
+    this.reset(players)
     this.step()
   }
 

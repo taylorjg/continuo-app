@@ -150,10 +150,9 @@ export class HomeScene extends Phaser.Scene {
     this.launchIfNotSleeping(this.boardBackgroundScene)
     this.launchIfNotSleeping(this.hudScene)
     this.launchIfNotSleeping(boardScene)
-    const players = this.players
     this.scene.wake(this.boardBackgroundScene)
-    this.scene.wake(boardScene, { players })
-    this.scene.wake(this.hudScene, { players })
+    this.scene.wake(boardScene)
+    this.scene.wake(this.hudScene, this.players)
   }
 
   private sleepIfActive(scene: Phaser.Scene): void {

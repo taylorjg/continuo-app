@@ -19,6 +19,7 @@ export class HUDScene extends Phaser.Scene {
   private settings: Settings
   private turnManager: TurnManager
   private currentPlayer: Player
+  private players: readonly Player[]
 
   private lhsButtons: RexUIPlugin.Sizer
   private rhsButtons: RexUIPlugin.Sizer
@@ -35,6 +36,8 @@ export class HUDScene extends Phaser.Scene {
     this.settings = settings
     this.miniScoreboard = null
     this.currentPlayer = null
+    this.players = []
+    this.turnManager = new TurnManager(eventEmitter)
   }
 
   public init() {
@@ -136,14 +139,11 @@ export class HUDScene extends Phaser.Scene {
     this.scale.resize(windowWidth, windowHeight)
   }
 
-  private onWake(
-    _scene: Phaser.Scene,
-    data: { players: Player[] }
-  ) {
-    log.debug('[HUDScene#onWake]')
-    this.turnManager = new TurnManager(this.eventEmitter, data.players)
-    this.miniScoreboard.updatePlayers(data.players)
-    this.eventEmitter.emit(ContinuoAppEvents.NewGame, data.players)
+  private onWake(_scene: Phaser.Scene, players: readonly Player[]) {
+    log.debug('[HUDScene#onWake]', players)
+    this.players = players
+    this.miniScoreboard.updatePlayers(this.players)
+    this.eventEmitter.emit(ContinuoAppEvents.NewGame, this.players)
   }
 
   private onHomeClick(): void {
@@ -207,9 +207,9 @@ export class HUDScene extends Phaser.Scene {
     this.ifHumanMove(() => this.eventEmitter.emit(ContinuoAppEvents.PlaceCard))
   }
 
-  private onNextTurn(arg: any): void {
-    log.debug('[HUDScene#onNextTurn]', arg)
-    this.currentPlayer = <Player>arg.currentPlayer
+  private onNextTurn(currentPlayer: Player): void {
+    log.debug('[HUDScene#onNextTurn]', currentPlayer)
+    this.currentPlayer = currentPlayer
   }
 
   private onStartMove(arg: any): void {
@@ -241,7 +241,7 @@ export class HUDScene extends Phaser.Scene {
     this.updateCurrentCardScore(arg)
   }
 
-  private onSettingsChanged(arg: any): void {
+  private onSettingsChanged(): void {
     log.debug('[HUDScene#onSettingsChanged]')
     const textWithHint = this.currentCardScoreLabel.getData('textWithHint') || ''
     const textWithoutHint = this.currentCardScoreLabel.getData('textWithoutHint') || ''
@@ -259,12 +259,8 @@ export class HUDScene extends Phaser.Scene {
       this,
       this.turnManager.scoreboard,
       this.turnManager.isGameOver,
-      () => {
-        this.eventEmitter.emit(ContinuoAppEvents.NewGame, this.turnManager.players)
-      },
-      () => {
-        this.onHomeClick()
-      }
+      () => { this.eventEmitter.emit(ContinuoAppEvents.NewGame, this.players) },
+      () => { this.onHomeClick() }
     )
   }
 
