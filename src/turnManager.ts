@@ -89,7 +89,7 @@ export class TurnManager {
     this.nextPlayerIndex = (this.nextPlayerIndex + 1) % this.playerScores.length
     setTimeout(() => {
       this.eventEmitter.emit(ContinuoAppEvents.NextTurn, this.currentPlayerScore.player)
-      this.eventEmitter.emit(ContinuoAppEvents.UpdateScoreboard, this.scoreboard)
+      this.eventEmitter.emit(ContinuoAppEvents.ScoreboardUpdated, this.scoreboard)
     })
   }
 
@@ -98,14 +98,14 @@ export class TurnManager {
     this.nextPlayerIndex = 0
     this.currentPlayerScore = null
     this._isGameOver = false
-    this.eventEmitter.emit(ContinuoAppEvents.UpdateScoreboard, this.scoreboard)
+    this.eventEmitter.emit(ContinuoAppEvents.ScoreboardUpdated, this.scoreboard)
   }
 
   public addTurnScore(player: Player, score: number, bestScore: number): void {
     const playerScore = this.playerScores.find(playerScore => playerScore.player == player)
     if (playerScore) {
       playerScore.addTurnScore(score, bestScore)
-      this.eventEmitter.emit(ContinuoAppEvents.UpdateScoreboard, this.scoreboard)
+      this.eventEmitter.emit(ContinuoAppEvents.ScoreboardUpdated, this.scoreboard)
     }
   }
 

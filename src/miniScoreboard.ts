@@ -22,7 +22,7 @@ export class MiniScoreboard {
     this.y = y
     this.cellMap = new Map<string, RexUIPlugin.Label>()
 
-    this.eventEmitter.on(ContinuoAppEvents.UpdateScoreboard, this.onUpdateScoreboard, this)
+    this.eventEmitter.on(ContinuoAppEvents.ScoreboardUpdated, this.onScoreboardUpdated, this)
   }
 
   private makeNewGridSizer = (players: readonly Player[]): void => {
@@ -82,7 +82,7 @@ export class MiniScoreboard {
     this.makeNewGridSizer(players)
   }
 
-  private onUpdateScoreboard(scoreboard: Scoreboard) {
+  private onScoreboardUpdated(scoreboard: Scoreboard) {
 
     scoreboard.forEach((entry, index) => {
 

@@ -17,6 +17,6 @@ export const enum ContinuoAppEvents {
   CardRotated = 'cardRotated',
   EndMove = 'endMove',
   GameOver = 'gameOver',
-  UpdateScoreboard = 'updateScoreboard',
+  ScoreboardUpdated = 'scoreboardUpdated',
   SettingsChanged = 'settingsChanged'
 }
