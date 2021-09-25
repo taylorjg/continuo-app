@@ -144,6 +144,7 @@ export class HUDScene extends Phaser.Scene {
     this.players = players
     this.miniScoreboard.updatePlayers(this.players)
     this.eventEmitter.emit(ContinuoAppEvents.NewGame, this.players)
+    this.eventEmitter.emit(ContinuoAppEvents.InitialMove)
   }
 
   private onHomeClick(): void {

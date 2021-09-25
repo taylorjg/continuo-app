@@ -79,18 +79,14 @@ export class TurnManager {
   constructor(private eventEmitter: Phaser.Events.EventEmitter) {
     this.reset([])
     this.eventEmitter.on(ContinuoAppEvents.NewGame, this.onNewGame, this)
+    this.eventEmitter.on(ContinuoAppEvents.InitialMove, this.onInitialMove, this)
   }
 
   public step(): void {
-    if (this._isGameOver) {
-      return
-    }
     this.currentPlayerScore = this.playerScores[this.nextPlayerIndex]
     this.nextPlayerIndex = (this.nextPlayerIndex + 1) % this.playerScores.length
-    setTimeout(() => {
-      this.eventEmitter.emit(ContinuoAppEvents.NextTurn, this.currentPlayerScore.player)
-      this.eventEmitter.emit(ContinuoAppEvents.ScoreboardUpdated, this.scoreboard)
-    })
+    this.eventEmitter.emit(ContinuoAppEvents.NextTurn, this.currentPlayerScore.player)
+    this.eventEmitter.emit(ContinuoAppEvents.ScoreboardUpdated, this.scoreboard)
   }
 
   public reset(players: readonly Player[]): void {
@@ -125,6 +121,10 @@ export class TurnManager {
   private onNewGame(players: readonly Player[]) {
     log.debug('[TurnManager#onNewGame]', players)
     this.reset(players)
+  }
+
+  private onInitialMove(players: readonly Player[]) {
+    log.debug('[TurnManager#onInitialMove]', players)
     this.step()
   }
 
