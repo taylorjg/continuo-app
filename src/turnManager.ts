@@ -80,6 +80,7 @@ export class TurnManager {
     this.reset([])
     this.eventEmitter.on(ContinuoAppEvents.NewGame, this.onNewGame, this)
     this.eventEmitter.on(ContinuoAppEvents.InitialMove, this.onInitialMove, this)
+    this.eventEmitter.on(ContinuoAppEvents.EndMove, this.onEndMove, this)
   }
 
   public step(): void {
@@ -97,7 +98,7 @@ export class TurnManager {
     this.eventEmitter.emit(ContinuoAppEvents.ScoreboardUpdated, this.scoreboard)
   }
 
-  public addTurnScore(player: Player, score: number, bestScore: number): void {
+  private addTurnScore(player: Player, score: number, bestScore: number): void {
     const playerScore = this.playerScores.find(playerScore => playerScore.player == player)
     if (playerScore) {
       playerScore.addTurnScore(score, bestScore)
@@ -126,6 +127,14 @@ export class TurnManager {
   private onInitialMove(players: readonly Player[]) {
     log.debug('[TurnManager#onInitialMove]', players)
     this.step()
+  }
+
+  private onEndMove(arg: any) {
+    log.debug('[TurnManager#onEndMove]')
+    const player = <Player>arg.player
+    const score = <number>arg.score
+    const bestScore = <number>arg.bestScore
+    this.addTurnScore(player, score, bestScore)
   }
 
   private makeScoreboard(): Scoreboard {

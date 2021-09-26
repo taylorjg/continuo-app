@@ -20,6 +20,7 @@ export class HUDScene extends Phaser.Scene {
   private turnManager: TurnManager
   private currentPlayer: Player
   private players: readonly Player[]
+  private isGameOver: boolean
 
   private lhsButtons: RexUIPlugin.Sizer
   private rhsButtons: RexUIPlugin.Sizer
@@ -37,6 +38,7 @@ export class HUDScene extends Phaser.Scene {
     this.miniScoreboard = null
     this.currentPlayer = null
     this.players = []
+    this.isGameOver = true
     this.turnManager = new TurnManager(eventEmitter)
   }
 
@@ -142,6 +144,7 @@ export class HUDScene extends Phaser.Scene {
   private onWake(_scene: Phaser.Scene, players: readonly Player[]) {
     log.debug('[HUDScene#onWake]', players)
     this.players = players
+    this.isGameOver = false
     this.miniScoreboard.updatePlayers(this.players)
     this.eventEmitter.emit(ContinuoAppEvents.NewGame, this.players)
     this.eventEmitter.emit(ContinuoAppEvents.InitialMove)
@@ -149,7 +152,7 @@ export class HUDScene extends Phaser.Scene {
 
   private onHomeClick(): void {
     log.debug('[HUDScene#onHomeClick]')
-    if (this.turnManager.isGameOver) {
+    if (this.isGameOver) {
       this.game.scene.wake(ContinuoAppScenes.Home)
     } else {
       createConfirmationDialog(this, () => this.game.scene.wake(ContinuoAppScenes.Home))
@@ -208,9 +211,9 @@ export class HUDScene extends Phaser.Scene {
     this.ifHumanMove(() => this.eventEmitter.emit(ContinuoAppEvents.PlaceCard))
   }
 
-  private onNextTurn(currentPlayer: Player): void {
-    log.debug('[HUDScene#onNextTurn]', currentPlayer)
-    this.currentPlayer = currentPlayer
+  private onNextTurn(player: Player): void {
+    log.debug('[HUDScene#onNextTurn]', player)
+    this.currentPlayer = player
   }
 
   private onStartMove(arg: any): void {
@@ -221,15 +224,14 @@ export class HUDScene extends Phaser.Scene {
 
   private onEndMove(arg: any): void {
     log.debug('[HUDScene#onEndMove]', arg)
-    const score = <number>arg.score
-    const bestScore = <number>arg.bestScore
-    this.turnManager.addTurnScore(this.currentPlayer, score, bestScore)
     this.currentPlayer = null
     this.clearCurrentCardScore()
+
     setTimeout(() => {
       const numCardsLeft = <number>arg.numCardsLeft
       if (numCardsLeft == 0) {
         this.turnManager.gameOver()
+        this.isGameOver = true
         this.onScoreboardClick()
       } else {
         this.turnManager.step()
@@ -259,8 +261,11 @@ export class HUDScene extends Phaser.Scene {
     createScoreboardDialog(
       this,
       this.turnManager.scoreboard,
-      this.turnManager.isGameOver,
-      () => { this.eventEmitter.emit(ContinuoAppEvents.NewGame, this.players) },
+      this.isGameOver,
+      () => {
+        this.eventEmitter.emit(ContinuoAppEvents.NewGame, this.players)
+        this.eventEmitter.emit(ContinuoAppEvents.InitialMove)
+      },
       () => { this.onHomeClick() }
     )
   }

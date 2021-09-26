@@ -37,7 +37,7 @@ export abstract class BoardScene extends Phaser.Scene {
   private board: CommonBoard
   private possibleMoves: CommonPossibleMove[]
   private currentPossibleMove: CommonPossibleMove
-  private currentPlayerType: PlayerType
+  private currentPlayer: Player
   private cardSpritesMap: Map<CommonCard, Phaser.GameObjects.Sprite>
   private currentCardContainer: Phaser.GameObjects.Container
   private animating: boolean
@@ -84,7 +84,13 @@ export abstract class BoardScene extends Phaser.Scene {
       const score = this.currentPossibleMove.score
       const bestScore = this.possibleMoves[0].score
       const bestScoreLocationCount = this.possibleMoves.filter(({ score }) => score == bestScore).length
-      this.boardSceneConfig.eventEmitter.emit(eventName, { numCardsLeft, score, bestScore, bestScoreLocationCount })
+      this.boardSceneConfig.eventEmitter.emit(eventName, {
+        player: this.currentPlayer,
+        numCardsLeft,
+        score,
+        bestScore,
+        bestScoreLocationCount
+      })
     }
   }
 
@@ -129,24 +135,23 @@ export abstract class BoardScene extends Phaser.Scene {
     this.showCardSpriteDirectly(placedCard)
   }
 
-  private placeCurrentCardTentative(possibleMove: CommonPossibleMove, playerType: PlayerType): void {
+  private placeCurrentCardTentative(possibleMove: CommonPossibleMove): void {
     this.currentPossibleMove = possibleMove
-    this.currentPlayerType = playerType
     const placedCard = this.currentPossibleMove.placedCard
     this.rescale(this.board.placeCard(placedCard))
-    this.showCardSpriteInContainer(placedCard, playerType)
+    this.showCardSpriteInContainer(placedCard, this.currentPlayer.type)
     this.highlightScoring(this.currentPossibleMove)
     this.emitCurrentCardChange(ContinuoAppEvents.StartMove)
   }
 
-  private placeCurrentCardFinal(playerType: PlayerType): void {
+  private placeCurrentCardFinal(): void {
     const placedCard = this.currentPossibleMove.placedCard
     this.board = this.board.placeCard(placedCard)
     this.showCardSpriteDirectly(placedCard)
     this.unhighlightScoring()
     this.emitCurrentCardChange(ContinuoAppEvents.EndMove)
     this.currentPossibleMove = null
-    this.currentPlayerType = null
+    this.currentPlayer = null
     this.bestScoreLocationsFound.clear()
   }
 
@@ -193,7 +198,7 @@ export abstract class BoardScene extends Phaser.Scene {
   }
 
   private rotateCurrentCardContainer(rotationAngle: number): void {
-    if (this.animating || this.currentPlayerType != PlayerType.Human) {
+    if (this.animating || !(this.currentPlayer?.type == PlayerType.Human)) {
       return
     }
     const newPlacedCard = rotationAngle > 0
@@ -398,7 +403,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.board = this.adapter.emptyBoard
     this.possibleMoves = []
     this.currentPossibleMove = null
-    this.currentPlayerType = null
+    this.currentPlayer = null
     const iter = this.getInitialPlacedCards(this.deck, this.board, players.length)
     for (let curr = iter.next(); curr.value; curr = iter.next(this.board)) {
       this.placeInitialCard(curr.value)
@@ -406,22 +411,23 @@ export abstract class BoardScene extends Phaser.Scene {
     this.resize()
   }
 
-  private onNextTurn(currentPlayer: Player): void {
-    log.debug('[BoardScene#onNextTurn]', currentPlayer)
+  private onNextTurn(player: Player): void {
+    log.debug('[BoardScene#onNextTurn]', player)
+    this.currentPlayer = player
     const card = this.deck.nextCard()
     this.possibleMoves = this.adapter.evaluateCard(this.board, card)
-    switch (currentPlayer.type) {
+    switch (this.currentPlayer.type) {
       case PlayerType.Human:
         {
           const possibleMove = this.chooseRandomWorstScoreMove(this.possibleMoves)
-          this.placeCurrentCardTentative(possibleMove, PlayerType.Human)
+          this.placeCurrentCardTentative(possibleMove)
           break
         }
       case PlayerType.Computer:
         {
           const possibleMove = this.chooseRandomBestScoreMove(this.possibleMoves)
-          this.placeCurrentCardTentative(possibleMove, PlayerType.Computer)
-          this.time.delayedCall(2000, () => this.placeCurrentCardFinal(PlayerType.Computer))
+          this.placeCurrentCardTentative(possibleMove)
+          this.time.delayedCall(2000, () => this.placeCurrentCardFinal())
           break
         }
     }
@@ -439,6 +445,6 @@ export abstract class BoardScene extends Phaser.Scene {
 
   private onPlaceCard(): void {
     log.debug('[BoardScene#onPlaceCard]')
-    this.placeCurrentCardFinal(PlayerType.Human)
+    this.placeCurrentCardFinal()
   }
 }
