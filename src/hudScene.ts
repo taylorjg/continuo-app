@@ -2,7 +2,7 @@ import * as Phaser from 'phaser'
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import log from 'loglevel'
 import { Settings } from './settings'
-import { TurnManager, Player, PlayerType } from './turnManager'
+import { Scoreboard, TurnManager, Player, PlayerType } from './turnManager'
 import { MiniScoreboard } from './miniScoreboard'
 import { createConfirmationDialog } from './confirmationDialog'
 import { createSettingsDialog } from './settingsDialog'
@@ -20,6 +20,7 @@ export class HUDScene extends Phaser.Scene {
   private turnManager: TurnManager
   private currentPlayer: Player
   private players: readonly Player[]
+  private scoreboard: Scoreboard
   private isGameOver: boolean
 
   private lhsButtons: RexUIPlugin.Sizer
@@ -38,6 +39,7 @@ export class HUDScene extends Phaser.Scene {
     this.miniScoreboard = null
     this.currentPlayer = null
     this.players = []
+    this.scoreboard = null
     this.isGameOver = true
     this.turnManager = new TurnManager(eventEmitter)
   }
@@ -115,6 +117,8 @@ export class HUDScene extends Phaser.Scene {
     this.eventEmitter.on(ContinuoAppEvents.CardRotated, this.onCardMovedOrRotated, this)
     this.eventEmitter.on(ContinuoAppEvents.StartMove, this.onStartMove, this)
     this.eventEmitter.on(ContinuoAppEvents.EndMove, this.onEndMove, this)
+    this.eventEmitter.on(ContinuoAppEvents.GameOver, this.onGameOver, this)
+    this.eventEmitter.on(ContinuoAppEvents.ScoreboardUpdated, this.onScoreboardUpdated, this)
     this.eventEmitter.on(ContinuoAppEvents.SettingsChanged, this.onSettingsChanged, this)
 
     this.events.on(Phaser.Scenes.Events.WAKE, this.onWake, this)
@@ -144,10 +148,11 @@ export class HUDScene extends Phaser.Scene {
   private onWake(_scene: Phaser.Scene, players: readonly Player[]) {
     log.debug('[HUDScene#onWake]', players)
     this.players = players
+    this.scoreboard = null
     this.isGameOver = false
     this.miniScoreboard.updatePlayers(this.players)
     this.eventEmitter.emit(ContinuoAppEvents.NewGame, this.players)
-    this.eventEmitter.emit(ContinuoAppEvents.InitialMove)
+    this.eventEmitter.emit(ContinuoAppEvents.ReadyForNextTurn)
   }
 
   private onHomeClick(): void {
@@ -226,17 +231,22 @@ export class HUDScene extends Phaser.Scene {
     log.debug('[HUDScene#onEndMove]', arg)
     this.currentPlayer = null
     this.clearCurrentCardScore()
-
-    setTimeout(() => {
-      const numCardsLeft = <number>arg.numCardsLeft
-      if (numCardsLeft == 0) {
-        this.turnManager.gameOver()
-        this.isGameOver = true
-        this.onScoreboardClick()
-      } else {
-        this.turnManager.step()
+    this.time.delayedCall(1000, () => {
+      if (!this.isGameOver) {
+        this.eventEmitter.emit(ContinuoAppEvents.ReadyForNextTurn)
       }
-    }, 1000)
+    })
+  }
+
+  private onGameOver(scoreboard: Scoreboard): void {
+    log.debug('[HUDScene#onGameOver]', scoreboard)
+    this.isGameOver = true
+    this.presentScoreboardDialog()
+  }
+
+  private onScoreboardUpdated(scoreboard: Scoreboard): void {
+    log.debug('[HUDScene#onScoreboardUpdated]', scoreboard)
+    this.scoreboard = scoreboard
   }
 
   private onCardMovedOrRotated(arg: any): void {
@@ -258,16 +268,7 @@ export class HUDScene extends Phaser.Scene {
 
   private onScoreboardClick(): void {
     log.debug('[HUDScene#onScoreboardClick]')
-    createScoreboardDialog(
-      this,
-      this.turnManager.scoreboard,
-      this.isGameOver,
-      () => {
-        this.eventEmitter.emit(ContinuoAppEvents.NewGame, this.players)
-        this.eventEmitter.emit(ContinuoAppEvents.InitialMove)
-      },
-      () => { this.onHomeClick() }
-    )
+    this.presentScoreboardDialog()
   }
 
   private onSettingsClick(): void {
@@ -280,5 +281,19 @@ export class HUDScene extends Phaser.Scene {
   private onAboutClick(): void {
     log.debug('[HUDScene#onAboutClick]')
     createAboutDialog(this)
+  }
+
+  private presentScoreboardDialog = (): void => {
+
+    const onPlayAgain = () => {
+      this.eventEmitter.emit(ContinuoAppEvents.NewGame, this.players)
+      this.eventEmitter.emit(ContinuoAppEvents.ReadyForNextTurn)
+    }
+
+    const onHome = () => {
+      this.onHomeClick()
+    }
+
+    createScoreboardDialog(this, this.scoreboard, this.isGameOver, onPlayAgain, onHome)
   }
 }

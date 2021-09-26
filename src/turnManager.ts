@@ -79,11 +79,11 @@ export class TurnManager {
   constructor(private eventEmitter: Phaser.Events.EventEmitter) {
     this.reset([])
     this.eventEmitter.on(ContinuoAppEvents.NewGame, this.onNewGame, this)
-    this.eventEmitter.on(ContinuoAppEvents.InitialMove, this.onInitialMove, this)
+    this.eventEmitter.on(ContinuoAppEvents.ReadyForNextTurn, this.onReadyForNextTurn, this)
     this.eventEmitter.on(ContinuoAppEvents.EndMove, this.onEndMove, this)
   }
 
-  public step(): void {
+  private step(): void {
     this.currentPlayerScore = this.playerScores[this.nextPlayerIndex]
     this.nextPlayerIndex = (this.nextPlayerIndex + 1) % this.playerScores.length
     this.eventEmitter.emit(ContinuoAppEvents.NextTurn, this.currentPlayerScore.player)
@@ -106,11 +106,6 @@ export class TurnManager {
     }
   }
 
-  public gameOver() {
-    this.currentPlayerScore = null
-    this._isGameOver = true
-  }
-
   public get scoreboard(): Scoreboard {
     return this.makeScoreboard()
   }
@@ -124,17 +119,23 @@ export class TurnManager {
     this.reset(players)
   }
 
-  private onInitialMove(players: readonly Player[]) {
-    log.debug('[TurnManager#onInitialMove]', players)
+  private onReadyForNextTurn() {
+    log.debug('[TurnManager#onReadyForNextTurn]')
     this.step()
   }
 
   private onEndMove(arg: any) {
-    log.debug('[TurnManager#onEndMove]')
+    log.debug('[TurnManager#onEndMove]', arg)
+    this.currentPlayerScore = null
     const player = <Player>arg.player
     const score = <number>arg.score
     const bestScore = <number>arg.bestScore
     this.addTurnScore(player, score, bestScore)
+    const numCardsLeft = <number>arg.numCardsLeft
+    if (numCardsLeft == 0) {
+      this._isGameOver = true
+      this.eventEmitter.emit(ContinuoAppEvents.GameOver, this.scoreboard)
+    }
   }
 
   private makeScoreboard(): Scoreboard {
