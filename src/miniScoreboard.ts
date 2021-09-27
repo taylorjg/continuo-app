@@ -1,3 +1,4 @@
+import log from 'loglevel'
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import { SceneWithRexUI } from './types'
 import { Player, Scoreboard } from './turnManager'
@@ -21,7 +22,8 @@ export class MiniScoreboard {
     this.scene = scene
     this.y = y
     this.cellMap = new Map<string, RexUIPlugin.Label>()
-
+    this.eventEmitter.on(ContinuoAppEvents.NewGame, this.onNewGame, this)
+    this.eventEmitter.on(ContinuoAppEvents.PlayersChanged, this.onPlayersChanged, this)
     this.eventEmitter.on(ContinuoAppEvents.ScoreboardUpdated, this.onScoreboardUpdated, this)
   }
 
@@ -77,12 +79,18 @@ export class MiniScoreboard {
     })
   }
 
-  // TODO: add a ContinuoAppEvents.PlayersChanged event and handle it in onPlayersChanged
-  public updatePlayers(players: readonly Player[]): void {
+  public onNewGame(players: readonly Player[]): void {
+    log.debug('[MiniScoreboard#onNewGame]', players)
+    this.makeNewGridSizer(players)
+  }
+
+  public onPlayersChanged(players: readonly Player[]): void {
+    log.debug('[MiniScoreboard#onPlayersChanged]', players)
     this.makeNewGridSizer(players)
   }
 
   private onScoreboardUpdated(scoreboard: Scoreboard) {
+    log.debug('[MiniScoreboard#onScoreboardUpdated]', scoreboard)
 
     scoreboard.forEach((entry, index) => {
 

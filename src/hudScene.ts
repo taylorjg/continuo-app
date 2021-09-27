@@ -1,8 +1,8 @@
 import * as Phaser from 'phaser'
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import log from 'loglevel'
-import { Settings } from './settings'
-import { Scoreboard, TurnManager, Player, PlayerType } from './turnManager'
+import { DEFAULT_SETTINGS, Settings } from './settings'
+import { Scoreboard, TurnManager, Player, PlayerType, DEFAULT_PLAYERS } from './turnManager'
 import { MiniScoreboard } from './miniScoreboard'
 import { createConfirmationDialog } from './confirmationDialog'
 import { createSettingsDialog } from './settingsDialog'
@@ -16,10 +16,10 @@ export class HUDScene extends Phaser.Scene {
 
   rexUI: RexUIPlugin
   private eventEmitter: Phaser.Events.EventEmitter
-  private settings: Settings
   private turnManager: TurnManager
-  private currentPlayer: Player
+  private settings: Settings
   private players: readonly Player[]
+  private currentPlayer: Player
   private scoreboard: Scoreboard
   private isGameOver: boolean
 
@@ -32,13 +32,13 @@ export class HUDScene extends Phaser.Scene {
   private currentCardScoreLabel: RexUIPlugin.Label
   private remainingCardsLabel: RexUIPlugin.Label
 
-  public constructor(eventEmitter: Phaser.Events.EventEmitter, settings: Settings) {
+  public constructor(eventEmitter: Phaser.Events.EventEmitter) {
     super(ContinuoAppScenes.HUD)
     this.eventEmitter = eventEmitter
-    this.settings = settings
     this.miniScoreboard = null
+    this.settings = DEFAULT_SETTINGS
+    this.players = DEFAULT_PLAYERS
     this.currentPlayer = null
-    this.players = []
     this.scoreboard = null
     this.isGameOver = true
     this.turnManager = new TurnManager(eventEmitter)
@@ -145,12 +145,15 @@ export class HUDScene extends Phaser.Scene {
     this.scale.resize(windowWidth, windowHeight)
   }
 
-  private onWake(_scene: Phaser.Scene, players: readonly Player[]) {
-    log.debug('[HUDScene#onWake]', players)
-    this.players = players
+  private onWake(_scene: Phaser.Scene, data: {
+    settings: Settings,
+    players: readonly Player[]
+  }) {
+    log.debug('[HUDScene#onWake]', data)
+    this.settings = data.settings
+    this.players = data.players
     this.scoreboard = null
     this.isGameOver = false
-    this.miniScoreboard.updatePlayers(this.players)
     this.eventEmitter.emit(ContinuoAppEvents.NewGame, this.players)
     this.eventEmitter.emit(ContinuoAppEvents.ReadyForNextTurn)
   }
@@ -254,8 +257,9 @@ export class HUDScene extends Phaser.Scene {
     this.updateCurrentCardScore(arg)
   }
 
-  private onSettingsChanged(): void {
-    log.debug('[HUDScene#onSettingsChanged]')
+  private onSettingsChanged(settings: Settings): void {
+    log.debug('[HUDScene#onSettingsChanged]', settings)
+    this.settings = settings
     const textWithHint = this.currentCardScoreLabel.getData('textWithHint') || ''
     const textWithoutHint = this.currentCardScoreLabel.getData('textWithoutHint') || ''
     if (this.settings.hintShowBestAvailableScore) {
@@ -273,17 +277,15 @@ export class HUDScene extends Phaser.Scene {
 
   private onSettingsClick(): void {
     log.debug('[HUDScene#onSettingsClick]')
-    createSettingsDialog(this, this.settings, () => {
-      this.eventEmitter.emit(ContinuoAppEvents.SettingsChanged)
-    })
+    this.presentSettingsDialog()
   }
 
   private onAboutClick(): void {
     log.debug('[HUDScene#onAboutClick]')
-    createAboutDialog(this)
+    this.presentAboutDialog()
   }
 
-  private presentScoreboardDialog = (): void => {
+  private presentScoreboardDialog(): void {
 
     const onPlayAgain = () => {
       this.eventEmitter.emit(ContinuoAppEvents.NewGame, this.players)
@@ -295,5 +297,13 @@ export class HUDScene extends Phaser.Scene {
     }
 
     createScoreboardDialog(this, this.scoreboard, this.isGameOver, onPlayAgain, onHome)
+  }
+
+  private presentSettingsDialog(): void {
+    createSettingsDialog(this, this.eventEmitter, this.settings)
+  }
+
+  private presentAboutDialog(): void {
+    createAboutDialog(this)
   }
 }

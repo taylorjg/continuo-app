@@ -4,6 +4,7 @@ import Label from 'phaser3-rex-plugins/templates/ui/label/Label'
 import Sizer from 'phaser3-rex-plugins/templates/ui/sizer/Sizer'
 import { ModalDialogBaseScene } from './modalDialogBase'
 import { Player, PlayerType } from './turnManager'
+import { ContinuoAppEvents } from './constants'
 import * as ui from './ui'
 
 const TITLE_STEP1 = 'Choose Players (Step 1)'
@@ -26,8 +27,9 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
   private getPlayers: () => readonly Player[]
 
   constructor(
+    private eventEmitter: Phaser.Events.EventEmitter,
     private players: readonly Player[],
-    private onDone: (players: readonly Player[]) => void
+    private onDone?: (players: readonly Player[]) => void
   ) {
     super('ChoosePlayersDialog')
     if (this.players.length == 2 && this.players[0].type == PlayerType.Human && this.players[1].type == PlayerType.Computer) {
@@ -230,7 +232,6 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
       _pointer: Phaser.Input.Pointer,
       gameObject: Phaser.GameObjects.GameObject,
       _event: Phaser.Types.Input.EventData) => {
-      console.log('[ChoosePlayersDialogScene input.on]', 'gameObject.name:', gameObject.name)
       switch (gameObject.name) {
         case 'singleButton':
           this.wrapStep2(() => this.onStep2Single())
@@ -251,14 +252,15 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
       _index: number,
       _pointer: Phaser.Input.Pointer,
       _event: Phaser.Types.Input.EventData) => {
-      console.log('[ChoosePlayersDialogScene dialog.on]', 'gameObject.name:', gameObject.name)
       switch (gameObject.name) {
         case 'backButton':
           this.wrapStep1(() => this.onStep1())
           break
         case 'doneButton':
           this.closeDialog()
-          this.onDone(this.getPlayers())
+          const players = this.getPlayers()
+          this.eventEmitter.emit(ContinuoAppEvents.PlayersChanged, players)
+          this.onDone?.(players)
           break
       }
     })
@@ -267,8 +269,9 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
 
 export const createChoosePlayersDialog = (
   parentScene: Phaser.Scene,
+  eventEmitter: Phaser.Events.EventEmitter,
   players: readonly Player[],
-  onDone: (players: readonly Player[]) => void
+  onDone?: (players: readonly Player[]) => void
 ) => {
-  parentScene.scene.add(undefined, new ChoosePlayersDialogScene(players, onDone), true)
+  parentScene.scene.add(undefined, new ChoosePlayersDialogScene(eventEmitter, players, onDone), true)
 }

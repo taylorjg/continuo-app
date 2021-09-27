@@ -14,6 +14,11 @@ export class Player {
   }
 }
 
+export const DEFAULT_PLAYERS = [
+  new Player('You', PlayerType.Human),
+  new Player('Computer', PlayerType.Computer)
+]
+
 class PlayerScore {
 
   private _score: number
@@ -74,44 +79,35 @@ export class TurnManager {
   private playerScores: PlayerScore[]
   private nextPlayerIndex: number
   private currentPlayerScore: PlayerScore
-  private _isGameOver: boolean
 
-  constructor(private eventEmitter: Phaser.Events.EventEmitter) {
-    this.reset([])
+  public constructor(private eventEmitter: Phaser.Events.EventEmitter) {
     this.eventEmitter.on(ContinuoAppEvents.NewGame, this.onNewGame, this)
     this.eventEmitter.on(ContinuoAppEvents.ReadyForNextTurn, this.onReadyForNextTurn, this)
     this.eventEmitter.on(ContinuoAppEvents.EndMove, this.onEndMove, this)
+  }
+
+  private reset(players: readonly Player[]): void {
+    this.playerScores = players.map(player => new PlayerScore(player))
+    this.nextPlayerIndex = 0
+    this.currentPlayerScore = null
+    setTimeout(() => {
+      this.eventEmitter.emit(ContinuoAppEvents.ScoreboardUpdated, this.makeScoreboard())
+    })
   }
 
   private step(): void {
     this.currentPlayerScore = this.playerScores[this.nextPlayerIndex]
     this.nextPlayerIndex = (this.nextPlayerIndex + 1) % this.playerScores.length
     this.eventEmitter.emit(ContinuoAppEvents.NextTurn, this.currentPlayerScore.player)
-    this.eventEmitter.emit(ContinuoAppEvents.ScoreboardUpdated, this.scoreboard)
-  }
-
-  public reset(players: readonly Player[]): void {
-    this.playerScores = players.map(player => new PlayerScore(player))
-    this.nextPlayerIndex = 0
-    this.currentPlayerScore = null
-    this._isGameOver = false
-    this.eventEmitter.emit(ContinuoAppEvents.ScoreboardUpdated, this.scoreboard)
+    this.eventEmitter.emit(ContinuoAppEvents.ScoreboardUpdated, this.makeScoreboard())
   }
 
   private addTurnScore(player: Player, score: number, bestScore: number): void {
     const playerScore = this.playerScores.find(playerScore => playerScore.player == player)
     if (playerScore) {
       playerScore.addTurnScore(score, bestScore)
-      this.eventEmitter.emit(ContinuoAppEvents.ScoreboardUpdated, this.scoreboard)
+      this.eventEmitter.emit(ContinuoAppEvents.ScoreboardUpdated, this.makeScoreboard())
     }
-  }
-
-  public get scoreboard(): Scoreboard {
-    return this.makeScoreboard()
-  }
-
-  public get isGameOver(): boolean {
-    return this._isGameOver
   }
 
   private onNewGame(players: readonly Player[]) {
@@ -133,8 +129,7 @@ export class TurnManager {
     this.addTurnScore(player, score, bestScore)
     const numCardsLeft = <number>arg.numCardsLeft
     if (numCardsLeft == 0) {
-      this._isGameOver = true
-      this.eventEmitter.emit(ContinuoAppEvents.GameOver, this.scoreboard)
+      this.eventEmitter.emit(ContinuoAppEvents.GameOver, this.makeScoreboard())
     }
   }
 

@@ -1,10 +1,15 @@
-export class Settings {
-  constructor(
-    public soundBestScoreEnabled: boolean,
-    public soundRotationEnabled: boolean,
-    public soundIllegalMoveEnabled: boolean,
-    public hintShowScoringHighlights: boolean,
-    public hintShowBestAvailableScore: boolean
-  ) {
-  }
+export type Settings = {
+  readonly soundBestScoreEnabled: boolean
+  readonly soundIllegalMoveEnabled: boolean
+  readonly soundRotationEnabled: boolean
+  readonly hintShowScoringHighlights: boolean
+  readonly hintShowBestAvailableScore: boolean
+}
+
+export const DEFAULT_SETTINGS = {
+  soundBestScoreEnabled: true,
+  soundIllegalMoveEnabled: false,
+  soundRotationEnabled: false,
+  hintShowScoringHighlights: true,
+  hintShowBestAvailableScore: true
 }

@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser'
 import log from 'loglevel'
 
-import { Settings } from './settings'
+import { DEFAULT_SETTINGS, Settings } from './settings'
 import { ContinuoAppEvents } from './constants'
 
 import {
@@ -23,7 +23,6 @@ export const HIGHLIGHT_COLOUR = 0xFF00FF
 
 export type BoardSceneConfig = {
   eventEmitter: Phaser.Events.EventEmitter,
-  settings: Settings,
   CARD_WIDTH: number,
   CARD_HEIGHT: number,
   ROTATION_ANGLE: number
@@ -35,6 +34,7 @@ export abstract class BoardScene extends Phaser.Scene {
   private adapter: CommonAdapter
   private deck: CommonDeck
   private board: CommonBoard
+  private settings: Settings
   private possibleMoves: CommonPossibleMove[]
   private currentPossibleMove: CommonPossibleMove
   private currentPlayer: Player
@@ -49,6 +49,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.adapter = adapter
     this.deck = this.adapter.deck
     this.board = this.adapter.emptyBoard
+    this.settings = DEFAULT_SETTINGS
     this.cardSpritesMap = new Map<CommonCard, Phaser.GameObjects.Sprite>()
     this.animating = false
     this.bestScoreLocationsFound = new Set()
@@ -64,7 +65,7 @@ export abstract class BoardScene extends Phaser.Scene {
   protected abstract getBoardRange(board: CommonBoard): CommonBoardRange
 
   private highlightScoring(currentPossibleMove: CommonPossibleMove): void {
-    if (this.boardSceneConfig.settings.hintShowScoringHighlights) {
+    if (this.settings.hintShowScoringHighlights) {
       const scoringHighlights = this.createScoringHighlights(currentPossibleMove)
       scoringHighlights.forEach(highlight => {
         highlight.setData('isScoringHighlight', true)
@@ -181,7 +182,7 @@ export abstract class BoardScene extends Phaser.Scene {
       }
     })
 
-    if (possibleMove && this.boardSceneConfig.settings.soundBestScoreEnabled) {
+    if (possibleMove && this.settings.soundBestScoreEnabled) {
       const score = possibleMove.score
       const bestScore = this.possibleMoves[0].score
       if (score == bestScore) {
@@ -192,7 +193,7 @@ export abstract class BoardScene extends Phaser.Scene {
       }
     }
 
-    if (!possibleMove && this.boardSceneConfig.settings.soundIllegalMoveEnabled) {
+    if (!possibleMove && this.settings.soundIllegalMoveEnabled) {
       this.sound.play('illegal-move')
     }
   }
@@ -206,7 +207,7 @@ export abstract class BoardScene extends Phaser.Scene {
       : this.adapter.placedCardRotateCCW(this.currentPossibleMove.placedCard)
     const possibleMove = this.findPossibleMove(newPlacedCard)
     if (possibleMove) {
-      if (this.boardSceneConfig.settings.soundRotationEnabled) {
+      if (this.settings.soundRotationEnabled) {
         this.sound.play('rotate-card')
       }
       this.tweens.add({
@@ -222,7 +223,7 @@ export abstract class BoardScene extends Phaser.Scene {
           this.currentPossibleMove = possibleMove
           this.highlightScoring(this.currentPossibleMove)
           this.emitCurrentCardChange(ContinuoAppEvents.CardRotated)
-          if (this.boardSceneConfig.settings.soundBestScoreEnabled) {
+          if (this.settings.soundBestScoreEnabled) {
             const score = possibleMove.score
             const bestScore = this.possibleMoves[0].score
             if (score == bestScore) {
@@ -362,11 +363,12 @@ export abstract class BoardScene extends Phaser.Scene {
     this.cameras.main.centerOn(boardRange.centreX, boardRange.centreY)
   }
 
-  private onSettingsChanged() {
-    log.debug('[BoardScene#onSettingsChanged]')
+  private onSettingsChanged(settings: Settings) {
+    log.debug('[BoardScene#onSettingsChanged]', settings)
+    this.settings = settings
     if (this.currentPossibleMove) {
       this.unhighlightScoring()
-      if (this.boardSceneConfig.settings.hintShowScoringHighlights) {
+      if (this.settings.hintShowScoringHighlights) {
         this.highlightScoring(this.currentPossibleMove)
       } else {
         this.unhighlightScoring()
@@ -374,8 +376,12 @@ export abstract class BoardScene extends Phaser.Scene {
     }
   }
 
-  private onWake(_scene: Phaser.Scene) {
-    log.debug('[BoardScene#onWake]')
+  private onWake(_scene: Phaser.Scene, data: {
+    settings: Settings,
+    players: readonly Player[]
+  }) {
+    log.debug('[BoardScene#onWake]', data)
+    this.settings = data.settings
     this.boardSceneConfig.eventEmitter.on(ContinuoAppEvents.NewGame, this.onNewGame, this)
     this.boardSceneConfig.eventEmitter.on(ContinuoAppEvents.NextTurn, this.onNextTurn, this)
     this.boardSceneConfig.eventEmitter.on(ContinuoAppEvents.RotateCW, this.onRotateCW, this)

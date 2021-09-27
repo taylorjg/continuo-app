@@ -7,17 +7,18 @@ export const enum ContinuoAppScenes {
 }
 
 export const enum ContinuoAppEvents {
-  RotateCW = 'rotateCW',
-  RotateCCW = 'rotateCCW',
-  PlaceCard = 'placeCard',
-  NewGame = 'newGame',
-  ReadyForNextTurn = 'readyForNextTurn',
-  NextTurn = 'nextTurn',
-  StartMove = 'startMove',
-  CardMoved = 'cardMoved',
-  CardRotated = 'cardRotated',
-  EndMove = 'endMove',
-  GameOver = 'gameOver',
-  ScoreboardUpdated = 'scoreboardUpdated',
-  SettingsChanged = 'settingsChanged'
+  RotateCW = 'RotateCW',
+  RotateCCW = 'RotateCCW',
+  PlaceCard = 'PlaceCard',
+  NewGame = 'NewGame',
+  ReadyForNextTurn = 'ReadyForNextTurn',
+  NextTurn = 'NextTurn',
+  StartMove = 'StartMove',
+  EndMove = 'EndMove',
+  CardMoved = 'CardMoved',
+  CardRotated = 'CardRotated',
+  GameOver = 'GameOver',
+  ScoreboardUpdated = 'ScoreboardUpdated',
+  SettingsChanged = 'SettingsChanged',
+  PlayersChanged = 'PlayersChanged'
 }

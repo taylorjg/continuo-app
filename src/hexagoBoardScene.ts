@@ -1,6 +1,5 @@
 import * as Phaser from 'phaser'
 
-import { Settings } from './settings'
 import { ContinuoAppScenes } from './constants'
 
 import { BoardScene, BoardSceneConfig, HIGHLIGHT_DEPTH, HIGHLIGHT_COLOUR } from './boardScene'
@@ -226,10 +225,9 @@ const adapter: CommonAdapter = {
 
 export class HexagoBoardScene extends BoardScene {
 
-  constructor(eventEmitter: Phaser.Events.EventEmitter, settings: Settings) {
+  constructor(eventEmitter: Phaser.Events.EventEmitter) {
     const boardSceneConfig: BoardSceneConfig = {
       eventEmitter,
-      settings,
       CARD_WIDTH,
       CARD_HEIGHT,
       ROTATION_ANGLE: 60
