@@ -3,6 +3,7 @@ import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import log from 'loglevel'
 import { EventCentre } from './eventCentre'
 import { DEFAULT_SETTINGS, Settings } from './settings'
+import { TurnClock } from './turnClock'
 import { Scoreboard, TurnManager, Player, PlayerType, DEFAULT_PLAYERS } from './turnManager'
 import { MiniScoreboard } from './miniScoreboard'
 import { createConfirmationDialog } from './confirmationDialog'
@@ -18,6 +19,7 @@ export class HUDScene extends Phaser.Scene {
   rexUI: RexUIPlugin
   private eventCentre: EventCentre
   private turnManager: TurnManager
+  private turnClock: TurnClock
   private settings: Settings
   private players: readonly Player[]
   private currentPlayer: Player
@@ -43,6 +45,7 @@ export class HUDScene extends Phaser.Scene {
     this.scoreboard = null
     this.isGameOver = true
     this.turnManager = new TurnManager(eventCentre)
+    this.turnClock = null
   }
 
   public init() {
@@ -74,6 +77,8 @@ export class HUDScene extends Phaser.Scene {
 
     const miniScoreboardY = this.lhsButtons.getBounds().bottom + 10
     this.miniScoreboard = new MiniScoreboard(this.eventCentre, this, miniScoreboardY)
+
+    this.turnClock = new TurnClock(this.eventCentre, this)
 
     const homeButton = ui.createHUDSceneButton(this, 'homeButton', 'house', .4)
     const scoreboardButton = ui.createHUDSceneButton(this, 'scoreboardButton', 'bar-chart', .4)
