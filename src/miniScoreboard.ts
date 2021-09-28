@@ -1,30 +1,31 @@
 import log from 'loglevel'
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import { SceneWithRexUI } from './types'
+import { EventCentre } from './eventCentre'
 import { Player, Scoreboard } from './turnManager'
 import { ContinuoAppEvents } from './constants'
 import * as ui from './ui'
 
 export class MiniScoreboard {
 
-  private eventEmitter: Phaser.Events.EventEmitter
+  private eventCentre: EventCentre
   private scene: SceneWithRexUI
   private y: number
   private cellMap: Map<string, RexUIPlugin.Label>
   private gridSizer: RexUIPlugin.GridSizer
 
   public constructor(
-    eventEmitter: Phaser.Events.EventEmitter,
+    eventCentre: EventCentre,
     scene: SceneWithRexUI,
     y: number
   ) {
-    this.eventEmitter = eventEmitter
+    this.eventCentre = eventCentre
     this.scene = scene
     this.y = y
     this.cellMap = new Map<string, RexUIPlugin.Label>()
-    this.eventEmitter.on(ContinuoAppEvents.NewGame, this.onNewGame, this)
-    this.eventEmitter.on(ContinuoAppEvents.PlayersChanged, this.onPlayersChanged, this)
-    this.eventEmitter.on(ContinuoAppEvents.ScoreboardUpdated, this.onScoreboardUpdated, this)
+    this.eventCentre.on(ContinuoAppEvents.NewGame, this.onNewGame, this)
+    this.eventCentre.on(ContinuoAppEvents.PlayersChanged, this.onPlayersChanged, this)
+    this.eventCentre.on(ContinuoAppEvents.ScoreboardUpdated, this.onScoreboardUpdated, this)
   }
 
   private makeNewGridSizer = (players: readonly Player[]): void => {

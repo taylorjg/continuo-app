@@ -2,6 +2,7 @@ import Dialog from 'phaser3-rex-plugins/templates/ui/dialog/Dialog'
 import GridSizer from 'phaser3-rex-plugins/templates/ui/gridsizer/GridSizer'
 import Label from 'phaser3-rex-plugins/templates/ui/label/Label'
 import Sizer from 'phaser3-rex-plugins/templates/ui/sizer/Sizer'
+import { EventCentre } from './eventCentre'
 import { ModalDialogBaseScene } from './modalDialogBase'
 import { Player, PlayerType } from './turnManager'
 import { ContinuoAppEvents } from './constants'
@@ -27,7 +28,7 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
   private getPlayers: () => readonly Player[]
 
   constructor(
-    private eventEmitter: Phaser.Events.EventEmitter,
+    private eventCentre: EventCentre,
     private players: readonly Player[],
     private onDone?: (players: readonly Player[]) => void
   ) {
@@ -259,7 +260,7 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
         case 'doneButton':
           this.closeDialog()
           const players = this.getPlayers()
-          this.eventEmitter.emit(ContinuoAppEvents.PlayersChanged, players)
+          this.eventCentre.emit(ContinuoAppEvents.PlayersChanged, players)
           this.onDone?.(players)
           break
       }
@@ -269,9 +270,9 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
 
 export const createChoosePlayersDialog = (
   parentScene: Phaser.Scene,
-  eventEmitter: Phaser.Events.EventEmitter,
+  eventCentre: EventCentre,
   players: readonly Player[],
   onDone?: (players: readonly Player[]) => void
 ) => {
-  parentScene.scene.add(undefined, new ChoosePlayersDialogScene(eventEmitter, players, onDone), true)
+  parentScene.scene.add(undefined, new ChoosePlayersDialogScene(eventCentre, players, onDone), true)
 }

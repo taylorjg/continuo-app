@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser'
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import log from 'loglevel'
+import { EventCentre } from './eventCentre'
 import { Settings, DEFAULT_SETTINGS } from './settings'
 import { BoardBackgroundScene } from './boardBackgroundScene'
 import { HUDScene } from './hudScene'
@@ -17,7 +18,7 @@ import * as ui from './ui'
 export class HomeScene extends Phaser.Scene {
 
   public rexUI: RexUIPlugin
-  private eventEmitter: Phaser.Events.EventEmitter
+  private eventCentre: EventCentre
   private settings: Settings
   private players: readonly Player[]
   private background: Phaser.GameObjects.TileSprite
@@ -58,7 +59,7 @@ export class HomeScene extends Phaser.Scene {
     window.addEventListener('resize', onResize)
     window.addEventListener('orientationchange', onOrientationChange)
 
-    this.eventEmitter = new Phaser.Events.EventEmitter()
+    this.eventCentre = new EventCentre()
     this.settings = DEFAULT_SETTINGS
     this.players = DEFAULT_PLAYERS
 
@@ -98,14 +99,14 @@ export class HomeScene extends Phaser.Scene {
     this.input.on(Phaser.Input.Events.GAMEOBJECT_DOWN, this.onClick, this)
 
     this.boardBackgroundScene = this.game.scene.add(undefined, new BoardBackgroundScene())
-    this.hudScene = this.game.scene.add(undefined, new HUDScene(this.eventEmitter))
-    this.continuoBoardScene = this.game.scene.add(undefined, new ContinuoBoardScene(this.eventEmitter))
-    this.hexagoBoardScene = this.game.scene.add(undefined, new HexagoBoardScene(this.eventEmitter))
+    this.hudScene = this.game.scene.add(undefined, new HUDScene(this.eventCentre))
+    this.continuoBoardScene = this.game.scene.add(undefined, new ContinuoBoardScene(this.eventCentre))
+    this.hexagoBoardScene = this.game.scene.add(undefined, new HexagoBoardScene(this.eventCentre))
 
     this.events.on(Phaser.Scenes.Events.WAKE, this.onWake, this)
 
-    this.eventEmitter.on(ContinuoAppEvents.SettingsChanged, this.onSettingsChanged, this)
-    this.eventEmitter.on(ContinuoAppEvents.PlayersChanged, this.onPlayersChanged, this)
+    this.eventCentre.on(ContinuoAppEvents.SettingsChanged, this.onSettingsChanged, this)
+    this.eventCentre.on(ContinuoAppEvents.PlayersChanged, this.onPlayersChanged, this)
   }
 
   private resize(): void {
@@ -198,11 +199,11 @@ export class HomeScene extends Phaser.Scene {
   }
 
   private presentChoosePlayersDialog(): void {
-    createChoosePlayersDialog(this, this.eventEmitter, this.players)
+    createChoosePlayersDialog(this, this.eventCentre, this.players)
   }
 
   private presentSettingsDialog(): void {
-    createSettingsDialog(this, this.eventEmitter, this.settings)
+    createSettingsDialog(this, this.eventCentre, this.settings)
   }
 
   private presentAboutDialog(): void {

@@ -1,4 +1,5 @@
 import Dialog from 'phaser3-rex-plugins/templates/ui/dialog/Dialog'
+import { EventCentre } from './eventCentre'
 import { ModalDialogBaseScene } from './modalDialogBase'
 import { Settings } from './settings'
 import { ContinuoAppEvents } from './constants'
@@ -9,12 +10,12 @@ class SettingsDialogScene extends ModalDialogBaseScene {
   private settings: Settings
 
   public constructor(
-    private eventEmitter: Phaser.Events.EventEmitter,
+    private eventCentre: EventCentre,
     settings: Settings,
     onCloseDialog?: () => void
   ) {
     super('SettingsDialog', () => {
-      this.eventEmitter.emit(ContinuoAppEvents.SettingsChanged, this.settings)
+      this.eventCentre.emit(ContinuoAppEvents.SettingsChanged, this.settings)
       onCloseDialog?.()
     })
     this.settings = settings
@@ -108,9 +109,9 @@ class SettingsDialogScene extends ModalDialogBaseScene {
 
 export const createSettingsDialog = (
   parentScene: Phaser.Scene,
-  eventEmitter: Phaser.Events.EventEmitter,
+  eventCentre: EventCentre,
   settings: Settings,
   onCloseDialog?: () => void
 ): void => {
-  parentScene.scene.add(undefined, new SettingsDialogScene(eventEmitter, settings, onCloseDialog), true)
+  parentScene.scene.add(undefined, new SettingsDialogScene(eventCentre, settings, onCloseDialog), true)
 }

@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser'
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import log from 'loglevel'
+import { EventCentre } from './eventCentre'
 import { DEFAULT_SETTINGS, Settings } from './settings'
 import { Scoreboard, TurnManager, Player, PlayerType, DEFAULT_PLAYERS } from './turnManager'
 import { MiniScoreboard } from './miniScoreboard'
@@ -15,7 +16,7 @@ import * as ui from './ui'
 export class HUDScene extends Phaser.Scene {
 
   rexUI: RexUIPlugin
-  private eventEmitter: Phaser.Events.EventEmitter
+  private eventCentre: EventCentre
   private turnManager: TurnManager
   private settings: Settings
   private players: readonly Player[]
@@ -32,16 +33,16 @@ export class HUDScene extends Phaser.Scene {
   private currentCardScoreLabel: RexUIPlugin.Label
   private remainingCardsLabel: RexUIPlugin.Label
 
-  public constructor(eventEmitter: Phaser.Events.EventEmitter) {
+  public constructor(eventCentre: EventCentre) {
     super(ContinuoAppScenes.HUD)
-    this.eventEmitter = eventEmitter
+    this.eventCentre = eventCentre
     this.miniScoreboard = null
     this.settings = DEFAULT_SETTINGS
     this.players = DEFAULT_PLAYERS
     this.currentPlayer = null
     this.scoreboard = null
     this.isGameOver = true
-    this.turnManager = new TurnManager(eventEmitter)
+    this.turnManager = new TurnManager(eventCentre)
   }
 
   public init() {
@@ -72,7 +73,7 @@ export class HUDScene extends Phaser.Scene {
       .layout()
 
     const miniScoreboardY = this.lhsButtons.getBounds().bottom + 10
-    this.miniScoreboard = new MiniScoreboard(this.eventEmitter, this, miniScoreboardY)
+    this.miniScoreboard = new MiniScoreboard(this.eventCentre, this, miniScoreboardY)
 
     const homeButton = ui.createHUDSceneButton(this, 'homeButton', 'house', .4)
     const scoreboardButton = ui.createHUDSceneButton(this, 'scoreboardButton', 'bar-chart', .4)
@@ -112,14 +113,14 @@ export class HUDScene extends Phaser.Scene {
       .add(this.remainingCardsLabel)
       .layout()
 
-    this.eventEmitter.on(ContinuoAppEvents.NextTurn, this.onNextTurn, this)
-    this.eventEmitter.on(ContinuoAppEvents.CardMoved, this.onCardMovedOrRotated, this)
-    this.eventEmitter.on(ContinuoAppEvents.CardRotated, this.onCardMovedOrRotated, this)
-    this.eventEmitter.on(ContinuoAppEvents.StartMove, this.onStartMove, this)
-    this.eventEmitter.on(ContinuoAppEvents.EndMove, this.onEndMove, this)
-    this.eventEmitter.on(ContinuoAppEvents.GameOver, this.onGameOver, this)
-    this.eventEmitter.on(ContinuoAppEvents.ScoreboardUpdated, this.onScoreboardUpdated, this)
-    this.eventEmitter.on(ContinuoAppEvents.SettingsChanged, this.onSettingsChanged, this)
+    this.eventCentre.on(ContinuoAppEvents.NextTurn, this.onNextTurn, this)
+    this.eventCentre.on(ContinuoAppEvents.CardMoved, this.onCardMovedOrRotated, this)
+    this.eventCentre.on(ContinuoAppEvents.CardRotated, this.onCardMovedOrRotated, this)
+    this.eventCentre.on(ContinuoAppEvents.StartMove, this.onStartMove, this)
+    this.eventCentre.on(ContinuoAppEvents.EndMove, this.onEndMove, this)
+    this.eventCentre.on(ContinuoAppEvents.GameOver, this.onGameOver, this)
+    this.eventCentre.on(ContinuoAppEvents.ScoreboardUpdated, this.onScoreboardUpdated, this)
+    this.eventCentre.on(ContinuoAppEvents.SettingsChanged, this.onSettingsChanged, this)
 
     this.events.on(Phaser.Scenes.Events.WAKE, this.onWake, this)
 
@@ -154,8 +155,8 @@ export class HUDScene extends Phaser.Scene {
     this.players = data.players
     this.scoreboard = null
     this.isGameOver = false
-    this.eventEmitter.emit(ContinuoAppEvents.NewGame, this.players)
-    this.eventEmitter.emit(ContinuoAppEvents.ReadyForNextTurn)
+    this.eventCentre.emit(ContinuoAppEvents.NewGame, this.players)
+    this.eventCentre.emit(ContinuoAppEvents.ReadyForNextTurn)
   }
 
   private onHomeClick(): void {
@@ -206,17 +207,17 @@ export class HUDScene extends Phaser.Scene {
 
   private onRotateCWClick(): void {
     log.debug('[HUDScene#onRotateCWClick]')
-    this.ifHumanMove(() => this.eventEmitter.emit(ContinuoAppEvents.RotateCW))
+    this.ifHumanMove(() => this.eventCentre.emit(ContinuoAppEvents.RotateCW))
   }
 
   private onRotateCCWClick(): void {
     log.debug('[HUDScene#onRotateCCWClick]')
-    this.ifHumanMove(() => this.eventEmitter.emit(ContinuoAppEvents.RotateCCW))
+    this.ifHumanMove(() => this.eventCentre.emit(ContinuoAppEvents.RotateCCW))
   }
 
   private onPlaceCardClick(): void {
     log.debug('[HUDScene#onPlaceCardClick]')
-    this.ifHumanMove(() => this.eventEmitter.emit(ContinuoAppEvents.PlaceCard))
+    this.ifHumanMove(() => this.eventCentre.emit(ContinuoAppEvents.PlaceCard))
   }
 
   private onNextTurn(player: Player): void {
@@ -236,7 +237,7 @@ export class HUDScene extends Phaser.Scene {
     this.clearCurrentCardScore()
     this.time.delayedCall(1000, () => {
       if (!this.isGameOver) {
-        this.eventEmitter.emit(ContinuoAppEvents.ReadyForNextTurn)
+        this.eventCentre.emit(ContinuoAppEvents.ReadyForNextTurn)
       }
     })
   }
@@ -288,8 +289,8 @@ export class HUDScene extends Phaser.Scene {
   private presentScoreboardDialog(): void {
 
     const onPlayAgain = () => {
-      this.eventEmitter.emit(ContinuoAppEvents.NewGame, this.players)
-      this.eventEmitter.emit(ContinuoAppEvents.ReadyForNextTurn)
+      this.eventCentre.emit(ContinuoAppEvents.NewGame, this.players)
+      this.eventCentre.emit(ContinuoAppEvents.ReadyForNextTurn)
     }
 
     const onHome = () => {
@@ -300,7 +301,7 @@ export class HUDScene extends Phaser.Scene {
   }
 
   private presentSettingsDialog(): void {
-    createSettingsDialog(this, this.eventEmitter, this.settings)
+    createSettingsDialog(this, this.eventCentre, this.settings)
   }
 
   private presentAboutDialog(): void {

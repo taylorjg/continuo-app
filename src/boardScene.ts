@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser'
 import log from 'loglevel'
 
+import { EventCentre } from './eventCentre'
 import { DEFAULT_SETTINGS, Settings } from './settings'
 import { ContinuoAppEvents } from './constants'
 
@@ -22,7 +23,7 @@ export const HIGHLIGHT_DEPTH = 2
 export const HIGHLIGHT_COLOUR = 0xFF00FF
 
 export type BoardSceneConfig = {
-  eventEmitter: Phaser.Events.EventEmitter,
+  eventCentre: EventCentre,
   CARD_WIDTH: number,
   CARD_HEIGHT: number,
   ROTATION_ANGLE: number
@@ -79,13 +80,13 @@ export abstract class BoardScene extends Phaser.Scene {
     scoringHighlights.forEach(highlight => highlight.destroy())
   }
 
-  private emitCurrentCardChange(eventName: string): void {
+  private emitCurrentCardChange(event: ContinuoAppEvents): void {
     if (this.possibleMoves) {
       const numCardsLeft = this.deck.numCardsLeft
       const score = this.currentPossibleMove.score
       const bestScore = this.possibleMoves[0].score
       const bestScoreLocationCount = this.possibleMoves.filter(({ score }) => score == bestScore).length
-      this.boardSceneConfig.eventEmitter.emit(eventName, {
+      this.boardSceneConfig.eventCentre.emit(event, {
         player: this.currentPlayer,
         numCardsLeft,
         score,
@@ -382,22 +383,22 @@ export abstract class BoardScene extends Phaser.Scene {
   }) {
     log.debug('[BoardScene#onWake]', data)
     this.settings = data.settings
-    this.boardSceneConfig.eventEmitter.on(ContinuoAppEvents.NewGame, this.onNewGame, this)
-    this.boardSceneConfig.eventEmitter.on(ContinuoAppEvents.NextTurn, this.onNextTurn, this)
-    this.boardSceneConfig.eventEmitter.on(ContinuoAppEvents.RotateCW, this.onRotateCW, this)
-    this.boardSceneConfig.eventEmitter.on(ContinuoAppEvents.RotateCCW, this.onRotateCCW, this)
-    this.boardSceneConfig.eventEmitter.on(ContinuoAppEvents.PlaceCard, this.onPlaceCard, this)
-    this.boardSceneConfig.eventEmitter.on(ContinuoAppEvents.SettingsChanged, this.onSettingsChanged, this)
+    this.boardSceneConfig.eventCentre.on(ContinuoAppEvents.NewGame, this.onNewGame, this)
+    this.boardSceneConfig.eventCentre.on(ContinuoAppEvents.NextTurn, this.onNextTurn, this)
+    this.boardSceneConfig.eventCentre.on(ContinuoAppEvents.RotateCW, this.onRotateCW, this)
+    this.boardSceneConfig.eventCentre.on(ContinuoAppEvents.RotateCCW, this.onRotateCCW, this)
+    this.boardSceneConfig.eventCentre.on(ContinuoAppEvents.PlaceCard, this.onPlaceCard, this)
+    this.boardSceneConfig.eventCentre.on(ContinuoAppEvents.SettingsChanged, this.onSettingsChanged, this)
   }
 
   private onSleep(_scene: Phaser.Scene) {
     log.debug('[BoardScene#onSleep]')
-    this.boardSceneConfig.eventEmitter.off(ContinuoAppEvents.NewGame, this.onNewGame, this)
-    this.boardSceneConfig.eventEmitter.off(ContinuoAppEvents.NextTurn, this.onNextTurn, this)
-    this.boardSceneConfig.eventEmitter.off(ContinuoAppEvents.RotateCW, this.onRotateCW, this)
-    this.boardSceneConfig.eventEmitter.off(ContinuoAppEvents.RotateCCW, this.onRotateCCW, this)
-    this.boardSceneConfig.eventEmitter.off(ContinuoAppEvents.PlaceCard, this.onPlaceCard, this)
-    this.boardSceneConfig.eventEmitter.off(ContinuoAppEvents.SettingsChanged, this.onSettingsChanged, this)
+    this.boardSceneConfig.eventCentre.off(ContinuoAppEvents.NewGame, this.onNewGame, this)
+    this.boardSceneConfig.eventCentre.off(ContinuoAppEvents.NextTurn, this.onNextTurn, this)
+    this.boardSceneConfig.eventCentre.off(ContinuoAppEvents.RotateCW, this.onRotateCW, this)
+    this.boardSceneConfig.eventCentre.off(ContinuoAppEvents.RotateCCW, this.onRotateCCW, this)
+    this.boardSceneConfig.eventCentre.off(ContinuoAppEvents.PlaceCard, this.onPlaceCard, this)
+    this.boardSceneConfig.eventCentre.off(ContinuoAppEvents.SettingsChanged, this.onSettingsChanged, this)
   }
 
   private onNewGame(players: readonly Player[]) {

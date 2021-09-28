@@ -1,4 +1,5 @@
 import log from 'loglevel'
+import { EventCentre } from './eventCentre'
 import { ContinuoAppEvents } from './constants'
 
 export enum PlayerType {
@@ -80,33 +81,31 @@ export class TurnManager {
   private nextPlayerIndex: number
   private currentPlayerScore: PlayerScore
 
-  public constructor(private eventEmitter: Phaser.Events.EventEmitter) {
-    this.eventEmitter.on(ContinuoAppEvents.NewGame, this.onNewGame, this)
-    this.eventEmitter.on(ContinuoAppEvents.ReadyForNextTurn, this.onReadyForNextTurn, this)
-    this.eventEmitter.on(ContinuoAppEvents.EndMove, this.onEndMove, this)
+  public constructor(private eventCentre: EventCentre) {
+    this.eventCentre.on(ContinuoAppEvents.NewGame, this.onNewGame, this)
+    this.eventCentre.on(ContinuoAppEvents.ReadyForNextTurn, this.onReadyForNextTurn, this)
+    this.eventCentre.on(ContinuoAppEvents.EndMove, this.onEndMove, this)
   }
 
   private reset(players: readonly Player[]): void {
     this.playerScores = players.map(player => new PlayerScore(player))
     this.nextPlayerIndex = 0
     this.currentPlayerScore = null
-    setTimeout(() => {
-      this.eventEmitter.emit(ContinuoAppEvents.ScoreboardUpdated, this.makeScoreboard())
-    })
+    this.eventCentre.emit(ContinuoAppEvents.ScoreboardUpdated, this.makeScoreboard())
   }
 
   private step(): void {
     this.currentPlayerScore = this.playerScores[this.nextPlayerIndex]
     this.nextPlayerIndex = (this.nextPlayerIndex + 1) % this.playerScores.length
-    this.eventEmitter.emit(ContinuoAppEvents.NextTurn, this.currentPlayerScore.player)
-    this.eventEmitter.emit(ContinuoAppEvents.ScoreboardUpdated, this.makeScoreboard())
+    this.eventCentre.emit(ContinuoAppEvents.NextTurn, this.currentPlayerScore.player)
+    this.eventCentre.emit(ContinuoAppEvents.ScoreboardUpdated, this.makeScoreboard())
   }
 
   private addTurnScore(player: Player, score: number, bestScore: number): void {
     const playerScore = this.playerScores.find(playerScore => playerScore.player == player)
     if (playerScore) {
       playerScore.addTurnScore(score, bestScore)
-      this.eventEmitter.emit(ContinuoAppEvents.ScoreboardUpdated, this.makeScoreboard())
+      this.eventCentre.emit(ContinuoAppEvents.ScoreboardUpdated, this.makeScoreboard())
     }
   }
 
@@ -129,7 +128,7 @@ export class TurnManager {
     this.addTurnScore(player, score, bestScore)
     const numCardsLeft = <number>arg.numCardsLeft
     if (numCardsLeft == 0) {
-      this.eventEmitter.emit(ContinuoAppEvents.GameOver, this.makeScoreboard())
+      this.eventCentre.emit(ContinuoAppEvents.GameOver, this.makeScoreboard())
     }
   }
 

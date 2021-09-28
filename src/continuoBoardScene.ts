@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser'
 
+import { EventCentre } from './eventCentre'
 import { ContinuoAppScenes } from './constants'
 
 import { BoardScene, BoardSceneConfig, HIGHLIGHT_DEPTH, HIGHLIGHT_COLOUR } from './boardScene'
@@ -86,9 +87,9 @@ const adapter: CommonAdapter = {
 
 export class ContinuoBoardScene extends BoardScene {
 
-  constructor(eventEmitter: Phaser.Events.EventEmitter) {
+  constructor(eventCentre: EventCentre) {
     const boardSceneConfig: BoardSceneConfig = {
-      eventEmitter,
+      eventCentre,
       CARD_WIDTH: CARD_SIZE,
       CARD_HEIGHT: CARD_SIZE,
       ROTATION_ANGLE: 90
