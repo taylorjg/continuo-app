@@ -169,7 +169,11 @@ export class HUDScene extends Phaser.Scene {
     if (this.isGameOver) {
       this.game.scene.wake(ContinuoAppScenes.Home)
     } else {
-      createConfirmationDialog(this, () => this.game.scene.wake(ContinuoAppScenes.Home))
+      const onYes = () => {
+        this.game.scene.wake(ContinuoAppScenes.Home)
+        this.eventCentre.emit(ContinuoAppEvents.GameAborted)
+      }
+      createConfirmationDialog(this, onYes)
     }
   }
 

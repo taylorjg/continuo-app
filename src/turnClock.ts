@@ -31,6 +31,7 @@ export class TurnClock {
       .layout()
     this.eventCentre.on(ContinuoAppEvents.StartMove, this.onStartMove, this)
     this.eventCentre.on(ContinuoAppEvents.EndMove, this.onEndMove, this)
+    this.eventCentre.on(ContinuoAppEvents.GameAborted, this.onGameAborted, this)
   }
 
   private onStartMove(arg: any): void {
@@ -39,30 +40,40 @@ export class TurnClock {
     if (player.type == PlayerType.Human) {
       this.timerEvent = this.scene.time.addEvent({
         delay: 1000,
-        repeat: 9,
+        repeat: 59,
         callback: () => {
+          this.updateRemainingTime()
           const remainingTime = this.timerEvent.getOverallRemainingSeconds()
-          this.remainingTimeLabel.text = `Remaining time: ${remainingTime}`
-          this.remainingTimeLabel.layout()
-          this.remainingTimePanel.setVisible(true).layout()
           if (remainingTime == 0) {
             this.timerEvent.remove()
-            this.timerEvent.destroy()
             this.timerEvent = null
             this.remainingTimePanel.setVisible(false)
             console.log('BOOM!')
           }
         }
       })
-      const remainingTime = this.timerEvent.getOverallRemainingSeconds()
-      this.remainingTimeLabel.text = `Remaining time: ${remainingTime}`
-      this.remainingTimeLabel.layout()
-      this.remainingTimePanel.setVisible(true).layout()
+      this.updateRemainingTime()
     }
   }
 
   private onEndMove(arg: any): void {
     log.debug('[TurnClock#onEndMove]', arg)
+    this.killTimer()
+  }
+
+  private onGameAborted(): void {
+    log.debug('[TurnClock#onGameAborted]')
+    this.killTimer()
+  }
+
+  private updateRemainingTime(): void {
+    const remainingTime = this.timerEvent.getOverallRemainingSeconds()
+    this.remainingTimeLabel.text = `Remaining time: ${remainingTime}`
+    this.remainingTimeLabel.layout()
+    this.remainingTimePanel.setVisible(true).layout()
+  }
+
+  private killTimer(): void {
     if (this.timerEvent) {
       this.timerEvent.remove()
       this.timerEvent.destroy()
