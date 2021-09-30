@@ -1,6 +1,6 @@
 import Dialog from 'phaser3-rex-plugins/templates/ui/dialog/Dialog'
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
-import * as ui from './ui'
+import * as ui from '../ui'
 
 export abstract class ModalDialogBaseScene extends Phaser.Scene {
 

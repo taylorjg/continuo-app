@@ -1,9 +1,9 @@
 import Dialog from 'phaser3-rex-plugins/templates/ui/dialog/Dialog'
 import GridSizer from 'phaser3-rex-plugins/templates/ui/gridsizer/GridSizer'
 import { ModalDialogBaseScene } from './modalDialogBase'
-import { SceneWithRexUI } from './types'
-import { Scoreboard, ScoreboardEntry } from './turnManager'
-import * as ui from './ui'
+import { SceneWithRexUI } from '../types'
+import { Scoreboard, ScoreboardEntry } from '../turnManager'
+import * as ui from '../ui'
 
 const addColumn = (
   scene: SceneWithRexUI,

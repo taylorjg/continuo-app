@@ -1,6 +1,6 @@
 import Dialog from 'phaser3-rex-plugins/templates/ui/dialog/Dialog'
 import { ModalDialogBaseScene } from './modalDialogBase'
-import * as ui from './ui'
+import * as ui from '../ui'
 
 class ConfirmationDialogScene extends ModalDialogBaseScene {
 

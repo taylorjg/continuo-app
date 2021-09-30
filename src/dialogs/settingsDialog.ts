@@ -1,9 +1,9 @@
 import Dialog from 'phaser3-rex-plugins/templates/ui/dialog/Dialog'
-import { EventCentre } from './eventCentre'
+import { EventCentre } from '../eventCentre'
 import { ModalDialogBaseScene } from './modalDialogBase'
-import { Settings } from './settings'
-import { ContinuoAppEvents } from './constants'
-import * as ui from './ui'
+import { Settings } from '../settings'
+import { ContinuoAppEvents } from '../constants'
+import * as ui from '../ui'
 
 class SettingsDialogScene extends ModalDialogBaseScene {
 
