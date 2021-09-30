@@ -13,7 +13,7 @@ const TITLE_STEP2 = 'Choose Players (Step 2)'
 
 const TEXTBOX_WIDTH = 250
 
-class ChoosePlayersDialogScene extends ModalDialogBaseScene {
+class PlayersDialogScene extends ModalDialogBaseScene {
 
   private title: Phaser.GameObjects.Text
   private contentSizer: Sizer
@@ -32,7 +32,7 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
     private players: readonly Player[],
     private onDone?: (players: readonly Player[]) => void
   ) {
-    super('ChoosePlayersDialog')
+    super('PlayersDialog')
     if (this.players.length == 2 && this.players[0].type == PlayerType.Human && this.players[1].type == PlayerType.Computer) {
       this.singlePlayerName = this.players[0].name
     } else {
@@ -268,11 +268,11 @@ class ChoosePlayersDialogScene extends ModalDialogBaseScene {
   }
 }
 
-export const createChoosePlayersDialog = (
+export const createPlayersDialog = (
   parentScene: Phaser.Scene,
   eventCentre: EventCentre,
   players: readonly Player[],
   onDone?: (players: readonly Player[]) => void
 ) => {
-  parentScene.scene.add(undefined, new ChoosePlayersDialogScene(eventCentre, players, onDone), true)
+  parentScene.scene.add(undefined, new PlayersDialogScene(eventCentre, players, onDone), true)
 }

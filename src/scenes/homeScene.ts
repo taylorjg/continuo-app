@@ -9,7 +9,7 @@ import { ContinuoBoardScene, createContinuoCardSprite } from './continuoBoardSce
 import { HexagoBoardScene, createHexagoCardSprite } from './hexagoBoardScene'
 import { Player, DEFAULT_PLAYERS } from '../turnManager'
 import { createAboutDialog } from '../dialogs/aboutDialog'
-import { createChoosePlayersDialog } from '../dialogs/choosePlayersDialog'
+import { createPlayersDialog } from '../dialogs/playersDialog'
 import { createSettingsDialog } from '../dialogs/settingsDialog'
 import { Fullscreen } from '../fullscreen'
 import { ContinuoAppScenes, ContinuoAppEvents } from '../constants'
@@ -128,7 +128,7 @@ export class HomeScene extends Phaser.Scene {
 
   private onChoosePlayersClick(): void {
     log.debug('[HomeScene#onChoosePlayers]')
-    this.presentChoosePlayersDialog()
+    this.presentPlayersDialog()
   }
 
   private onPlayersChanged(players: readonly Player[]): void {
@@ -198,8 +198,8 @@ export class HomeScene extends Phaser.Scene {
     this.presentAboutDialog()
   }
 
-  private presentChoosePlayersDialog(): void {
-    createChoosePlayersDialog(this, this.eventCentre, this.players)
+  private presentPlayersDialog(): void {
+    createPlayersDialog(this, this.eventCentre, this.players)
   }
 
   private presentSettingsDialog(): void {
