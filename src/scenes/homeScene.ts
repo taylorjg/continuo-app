@@ -11,7 +11,7 @@ import { Player, DEFAULT_PLAYERS } from '../turnManager'
 import { createAboutDialog } from '../dialogs/aboutDialog'
 import { createPlayersDialog } from '../dialogs/playersDialog'
 import { createSettingsDialog } from '../dialogs/settingsDialog'
-import { Fullscreen } from '../fullscreen'
+import { Fullscreen } from '../components/fullscreen'
 import { ContinuoAppScenes, ContinuoAppEvents } from '../constants'
 import * as ui from '../ui'
 

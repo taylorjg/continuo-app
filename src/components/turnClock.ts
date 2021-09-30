@@ -1,10 +1,10 @@
 import log from 'loglevel'
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
-import { SceneWithRexUI } from './types'
-import { EventCentre } from './eventCentre'
-import { Player, PlayerType } from './turnManager'
-import { ContinuoAppEvents } from './constants'
-import * as ui from './ui'
+import { SceneWithRexUI } from '../types'
+import { EventCentre } from '../eventCentre'
+import { Player, PlayerType } from '../turnManager'
+import { ContinuoAppEvents } from '../constants'
+import * as ui from '../ui'
 
 export class TurnClock {
 

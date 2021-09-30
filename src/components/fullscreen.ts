@@ -1,6 +1,6 @@
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
-import { SceneWithRexUI } from './types'
-import * as ui from './ui'
+import { SceneWithRexUI } from '../types'
+import * as ui from '../ui'
 
 export class Fullscreen {
 
