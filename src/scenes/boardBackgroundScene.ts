@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser'
-import { ContinuoAppScenes } from './constants'
+import { ContinuoAppScenes } from '../constants'
 
 export class BoardBackgroundScene extends Phaser.Scene {
 

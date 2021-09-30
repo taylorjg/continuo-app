@@ -1,9 +1,9 @@
 import * as Phaser from 'phaser'
 import log from 'loglevel'
 
-import { EventCentre } from './eventCentre'
-import { DEFAULT_SETTINGS, Settings } from './settings'
-import { ContinuoAppEvents } from './constants'
+import { EventCentre } from '../eventCentre'
+import { DEFAULT_SETTINGS, Settings } from '../settings'
+import { ContinuoAppEvents } from '../constants'
 
 import {
   CommonAdapter,
@@ -14,9 +14,9 @@ import {
   CommonDeck,
   CommonPlacedCard,
   CommonPossibleMove
-} from './types'
+} from '../types'
 
-import { Player, PlayerType } from './turnManager'
+import { Player, PlayerType } from '../turnManager'
 
 export const CURRENT_CARD_DEPTH = 1
 export const HIGHLIGHT_DEPTH = 2

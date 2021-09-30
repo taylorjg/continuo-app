@@ -1,10 +1,10 @@
 import * as Phaser from 'phaser'
 
-import { EventCentre } from './eventCentre'
-import { ContinuoAppScenes } from './constants'
+import { EventCentre } from '../eventCentre'
+import { ContinuoAppScenes } from '../constants'
 
 import { BoardScene, BoardSceneConfig, HIGHLIGHT_DEPTH, HIGHLIGHT_COLOUR } from './boardScene'
-import { CommonAdapter, CommonBoardRange } from './types'
+import { CommonAdapter, CommonBoardRange } from '../types'
 
 import {
   Board,
@@ -17,7 +17,7 @@ import {
   PossibleMove,
   evaluateCard,
   switchOrientation
-} from './continuo-lib'
+} from '../continuo-lib'
 
 const CELL_SIZE = 28 * 2
 const GAP_SIZE = 2

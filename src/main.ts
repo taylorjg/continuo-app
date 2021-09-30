@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser'
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import log from 'loglevel'
-import { HomeScene } from './homeScene'
+import { HomeScene } from './scenes/homeScene'
 
 const gameConfig: Phaser.Types.Core.GameConfig = {
   title: 'Continuo',

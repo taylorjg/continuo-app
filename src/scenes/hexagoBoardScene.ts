@@ -1,10 +1,10 @@
 import * as Phaser from 'phaser'
 
-import { EventCentre } from './eventCentre'
-import { ContinuoAppScenes } from './constants'
+import { EventCentre } from '../eventCentre'
+import { ContinuoAppScenes } from '../constants'
 
 import { BoardScene, BoardSceneConfig, HIGHLIGHT_DEPTH, HIGHLIGHT_COLOUR } from './boardScene'
-import { CommonAdapter, CommonBoardRange } from './types'
+import { CommonAdapter, CommonBoardRange } from '../types'
 
 import {
   Board,
@@ -21,7 +21,7 @@ import {
   evaluateCard,
   rotationRotateCCW,
   rotationRotateCW
-} from './hexago-lib'
+} from '../hexago-lib'
 
 const TAN_30 = Math.tan(Phaser.Math.DegToRad(30))
 
