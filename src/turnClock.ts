@@ -40,15 +40,13 @@ export class TurnClock {
     if (player.type == PlayerType.Human) {
       this.timerEvent = this.scene.time.addEvent({
         delay: 1000,
-        repeat: 59,
+        repeat: 10, // 59,
         callback: () => {
           this.updateRemainingTime()
           const remainingTime = this.timerEvent.getOverallRemainingSeconds()
           if (remainingTime == 0) {
-            this.timerEvent.remove()
-            this.timerEvent = null
-            this.remainingTimePanel.setVisible(false)
-            console.log('BOOM!')
+            this.killTimerEvent()
+            this.eventCentre.emit(ContinuoAppEvents.MoveTimedOut)
           }
         }
       })
@@ -58,12 +56,12 @@ export class TurnClock {
 
   private onEndMove(arg: any): void {
     log.debug('[TurnClock#onEndMove]', arg)
-    this.killTimer()
+    this.killTimerEvent()
   }
 
   private onGameAborted(): void {
     log.debug('[TurnClock#onGameAborted]')
-    this.killTimer()
+    this.killTimerEvent()
   }
 
   private updateRemainingTime(): void {
@@ -73,12 +71,11 @@ export class TurnClock {
     this.remainingTimePanel.setVisible(true).layout()
   }
 
-  private killTimer(): void {
+  private killTimerEvent(): void {
+    this.remainingTimePanel.setVisible(false)
     if (this.timerEvent) {
       this.timerEvent.remove()
-      this.timerEvent.destroy()
       this.timerEvent = null
-      this.remainingTimePanel.setVisible(false)
     }
   }
 }

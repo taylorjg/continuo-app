@@ -43,6 +43,7 @@ export abstract class BoardScene extends Phaser.Scene {
   private currentCardContainer: Phaser.GameObjects.Container
   private animating: boolean
   private bestScoreLocationsFound: Set<CommonPossibleMove>
+  private allLocationsFound: Set<CommonPossibleMove>
 
   public constructor(sceneName: string, boardSceneConfig: BoardSceneConfig, adapter: CommonAdapter) {
     super(sceneName)
@@ -54,6 +55,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.cardSpritesMap = new Map<CommonCard, Phaser.GameObjects.Sprite>()
     this.animating = false
     this.bestScoreLocationsFound = new Set()
+    this.allLocationsFound = new Set()
   }
 
   protected abstract getInitialPlacedCards(deck: CommonDeck, board: CommonBoard, numPlayers: number): Generator<CommonPlacedCard, void, CommonBoard>
@@ -155,6 +157,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.currentPossibleMove = null
     this.currentPlayer = null
     this.bestScoreLocationsFound.clear()
+    this.allLocationsFound.clear()
   }
 
   private repositionCurrentCardContainer(possibleMove?: CommonPossibleMove): void {
@@ -182,6 +185,8 @@ export abstract class BoardScene extends Phaser.Scene {
         this.animating = false
       }
     })
+
+    this.allLocationsFound.add(possibleMove)
 
     if (possibleMove && this.settings.soundBestScoreEnabled) {
       const score = possibleMove.score
@@ -227,6 +232,7 @@ export abstract class BoardScene extends Phaser.Scene {
           if (this.settings.soundBestScoreEnabled) {
             const score = possibleMove.score
             const bestScore = this.possibleMoves[0].score
+            this.allLocationsFound.add(possibleMove)
             if (score == bestScore) {
               if (!this.bestScoreLocationsFound.has(possibleMove)) {
                 this.sound.play('best-move')
@@ -364,19 +370,6 @@ export abstract class BoardScene extends Phaser.Scene {
     this.cameras.main.centerOn(boardRange.centreX, boardRange.centreY)
   }
 
-  private onSettingsChanged(settings: Settings) {
-    log.debug('[BoardScene#onSettingsChanged]', settings)
-    this.settings = settings
-    if (this.currentPossibleMove) {
-      this.unhighlightScoring()
-      if (this.settings.hintShowScoringHighlights) {
-        this.highlightScoring(this.currentPossibleMove)
-      } else {
-        this.unhighlightScoring()
-      }
-    }
-  }
-
   private onWake(_scene: Phaser.Scene, data: {
     settings: Settings,
     players: readonly Player[]
@@ -388,6 +381,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.boardSceneConfig.eventCentre.on(ContinuoAppEvents.RotateCW, this.onRotateCW, this)
     this.boardSceneConfig.eventCentre.on(ContinuoAppEvents.RotateCCW, this.onRotateCCW, this)
     this.boardSceneConfig.eventCentre.on(ContinuoAppEvents.PlaceCard, this.onPlaceCard, this)
+    this.boardSceneConfig.eventCentre.on(ContinuoAppEvents.MoveTimedOut, this.onMoveTimedOut, this)
     this.boardSceneConfig.eventCentre.on(ContinuoAppEvents.SettingsChanged, this.onSettingsChanged, this)
   }
 
@@ -398,6 +392,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.boardSceneConfig.eventCentre.off(ContinuoAppEvents.RotateCW, this.onRotateCW, this)
     this.boardSceneConfig.eventCentre.off(ContinuoAppEvents.RotateCCW, this.onRotateCCW, this)
     this.boardSceneConfig.eventCentre.off(ContinuoAppEvents.PlaceCard, this.onPlaceCard, this)
+    this.boardSceneConfig.eventCentre.off(ContinuoAppEvents.MoveTimedOut, this.onMoveTimedOut, this)
     this.boardSceneConfig.eventCentre.off(ContinuoAppEvents.SettingsChanged, this.onSettingsChanged, this)
   }
 
@@ -453,5 +448,29 @@ export abstract class BoardScene extends Phaser.Scene {
   private onPlaceCard(): void {
     log.debug('[BoardScene#onPlaceCard]')
     this.placeCurrentCardFinal()
+  }
+
+  private onMoveTimedOut(): void {
+    log.debug('[BoardScene#onMoveTimedOut]')
+    // TODO: need to handle any outstanding dragging/rotation
+    const possibleMove = Array.from(this.allLocationsFound.values()).reduce(
+      (acc, pm) => pm.score > acc.score ? pm : acc,
+      this.currentPossibleMove
+    )
+    this.currentPossibleMove = possibleMove
+    this.placeCurrentCardFinal()
+  }
+
+  private onSettingsChanged(settings: Settings) {
+    log.debug('[BoardScene#onSettingsChanged]', settings)
+    this.settings = settings
+    if (this.currentPossibleMove) {
+      this.unhighlightScoring()
+      if (this.settings.hintShowScoringHighlights) {
+        this.highlightScoring(this.currentPossibleMove)
+      } else {
+        this.unhighlightScoring()
+      }
+    }
   }
 }
