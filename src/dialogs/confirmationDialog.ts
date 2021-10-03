@@ -8,7 +8,7 @@ class ConfirmationDialogScene extends ModalDialogBaseScene {
   onNo?: () => void
 
   constructor(onYes?: () => void, onNo?: () => void) {
-    super('ConfirmationDialog')
+    super('ConfirmationDialog', onNo)
     this.onYes = onYes
     this.onNo = onNo
   }

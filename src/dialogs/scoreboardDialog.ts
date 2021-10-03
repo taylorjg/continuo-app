@@ -66,10 +66,11 @@ class ScoreboardDialogScene extends ModalDialogBaseScene {
   constructor(
     scoreboard: Scoreboard,
     isGameOver: boolean,
+    onCloseDialog?: () => void,
     onPlayAgain?: () => void,
     onHome?: () => void
   ) {
-    super('ScoreboardDialog')
+    super('ScoreboardDialog', onCloseDialog)
     this.scoreboard = scoreboard
     this.isGameOver = isGameOver
     this.onPlayAgain = onPlayAgain
@@ -126,11 +127,12 @@ export const createScoreboardDialog = (
   parentScene: Phaser.Scene,
   scoreboard: Scoreboard,
   isGameOver: boolean,
+  onCloseDialog?: () => void,
   onPlayAgain?: () => void,
   onHome?: () => void
 ): void => {
   parentScene.scene.add(
     undefined,
-    new ScoreboardDialogScene(scoreboard, isGameOver, onPlayAgain, onHome),
+    new ScoreboardDialogScene(scoreboard, isGameOver, onCloseDialog, onPlayAgain, onHome),
     true)
 }

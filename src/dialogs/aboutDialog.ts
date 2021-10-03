@@ -5,8 +5,8 @@ import { version, author } from '../../package.json'
 
 class AboutDialogScene extends ModalDialogBaseScene {
 
-  constructor() {
-    super('AboutDialog')
+  constructor(onCloseDialog?: () => void) {
+    super('AboutDialog', onCloseDialog)
   }
 
   protected getDialogConfig(): Dialog.IConfig {
@@ -24,6 +24,6 @@ class AboutDialogScene extends ModalDialogBaseScene {
   }
 }
 
-export const createAboutDialog = (parentScene: Phaser.Scene): void => {
-  parentScene.scene.add(undefined, new AboutDialogScene(), true)
+export const createAboutDialog = (parentScene: Phaser.Scene, onCloseDialog?: () => void): void => {
+  parentScene.scene.add(undefined, new AboutDialogScene(onCloseDialog), true)
 }

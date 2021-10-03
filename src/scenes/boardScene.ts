@@ -287,7 +287,8 @@ export abstract class BoardScene extends Phaser.Scene {
 
     this.input.on(Phaser.Input.Events.DRAG_START, (
       _pointer: Phaser.Input.Pointer,
-      _gameObject: Phaser.GameObjects.GameObject) => {
+      _gameObject: Phaser.GameObjects.GameObject
+    ) => {
       this.unhighlightScoring()
       this.animating = true
     })
@@ -296,18 +297,22 @@ export abstract class BoardScene extends Phaser.Scene {
       _pointer: Phaser.Input.Pointer,
       _gameObject: Phaser.GameObjects.GameObject,
       dragX: number,
-      dragY: number) => {
+      dragY: number
+    ) => {
       this.currentCardContainer.x = dragX
       this.currentCardContainer.y = dragY
     })
 
     this.input.on(Phaser.Input.Events.DRAG_END, (
       _pointer: Phaser.Input.Pointer,
-      _gameObject: Phaser.GameObjects.GameObject) => {
-      const { row, col } = this.getSnapPosition(this.currentCardContainer.x, this.currentCardContainer.y)
-      const newPlacedCard = this.adapter.placedCardMoveTo(this.currentPossibleMove.placedCard, row, col)
-      const possibleMove = this.findPossibleMove(newPlacedCard)
-      this.repositionCurrentCardContainer(possibleMove)
+      _gameObject: Phaser.GameObjects.GameObject
+    ) => {
+      if (this.currentPossibleMove) {
+        const { row, col } = this.getSnapPosition(this.currentCardContainer.x, this.currentCardContainer.y)
+        const newPlacedCard = this.adapter.placedCardMoveTo(this.currentPossibleMove.placedCard, row, col)
+        const possibleMove = this.findPossibleMove(newPlacedCard)
+        this.repositionCurrentCardContainer(possibleMove)
+      }
     })
 
     this.input.keyboard.on('keydown-LEFT', () => {
@@ -452,7 +457,8 @@ export abstract class BoardScene extends Phaser.Scene {
 
   private onMoveTimedOut(): void {
     log.debug('[BoardScene#onMoveTimedOut]')
-    // TODO: need to handle any outstanding dragging/rotation
+    this.tweens.killTweensOf(this.currentCardContainer)
+    this.input.setDragState(this.input.activePointer, 0)
     const possibleMove = Array.from(this.allLocationsFound.values()).reduce(
       (acc, pm) => pm.score > acc.score ? pm : acc,
       this.currentPossibleMove

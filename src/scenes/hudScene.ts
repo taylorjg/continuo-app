@@ -78,8 +78,6 @@ export class HUDScene extends Phaser.Scene {
     const miniScoreboardY = this.lhsButtons.getBounds().bottom + 10
     this.miniScoreboard = new MiniScoreboard(this.eventCentre, this, miniScoreboardY)
 
-    this.turnClock = new TurnClock(this.eventCentre, this)
-
     const homeButton = ui.createHUDSceneButton(this, 'homeButton', 'house', .4)
     const scoreboardButton = ui.createHUDSceneButton(this, 'scoreboardButton', 'bar-chart', .4)
     const settingsButton = ui.createHUDSceneButton(this, 'settingsButton', 'gear', .4)
@@ -160,6 +158,9 @@ export class HUDScene extends Phaser.Scene {
     this.players = data.players
     this.scoreboard = null
     this.isGameOver = false
+    if (!this.turnClock) {
+      this.turnClock = new TurnClock(this.eventCentre, this.settings, this)
+    }
     this.eventCentre.emit(ContinuoAppEvents.NewGame, this.players)
     this.eventCentre.emit(ContinuoAppEvents.ReadyForNextTurn)
   }
@@ -167,13 +168,17 @@ export class HUDScene extends Phaser.Scene {
   private onHomeClick(): void {
     log.debug('[HUDScene#onHomeClick]')
     if (this.isGameOver) {
-      this.game.scene.wake(ContinuoAppScenes.Home)
+      this.scene.wake(ContinuoAppScenes.Home)
     } else {
       const onYes = () => {
-        this.game.scene.wake(ContinuoAppScenes.Home)
+        this.scene.wake(ContinuoAppScenes.Home)
         this.eventCentre.emit(ContinuoAppEvents.GameAborted)
       }
-      createConfirmationDialog(this, onYes)
+      const onNo = () => {
+        this.scene.resume()
+      }
+      this.scene.pause()
+      createConfirmationDialog(this, onYes, onNo)
     }
   }
 
@@ -297,23 +302,36 @@ export class HUDScene extends Phaser.Scene {
 
   private presentScoreboardDialog(): void {
 
+    const onCloseDialog = () => {
+      this.scene.resume()
+    }
+
     const onPlayAgain = () => {
+      this.scene.resume()
       this.eventCentre.emit(ContinuoAppEvents.NewGame, this.players)
       this.eventCentre.emit(ContinuoAppEvents.ReadyForNextTurn)
     }
 
     const onHome = () => {
+      this.scene.resume()
       this.onHomeClick()
     }
 
-    createScoreboardDialog(this, this.scoreboard, this.isGameOver, onPlayAgain, onHome)
+    this.scene.pause()
+    createScoreboardDialog(this, this.scoreboard, this.isGameOver, onCloseDialog, onPlayAgain, onHome)
   }
 
   private presentSettingsDialog(): void {
-    createSettingsDialog(this, this.eventCentre, this.settings)
+    this.scene.pause()
+    createSettingsDialog(this, this.eventCentre, this.settings, () => {
+      this.scene.resume()
+    })
   }
 
   private presentAboutDialog(): void {
-    createAboutDialog(this)
+    this.scene.pause()
+    createAboutDialog(this, () => {
+      this.scene.resume()
+    })
   }
 }

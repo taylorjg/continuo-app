@@ -22,5 +22,7 @@ export const enum ContinuoAppEvents {
   GameAborted = 'GameAborted',
   ScoreboardUpdated = 'ScoreboardUpdated',
   SettingsChanged = 'SettingsChanged',
-  PlayersChanged = 'PlayersChanged'
+  PlayersChanged = 'PlayersChanged',
+  ModalDialogOpened = 'ModalDialogOpened',
+  ModalDialogClosed = 'ModalDialogClosed'
 }

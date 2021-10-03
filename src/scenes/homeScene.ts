@@ -98,10 +98,10 @@ export class HomeScene extends Phaser.Scene {
 
     this.input.on(Phaser.Input.Events.GAMEOBJECT_DOWN, this.onClick, this)
 
-    this.boardBackgroundScene = this.game.scene.add(undefined, new BoardBackgroundScene())
-    this.hudScene = this.game.scene.add(undefined, new HUDScene(this.eventCentre))
-    this.continuoBoardScene = this.game.scene.add(undefined, new ContinuoBoardScene(this.eventCentre))
-    this.hexagoBoardScene = this.game.scene.add(undefined, new HexagoBoardScene(this.eventCentre))
+    this.boardBackgroundScene = this.scene.add(undefined, new BoardBackgroundScene())
+    this.hudScene = this.scene.add(undefined, new HUDScene(this.eventCentre))
+    this.continuoBoardScene = this.scene.add(undefined, new ContinuoBoardScene(this.eventCentre))
+    this.hexagoBoardScene = this.scene.add(undefined, new HexagoBoardScene(this.eventCentre))
 
     this.events.on(Phaser.Scenes.Events.WAKE, this.onWake, this)
 
@@ -156,14 +156,14 @@ export class HomeScene extends Phaser.Scene {
 
   private play(boardScene: Phaser.Scene): void {
     this.scene.sleep()
-    this.launchIfNotSleeping(this.boardBackgroundScene)
-    this.launchIfNotSleeping(this.hudScene)
-    this.launchIfNotSleeping(boardScene)
-    this.scene.wake(this.boardBackgroundScene)
     const data = {
       settings: this.settings,
       players: this.players
     }
+    this.runIfNotRunBefore(this.boardBackgroundScene)
+    this.runIfNotRunBefore(this.hudScene)
+    this.runIfNotRunBefore(boardScene)
+    this.scene.wake(this.boardBackgroundScene)
     this.scene.wake(boardScene, data)
     this.scene.wake(this.hudScene, data)
   }
@@ -174,9 +174,9 @@ export class HomeScene extends Phaser.Scene {
     }
   }
 
-  private launchIfNotSleeping(scene: Phaser.Scene): void {
+  private runIfNotRunBefore(scene: Phaser.Scene): void {
     if (!this.scene.isSleeping(scene)) {
-      this.scene.launch(scene)
+      this.scene.run(scene)
     }
   }
 

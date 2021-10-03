@@ -64,6 +64,13 @@ export const createLabel = (
   })
 }
 
+export const setLabelBackgroundColour = (label: RexUIPlugin.Label, backgroundColour: number): void => {
+  const backgroundObject = label.getElement('background') as RexUIPlugin.RoundRectangle
+  const textObject = label.getElement('text') as Phaser.GameObjects.Text
+  backgroundObject.fillColor = backgroundColour
+  textObject.setBackgroundColor('#' + backgroundColour.toString(16))
+}
+
 export const createCheckbox = (scene: SceneWithRexUI, name: string, text: string): RexUIPlugin.Label => {
   return scene.rexUI.add.label({
     name,
