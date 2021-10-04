@@ -112,26 +112,38 @@ export abstract class BoardScene extends Phaser.Scene {
     this.currentCardContainer.setVisible(false)
   }
 
-  private showCardSpriteInContainer(placedCard: CommonPlacedCard, playerType: PlayerType) {
+  private showCardSpriteInContainer(placedCard: CommonPlacedCard, playerType: PlayerType, cb: () => void) {
 
-    const cardSprite = this.cardSpritesMap.get(placedCard.card)
-    const cardPosition = this.getCardPosition(placedCard.row, placedCard.col)
+    const boardRange = this.getBoardRange(this.board)
+    const fromCardPosition = { x: boardRange.width, y: boardRange.height }
+    const toCardPosition = this.getCardPosition(placedCard.row, placedCard.col)
     const angle = this.getPlacedCardRotationAngle(placedCard)
 
+    const cardSprite = this.cardSpritesMap.get(placedCard.card)
     cardSprite.setPosition(0, 0)
     cardSprite.setAngle(0)
     cardSprite.setVisible(true)
 
     this.currentCardContainer.addAt(cardSprite, 0)
-    this.currentCardContainer.setPosition(cardPosition.x, cardPosition.y)
+    this.currentCardContainer.setPosition(fromCardPosition.x, fromCardPosition.y)
     this.currentCardContainer.setAngle(angle)
     this.currentCardContainer.setVisible(true)
 
-    if (playerType == PlayerType.Human) {
-      this.currentCardContainer.setInteractive({ useHandCursor: true })
-    } else {
-      this.currentCardContainer.disableInteractive()
-    }
+    this.tweens.add({
+      targets: this.currentCardContainer,
+      duration: 500,
+      ease: 'Sine.InOut',
+      x: { from: fromCardPosition.x, to: toCardPosition.x },
+      y: { from: fromCardPosition.y, to: toCardPosition.y },
+      onComplete: () => {
+        if (playerType == PlayerType.Human) {
+          this.currentCardContainer.setInteractive({ useHandCursor: true })
+        } else {
+          this.currentCardContainer.disableInteractive()
+        }
+        cb()
+      }
+    })
   }
 
   private placeInitialCard(placedCard: CommonPlacedCard): void {
@@ -142,15 +154,17 @@ export abstract class BoardScene extends Phaser.Scene {
   private placeCurrentCardTentative(possibleMove: CommonPossibleMove): void {
     this.currentPossibleMove = possibleMove
     const placedCard = this.currentPossibleMove.placedCard
-    this.rescale(this.board.placeCard(placedCard))
-    this.showCardSpriteInContainer(placedCard, this.currentPlayer.type)
-    this.highlightScoring(this.currentPossibleMove)
-    this.emitCurrentCardChange(ContinuoAppEvents.StartMove)
+    this.rescale(this.board.placeCard(placedCard), () => {
+      this.showCardSpriteInContainer(placedCard, this.currentPlayer.type, () => {
+        this.highlightScoring(this.currentPossibleMove)
+        this.emitCurrentCardChange(ContinuoAppEvents.StartMove)
+      })
+    })
   }
 
   private placeCurrentCardFinal(): void {
     this.unhighlightScoring()
-    const throbCount = 3
+    const throbCount = 2
     const throbspeed = 100
     this.tweens.add({
       targets: this.currentCardContainer,
@@ -371,7 +385,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.rescale(this.board)
   }
 
-  private rescale(board: CommonBoard): void {
+  private rescale(board: CommonBoard, cb?: () => void): void {
 
     const boardRange = this.getBoardRange(board)
 
@@ -383,7 +397,8 @@ export abstract class BoardScene extends Phaser.Scene {
       targets: this.cameras.main,
       zoom: scale,
       duration: 1000,
-      ease: 'Expo.Out'
+      ease: 'Expo.Out',
+      onComplete: cb
     })
 
     this.cameras.main.centerOn(boardRange.centreX, boardRange.centreY)
