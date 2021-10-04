@@ -13,5 +13,5 @@ export const DEFAULT_SETTINGS = {
   soundRotationEnabled: false,
   hintShowScoringHighlights: true,
   hintShowBestAvailableScore: true,
-  turnClock: 15
+  turnClock: 0
 }

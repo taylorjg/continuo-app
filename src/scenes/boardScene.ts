@@ -149,15 +149,29 @@ export abstract class BoardScene extends Phaser.Scene {
   }
 
   private placeCurrentCardFinal(): void {
-    const placedCard = this.currentPossibleMove.placedCard
-    this.board = this.board.placeCard(placedCard)
-    this.showCardSpriteDirectly(placedCard)
     this.unhighlightScoring()
-    this.emitCurrentCardChange(ContinuoAppEvents.EndMove)
-    this.currentPossibleMove = null
-    this.currentPlayer = null
-    this.bestScoreLocationsFound.clear()
-    this.allLocationsFound.clear()
+    const throbCount = 3
+    const throbspeed = 100
+    this.tweens.add({
+      targets: this.currentCardContainer,
+      duration: 50,
+      hold: throbspeed,
+      scale: 1.05,
+      repeat: throbCount,
+      repeatDelay: throbspeed,
+      yoyo: true,
+      completeDelay: throbspeed * 2,
+      onComplete: () => {
+        const placedCard = this.currentPossibleMove.placedCard
+        this.board = this.board.placeCard(placedCard)
+        this.showCardSpriteDirectly(placedCard)
+        this.emitCurrentCardChange(ContinuoAppEvents.EndMove)
+        this.currentPossibleMove = null
+        this.currentPlayer = null
+        this.bestScoreLocationsFound.clear()
+        this.allLocationsFound.clear()
+      }
+    })
   }
 
   private repositionCurrentCardContainer(possibleMove?: CommonPossibleMove): void {
