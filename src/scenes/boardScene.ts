@@ -18,6 +18,12 @@ import {
 
 import { Player, PlayerType } from '../turnManager'
 
+const promisifyTween = (tween: Phaser.Tweens.Tween): Promise<void> => {
+  return new Promise(resolve => {
+    tween.once(Phaser.Tweens.Events.TWEEN_COMPLETE, resolve)
+  })
+}
+
 export const CURRENT_CARD_DEPTH = 1
 export const HIGHLIGHT_DEPTH = 2
 export const HIGHLIGHT_COLOUR = 0xFF00FF
@@ -112,7 +118,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.currentCardContainer.setVisible(false)
   }
 
-  private showCardSpriteInContainer(placedCard: CommonPlacedCard, playerType: PlayerType, cb: () => void) {
+  private showCardSpriteInContainer(placedCard: CommonPlacedCard, playerType: PlayerType): Promise<void> {
 
     const boardRange = this.getBoardRange(this.board)
     const fromCardPosition = { x: boardRange.width, y: boardRange.height }
@@ -129,7 +135,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.currentCardContainer.setAngle(angle)
     this.currentCardContainer.setVisible(true)
 
-    this.tweens.add({
+    return promisifyTween(this.tweens.add({
       targets: this.currentCardContainer,
       duration: 500,
       ease: 'Sine.InOut',
@@ -141,9 +147,8 @@ export abstract class BoardScene extends Phaser.Scene {
         } else {
           this.currentCardContainer.disableInteractive()
         }
-        cb()
       }
-    })
+    }))
   }
 
   private placeInitialCard(placedCard: CommonPlacedCard): void {
@@ -151,22 +156,20 @@ export abstract class BoardScene extends Phaser.Scene {
     this.showCardSpriteDirectly(placedCard)
   }
 
-  private placeCurrentCardTentative(possibleMove: CommonPossibleMove): void {
+  private async placeCurrentCardTentative(possibleMove: CommonPossibleMove) {
     this.currentPossibleMove = possibleMove
     const placedCard = this.currentPossibleMove.placedCard
-    this.rescale(this.board.placeCard(placedCard), () => {
-      this.showCardSpriteInContainer(placedCard, this.currentPlayer.type, () => {
-        this.highlightScoring(this.currentPossibleMove)
-        this.emitCurrentCardChange(ContinuoAppEvents.StartMove)
-      })
-    })
+    await this.rescale(this.board.placeCard(placedCard))
+    await this.showCardSpriteInContainer(placedCard, this.currentPlayer.type)
+    this.highlightScoring(this.currentPossibleMove)
+    this.emitCurrentCardChange(ContinuoAppEvents.StartMove)
   }
 
-  private placeCurrentCardFinal(): void {
+  private async placeCurrentCardFinal() {
     this.unhighlightScoring()
     const throbCount = 2
     const throbspeed = 100
-    this.tweens.add({
+    return promisifyTween(this.tweens.add({
       targets: this.currentCardContainer,
       duration: 50,
       hold: throbspeed,
@@ -185,7 +188,7 @@ export abstract class BoardScene extends Phaser.Scene {
         this.bestScoreLocationsFound.clear()
         this.allLocationsFound.clear()
       }
-    })
+    }))
   }
 
   private repositionCurrentCardContainer(possibleMove?: CommonPossibleMove): void {
@@ -385,23 +388,22 @@ export abstract class BoardScene extends Phaser.Scene {
     this.rescale(this.board)
   }
 
-  private rescale(board: CommonBoard, cb?: () => void): void {
+  private async rescale(board: CommonBoard) {
 
     const boardRange = this.getBoardRange(board)
+
+    this.cameras.main.centerOn(boardRange.centreX, boardRange.centreY)
 
     const scaleX = window.innerWidth / boardRange.width
     const scaleY = window.innerHeight / boardRange.height
     const scale = Math.min(scaleX, scaleY)
 
-    this.tweens.add({
+    return promisifyTween(this.tweens.add({
       targets: this.cameras.main,
       zoom: scale,
       duration: 1000,
-      ease: 'Expo.Out',
-      onComplete: cb
-    })
-
-    this.cameras.main.centerOn(boardRange.centreX, boardRange.centreY)
+      ease: 'Expo.Out'
+    }))
   }
 
   private onWake(_scene: Phaser.Scene, data: {
@@ -447,7 +449,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.resize()
   }
 
-  private onNextTurn(player: Player): void {
+  private async onNextTurn(player: Player) {
     log.debug('[BoardScene#onNextTurn]', player)
     this.currentPlayer = player
     const card = this.deck.nextCard()
@@ -462,7 +464,7 @@ export abstract class BoardScene extends Phaser.Scene {
       case PlayerType.Computer:
         {
           const possibleMove = this.chooseRandomBestScoreMove(this.possibleMoves)
-          this.placeCurrentCardTentative(possibleMove)
+          await this.placeCurrentCardTentative(possibleMove)
           this.time.delayedCall(2000, () => this.placeCurrentCardFinal())
           break
         }
