@@ -24,6 +24,37 @@ const promisifyTween = (tween: Phaser.Tweens.Tween): Promise<void> => {
   })
 }
 
+const tweenPositionAlongCurve = (
+  scene: Phaser.Scene,
+  target: Phaser.GameObjects.Components.Transform,
+  from: Phaser.Geom.Point,
+  to: Phaser.Geom.Point
+): Promise<void> => {
+  // https://www.emanueleferonato.com/2018/07/19/playing-with-phaser-3-tweens-curves-and-cubic-bezier-curves/
+  const line = new Phaser.Geom.Line(from.x, from.y, to.x, to.y)
+  const length = Phaser.Geom.Line.Length(line)
+  const normal = Phaser.Geom.Line.GetNormal(line)
+  const normalElongated = Phaser.Geom.Point.Invert(Phaser.Geom.Point.SetMagnitude(normal, length * 0.25))
+  const fromV = new Phaser.Math.Vector2(from.x, from.y)
+  const toV = new Phaser.Math.Vector2(to.x, to.y)
+  const p0 = fromV
+  const p1 = fromV.clone().add(normalElongated)
+  const p2 = toV.clone().add(normalElongated)
+  const p3 = toV
+  const bezierCurve = new Phaser.Curves.CubicBezier(p0, p1, p2, p3)
+  const tweenObject = { val: 0 }
+  return promisifyTween(scene.tweens.add({
+    targets: tweenObject,
+    duration: 1000,
+    ease: 'Sine.Out',
+    val: 1,
+    onUpdate: () => {
+      const p = bezierCurve.getPoint(tweenObject.val)
+      target.setPosition(p.x, p.y)
+    }
+  }))
+}
+
 export const CURRENT_CARD_DEPTH = 1
 export const HIGHLIGHT_DEPTH = 2
 export const HIGHLIGHT_COLOUR = 0xFF00FF
@@ -118,10 +149,10 @@ export abstract class BoardScene extends Phaser.Scene {
     this.currentCardContainer.setVisible(false)
   }
 
-  private showCardSpriteInContainer(placedCard: CommonPlacedCard, playerType: PlayerType): Promise<void> {
+  private async showCardSpriteInContainer(placedCard: CommonPlacedCard, playerType: PlayerType) {
 
     const boardRange = this.getBoardRange(this.board)
-    const fromCardPosition = { x: boardRange.width, y: boardRange.height }
+    const fromCardPosition = new Phaser.Geom.Point(boardRange.width, boardRange.height)
     const toCardPosition = this.getCardPosition(placedCard.row, placedCard.col)
     const angle = this.getPlacedCardRotationAngle(placedCard)
 
@@ -135,20 +166,13 @@ export abstract class BoardScene extends Phaser.Scene {
     this.currentCardContainer.setAngle(angle)
     this.currentCardContainer.setVisible(true)
 
-    return promisifyTween(this.tweens.add({
-      targets: this.currentCardContainer,
-      duration: 500,
-      ease: 'Sine.InOut',
-      x: { from: fromCardPosition.x, to: toCardPosition.x },
-      y: { from: fromCardPosition.y, to: toCardPosition.y },
-      onComplete: () => {
-        if (playerType == PlayerType.Human) {
-          this.currentCardContainer.setInteractive({ useHandCursor: true })
-        } else {
-          this.currentCardContainer.disableInteractive()
-        }
-      }
-    }))
+    if (playerType == PlayerType.Human) {
+      this.currentCardContainer.setInteractive({ useHandCursor: true })
+    } else {
+      this.currentCardContainer.disableInteractive()
+    }
+
+    return tweenPositionAlongCurve(this, this.currentCardContainer, fromCardPosition, toCardPosition)
   }
 
   private placeInitialCard(placedCard: CommonPlacedCard): void {
