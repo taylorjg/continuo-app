@@ -32,20 +32,24 @@ const tweenPositionAlongCurve = (
 ): Promise<void> => {
   // https://www.emanueleferonato.com/2018/07/19/playing-with-phaser-3-tweens-curves-and-cubic-bezier-curves/
   const line = new Phaser.Geom.Line(from.x, from.y, to.x, to.y)
-  const length = Phaser.Geom.Line.Length(line)
+  const lineLength = Phaser.Geom.Line.Length(line)
   const normal = Phaser.Geom.Line.GetNormal(line)
-  const normalElongated = Phaser.Geom.Point.Invert(Phaser.Geom.Point.SetMagnitude(normal, length * 0.25))
-  const fromV = new Phaser.Math.Vector2(from.x, from.y)
-  const toV = new Phaser.Math.Vector2(to.x, to.y)
+  const normalElongated = Phaser.Geom.Point.Invert(Phaser.Geom.Point.SetMagnitude(normal, lineLength * 0.2))
+  const fromV = new Phaser.Math.Vector2(from)
+  const toV = new Phaser.Math.Vector2(to)
+  const control1 = Phaser.Geom.Point.Interpolate(from, to, 0.2)
+  const control2 = Phaser.Geom.Point.Interpolate(from, to, 0.8)
+  const control1V = new Phaser.Math.Vector2(control1)
+  const control2V = new Phaser.Math.Vector2(control2)
   const p0 = fromV
-  const p1 = fromV.clone().add(normalElongated)
-  const p2 = toV.clone().add(normalElongated)
+  const p1 = control1V.add(normalElongated)
+  const p2 = control2V.add(normalElongated)
   const p3 = toV
   const bezierCurve = new Phaser.Curves.CubicBezier(p0, p1, p2, p3)
   const tweenObject = { val: 0 }
   return promisifyTween(scene.tweens.add({
     targets: tweenObject,
-    duration: 1000,
+    duration: lineLength / 2,
     ease: 'Sine.Out',
     val: 1,
     onUpdate: () => {
