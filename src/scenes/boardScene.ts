@@ -18,43 +18,49 @@ import {
 
 import { Player, PlayerType } from '../turnManager'
 
+const promisifyDelayedCall = (scene: Phaser.Scene, delay: number) => {
+  return new Promise(resolve => {
+    scene.time.delayedCall(delay, resolve)
+  })
+}
+
 const promisifyTween = (tween: Phaser.Tweens.Tween): Promise<void> => {
   return new Promise(resolve => {
     tween.once(Phaser.Tweens.Events.TWEEN_COMPLETE, resolve)
   })
 }
 
-const tweenPositionAlongCurve = (
+const tweenAlongCurve = (
   scene: Phaser.Scene,
   target: Phaser.GameObjects.Components.Transform,
-  from: Phaser.Geom.Point,
-  to: Phaser.Geom.Point
+  fromPosition: Phaser.Geom.Point,
+  toPosition: Phaser.Geom.Point,
+  fromAngle: number = 0,
+  toAngle: number = 0
 ): Promise<void> => {
   // https://www.emanueleferonato.com/2018/07/19/playing-with-phaser-3-tweens-curves-and-cubic-bezier-curves/
-  const line = new Phaser.Geom.Line(from.x, from.y, to.x, to.y)
+  const line = new Phaser.Geom.Line(fromPosition.x, fromPosition.y, toPosition.x, toPosition.y)
   const lineLength = Phaser.Geom.Line.Length(line)
   const normal = Phaser.Geom.Line.GetNormal(line)
   const normalElongated = Phaser.Geom.Point.Invert(Phaser.Geom.Point.SetMagnitude(normal, lineLength * 0.2))
-  const fromV = new Phaser.Math.Vector2(from)
-  const toV = new Phaser.Math.Vector2(to)
-  const control1 = Phaser.Geom.Point.Interpolate(from, to, 0.2)
-  const control2 = Phaser.Geom.Point.Interpolate(from, to, 0.8)
-  const control1V = new Phaser.Math.Vector2(control1)
-  const control2V = new Phaser.Math.Vector2(control2)
-  const p0 = fromV
-  const p1 = control1V.add(normalElongated)
-  const p2 = control2V.add(normalElongated)
-  const p3 = toV
-  const bezierCurve = new Phaser.Curves.CubicBezier(p0, p1, p2, p3)
-  const tweenObject = { val: 0 }
+  const fromV = new Phaser.Math.Vector2(fromPosition)
+  const toV = new Phaser.Math.Vector2(toPosition)
+  const control1V = new Phaser.Math.Vector2(Phaser.Geom.Point.Interpolate(fromPosition, toPosition, 0.2)).add(normalElongated)
+  const control2V = new Phaser.Math.Vector2(Phaser.Geom.Point.Interpolate(fromPosition, toPosition, 0.8)).add(normalElongated)
+  const bezierCurve = new Phaser.Curves.CubicBezier(fromV, control1V, control2V, toV)
+  const tweenObject = { t: 0, angle: fromAngle }
   return promisifyTween(scene.tweens.add({
     targets: tweenObject,
     duration: lineLength / 2,
     ease: 'Sine.Out',
-    val: 1,
-    onUpdate: () => {
-      const p = bezierCurve.getPoint(tweenObject.val)
+    t: 1,
+    angle: toAngle,
+    onUpdate: (_, tweenObjectCurrent) => {
+      const p = bezierCurve.getPoint(tweenObjectCurrent.t)
       target.setPosition(p.x, p.y)
+      if (fromAngle != toAngle) {
+        target.setAngle(tweenObjectCurrent.angle)
+      }
     }
   }))
 }
@@ -156,9 +162,11 @@ export abstract class BoardScene extends Phaser.Scene {
   private async showCardSpriteInContainer(placedCard: CommonPlacedCard, playerType: PlayerType) {
 
     const boardRange = this.getBoardRange(this.board)
-    const fromCardPosition = new Phaser.Geom.Point(boardRange.width, boardRange.height)
-    const toCardPosition = this.getCardPosition(placedCard.row, placedCard.col)
-    const angle = this.getPlacedCardRotationAngle(placedCard)
+
+    const fromPosition = new Phaser.Geom.Point(boardRange.width, boardRange.height)
+    const toPosition = this.getCardPosition(placedCard.row, placedCard.col)
+    const fromAngle = 0
+    const toAngle = this.getPlacedCardRotationAngle(placedCard)
 
     const cardSprite = this.cardSpritesMap.get(placedCard.card)
     cardSprite.setPosition(0, 0)
@@ -166,17 +174,17 @@ export abstract class BoardScene extends Phaser.Scene {
     cardSprite.setVisible(true)
 
     this.currentCardContainer.addAt(cardSprite, 0)
-    this.currentCardContainer.setPosition(fromCardPosition.x, fromCardPosition.y)
-    this.currentCardContainer.setAngle(angle)
+    this.currentCardContainer.setPosition(fromPosition.x, fromPosition.y)
+    this.currentCardContainer.setAngle(fromAngle)
     this.currentCardContainer.setVisible(true)
+
+    await tweenAlongCurve(this, this.currentCardContainer, fromPosition, toPosition, fromAngle, toAngle)
 
     if (playerType == PlayerType.Human) {
       this.currentCardContainer.setInteractive({ useHandCursor: true })
     } else {
       this.currentCardContainer.disableInteractive()
     }
-
-    return tweenPositionAlongCurve(this, this.currentCardContainer, fromCardPosition, toCardPosition)
   }
 
   private placeInitialCard(placedCard: CommonPlacedCard): void {
@@ -194,10 +202,13 @@ export abstract class BoardScene extends Phaser.Scene {
   }
 
   private async placeCurrentCardFinal() {
+
     this.unhighlightScoring()
+
     const throbCount = 2
     const throbspeed = 100
-    return promisifyTween(this.tweens.add({
+
+    await promisifyTween(this.tweens.add({
       targets: this.currentCardContainer,
       duration: 50,
       hold: throbspeed,
@@ -205,18 +216,17 @@ export abstract class BoardScene extends Phaser.Scene {
       repeat: throbCount,
       repeatDelay: throbspeed,
       yoyo: true,
-      completeDelay: throbspeed * 2,
-      onComplete: () => {
-        const placedCard = this.currentPossibleMove.placedCard
-        this.board = this.board.placeCard(placedCard)
-        this.showCardSpriteDirectly(placedCard)
-        this.emitCurrentCardChange(ContinuoAppEvents.EndMove)
-        this.currentPossibleMove = null
-        this.currentPlayer = null
-        this.bestScoreLocationsFound.clear()
-        this.allLocationsFound.clear()
-      }
+      completeDelay: throbspeed * 4
     }))
+
+    const placedCard = this.currentPossibleMove.placedCard
+    this.board = this.board.placeCard(placedCard)
+    this.showCardSpriteDirectly(placedCard)
+    this.emitCurrentCardChange(ContinuoAppEvents.EndMove)
+    this.currentPossibleMove = null
+    this.currentPlayer = null
+    this.bestScoreLocationsFound.clear()
+    this.allLocationsFound.clear()
   }
 
   private repositionCurrentCardContainer(possibleMove?: CommonPossibleMove): void {
@@ -493,7 +503,8 @@ export abstract class BoardScene extends Phaser.Scene {
         {
           const possibleMove = this.chooseRandomBestScoreMove(this.possibleMoves)
           await this.placeCurrentCardTentative(possibleMove)
-          this.time.delayedCall(2000, () => this.placeCurrentCardFinal())
+          await promisifyDelayedCall(this, 2000)
+          this.placeCurrentCardFinal()
           break
         }
     }
@@ -514,7 +525,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.placeCurrentCardFinal()
   }
 
-  private onMoveTimedOut(): void {
+  private async onMoveTimedOut() {
     log.debug('[BoardScene#onMoveTimedOut]')
     this.tweens.killTweensOf(this.currentCardContainer)
     this.input.setDragState(this.input.activePointer, 0)
@@ -522,6 +533,16 @@ export abstract class BoardScene extends Phaser.Scene {
       (acc, pm) => pm.score > acc.score ? pm : acc,
       this.currentPossibleMove
     )
+    const fromPlacedCard = this.currentPossibleMove.placedCard
+    const toPlacedCard = possibleMove.placedCard
+    const fromPosition = this.getCardPosition(fromPlacedCard.row, fromPlacedCard.col)
+    const toPosition = this.getCardPosition(toPlacedCard.row, toPlacedCard.col)
+    const fromAngle = this.getPlacedCardRotationAngle(fromPlacedCard)
+    const toAngle = this.getPlacedCardRotationAngle(toPlacedCard)
+    this.unhighlightScoring()
+    await tweenAlongCurve(this, this.currentCardContainer, fromPosition, toPosition, fromAngle, toAngle)
+    this.highlightScoring(possibleMove)
+    await promisifyDelayedCall(this, 2000)
     this.currentPossibleMove = possibleMove
     this.placeCurrentCardFinal()
   }
