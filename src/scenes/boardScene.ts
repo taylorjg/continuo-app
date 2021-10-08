@@ -4,6 +4,8 @@ import log from 'loglevel'
 import { EventCentre } from '../eventCentre'
 import { DEFAULT_SETTINGS, Settings } from '../settings'
 import { ContinuoAppEvents } from '../constants'
+import { promisifyTween, promisifyDelayedCall } from '../promisifyThings'
+import { tweenAlongCurve } from '../specialTweens'
 
 import {
   CommonAdapter,
@@ -18,56 +20,13 @@ import {
 
 import { Player, PlayerType } from '../turnManager'
 
-const promisifyDelayedCall = (scene: Phaser.Scene, delay: number) => {
-  return new Promise(resolve => {
-    scene.time.delayedCall(delay, resolve)
-  })
-}
-
-const promisifyTween = (tween: Phaser.Tweens.Tween): Promise<void> => {
-  return new Promise(resolve => {
-    tween.once(Phaser.Tweens.Events.TWEEN_COMPLETE, resolve)
-  })
-}
-
-const tweenAlongCurve = (
-  scene: Phaser.Scene,
-  target: Phaser.GameObjects.Components.Transform,
-  fromPosition: Phaser.Geom.Point,
-  toPosition: Phaser.Geom.Point,
-  fromAngle: number = 0,
-  toAngle: number = 0
-): Promise<void> => {
-  // https://www.emanueleferonato.com/2018/07/19/playing-with-phaser-3-tweens-curves-and-cubic-bezier-curves/
-  const line = new Phaser.Geom.Line(fromPosition.x, fromPosition.y, toPosition.x, toPosition.y)
-  const lineLength = Phaser.Geom.Line.Length(line)
-  const normal = Phaser.Geom.Line.GetNormal(line)
-  const normalElongated = Phaser.Geom.Point.Invert(Phaser.Geom.Point.SetMagnitude(normal, lineLength * 0.2))
-  const fromV = new Phaser.Math.Vector2(fromPosition)
-  const toV = new Phaser.Math.Vector2(toPosition)
-  const control1V = new Phaser.Math.Vector2(Phaser.Geom.Point.Interpolate(fromPosition, toPosition, 0.2)).add(normalElongated)
-  const control2V = new Phaser.Math.Vector2(Phaser.Geom.Point.Interpolate(fromPosition, toPosition, 0.8)).add(normalElongated)
-  const bezierCurve = new Phaser.Curves.CubicBezier(fromV, control1V, control2V, toV)
-  const tweenObject = { t: 0, angle: fromAngle }
-  return promisifyTween(scene.tweens.add({
-    targets: tweenObject,
-    duration: lineLength / 2,
-    ease: 'Sine.Out',
-    t: 1,
-    angle: toAngle,
-    onUpdate: (_, tweenObjectCurrent) => {
-      const p = bezierCurve.getPoint(tweenObjectCurrent.t)
-      target.setPosition(p.x, p.y)
-      if (fromAngle != toAngle) {
-        target.setAngle(tweenObjectCurrent.angle)
-      }
-    }
-  }))
-}
-
 export const CURRENT_CARD_DEPTH = 1
 export const HIGHLIGHT_DEPTH = 2
 export const HIGHLIGHT_COLOUR = 0xFF00FF
+
+const DURATION_ROTATE = 300
+const DURATION_RESCALE_ZOOM = 2000
+const DURATION_PRE_FINAL_PLACEMENT = 2000
 
 export type BoardSceneConfig = {
   eventCentre: EventCentre,
@@ -206,17 +165,17 @@ export abstract class BoardScene extends Phaser.Scene {
     this.unhighlightScoring()
 
     const throbCount = 2
-    const throbspeed = 100
+    const throbSpeed = 100
 
     await promisifyTween(this.tweens.add({
       targets: this.currentCardContainer,
-      duration: 50,
-      hold: throbspeed,
+      duration: throbSpeed / 2,
+      hold: throbSpeed,
       scale: 1.05,
       repeat: throbCount,
-      repeatDelay: throbspeed,
+      repeatDelay: throbSpeed,
       yoyo: true,
-      completeDelay: throbspeed * 4
+      completeDelay: throbSpeed * 4
     }))
 
     const placedCard = this.currentPossibleMove.placedCard
@@ -288,7 +247,7 @@ export abstract class BoardScene extends Phaser.Scene {
       this.tweens.add({
         targets: this.currentCardContainer,
         angle: this.currentCardContainer.angle + rotationAngle,
-        duration: 300,
+        duration: DURATION_ROTATE,
         ease: 'Sine.InOut',
         onStart: () => {
           this.unhighlightScoring()
@@ -439,7 +398,7 @@ export abstract class BoardScene extends Phaser.Scene {
     return promisifyTween(this.tweens.add({
       targets: this.cameras.main,
       zoom: scale,
-      duration: 1000,
+      duration: DURATION_RESCALE_ZOOM,
       ease: 'Expo.Out'
     }))
   }
@@ -503,7 +462,7 @@ export abstract class BoardScene extends Phaser.Scene {
         {
           const possibleMove = this.chooseRandomBestScoreMove(this.possibleMoves)
           await this.placeCurrentCardTentative(possibleMove)
-          await promisifyDelayedCall(this, 2000)
+          await promisifyDelayedCall(this, DURATION_PRE_FINAL_PLACEMENT)
           this.placeCurrentCardFinal()
           break
         }
@@ -542,7 +501,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.unhighlightScoring()
     await tweenAlongCurve(this, this.currentCardContainer, fromPosition, toPosition, fromAngle, toAngle)
     this.highlightScoring(possibleMove)
-    await promisifyDelayedCall(this, 2000)
+    await promisifyDelayedCall(this, DURATION_PRE_FINAL_PLACEMENT)
     this.currentPossibleMove = possibleMove
     this.placeCurrentCardFinal()
   }
