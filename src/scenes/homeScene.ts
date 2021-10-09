@@ -2,6 +2,7 @@ import * as Phaser from 'phaser'
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import log from 'loglevel'
 import { EventCentre } from '../eventCentre'
+import { Options, DEFAULT_OPTIONS } from '../options'
 import { Settings, DEFAULT_SETTINGS } from '../settings'
 import { BoardBackgroundScene } from './boardBackgroundScene'
 import { HUDScene } from './hudScene'
@@ -10,6 +11,7 @@ import { HexagoBoardScene, createHexagoCardSprite } from './hexagoBoardScene'
 import { Player, DEFAULT_PLAYERS } from '../turnManager'
 import { createAboutDialog } from '../dialogs/aboutDialog'
 import { createPlayersDialog } from '../dialogs/playersDialog'
+import { createOptionsDialog } from '../dialogs/optionsDialog'
 import { createSettingsDialog } from '../dialogs/settingsDialog'
 import { Fullscreen } from '../components/fullscreen'
 import { ContinuoAppScenes, ContinuoAppEvents } from '../constants'
@@ -19,6 +21,7 @@ export class HomeScene extends Phaser.Scene {
 
   public rexUI: RexUIPlugin
   private eventCentre: EventCentre
+  private options: Options
   private settings: Settings
   private players: readonly Player[]
   private background: Phaser.GameObjects.TileSprite
@@ -60,6 +63,7 @@ export class HomeScene extends Phaser.Scene {
     window.addEventListener('orientationchange', onOrientationChange)
 
     this.eventCentre = new EventCentre()
+    this.options = DEFAULT_OPTIONS
     this.settings = DEFAULT_SETTINGS
     this.players = DEFAULT_PLAYERS
 
@@ -68,10 +72,12 @@ export class HomeScene extends Phaser.Scene {
     const continuoCardSprite = createContinuoCardSprite(this).setScale(.4, .4)
     const hexagoCardSprite = createHexagoCardSprite(this).setScale(.5, .5)
     const groupSprite = new Phaser.GameObjects.Sprite(this, 0, 0, 'group')
+    const group2Sprite = new Phaser.GameObjects.Sprite(this, 0, 0, 'group')
 
     const playContinuoButton = ui.createHomeSceneButton(this, 'playContinuoButton', 'Play Continuo', continuoCardSprite)
     const playHexagoButton = ui.createHomeSceneButton(this, 'playHexagoButton', 'Play Hexago', hexagoCardSprite)
-    const choosePlayersButton = ui.createHomeSceneButton(this, 'choosePlayersButton', 'Choose Players', groupSprite)
+    const playersButton = ui.createHomeSceneButton(this, 'playersButton', 'Players', groupSprite)
+    const optionsButton = ui.createHomeSceneButton(this, 'optionsButton', 'Game Options', group2Sprite)
 
     this.rexUI.add.sizer({
       orientation: 'vertical',
@@ -80,7 +86,8 @@ export class HomeScene extends Phaser.Scene {
     })
       .add(playContinuoButton)
       .add(playHexagoButton)
-      .add(choosePlayersButton)
+      .add(playersButton)
+      .add(optionsButton)
       .layout()
 
     const settingsButton = ui.createHUDSceneButton(this, 'settingsButton', 'gear', .4)
@@ -105,6 +112,7 @@ export class HomeScene extends Phaser.Scene {
 
     this.events.on(Phaser.Scenes.Events.WAKE, this.onWake, this)
 
+    this.eventCentre.on(ContinuoAppEvents.OptionsChanged, this.onOptionsChanged, this)
     this.eventCentre.on(ContinuoAppEvents.SettingsChanged, this.onSettingsChanged, this)
     this.eventCentre.on(ContinuoAppEvents.PlayersChanged, this.onPlayersChanged, this)
   }
@@ -117,17 +125,17 @@ export class HomeScene extends Phaser.Scene {
   }
 
   private onPlayContinuoClick(): void {
-    log.debug('[HomeScene#onPlayContinuo]')
+    log.debug('[HomeScene#onPlayContinuoClick]')
     this.play(this.continuoBoardScene)
   }
 
   private onPlayHexagoClick(): void {
-    log.debug('[HomeScene#onPlayHexago]')
+    log.debug('[HomeScene#onPlayHexagoClick]')
     this.play(this.hexagoBoardScene)
   }
 
-  private onChoosePlayersClick(): void {
-    log.debug('[HomeScene#onChoosePlayers]')
+  private onPlayersClick(): void {
+    log.debug('[HomeScene#onPlayersClick]')
     this.presentPlayersDialog()
   }
 
@@ -136,8 +144,18 @@ export class HomeScene extends Phaser.Scene {
     this.players = players
   }
 
+  private onOptionsClick(): void {
+    log.debug('[HomeScene#onOptionsClick]')
+    this.presentOptionsDialog()
+  }
+
+  private onOptionsChanged(options: Options): void {
+    log.debug('[HomeScene#onOptionsChanged]', options)
+    this.options = options
+  }
+
   private onSettingsClick(): void {
-    log.debug('[HomeScene#onSettings]')
+    log.debug('[HomeScene#onSettingsClick]')
     this.presentSettingsDialog()
   }
 
@@ -157,6 +175,7 @@ export class HomeScene extends Phaser.Scene {
   private play(boardScene: Phaser.Scene): void {
     this.scene.sleep()
     const data = {
+      options: this.options,
       settings: this.settings,
       players: this.players
     }
@@ -188,7 +207,8 @@ export class HomeScene extends Phaser.Scene {
     switch (gameObject.name) {
       case 'playContinuoButton': return this.onPlayContinuoClick()
       case 'playHexagoButton': return this.onPlayHexagoClick()
-      case 'choosePlayersButton': return this.onChoosePlayersClick()
+      case 'playersButton': return this.onPlayersClick()
+      case 'optionsButton': return this.onOptionsClick()
       case 'settingsButton': return this.onSettingsClick()
       case 'aboutButton': return this.onAboutClick()
     }
@@ -200,6 +220,10 @@ export class HomeScene extends Phaser.Scene {
 
   private presentPlayersDialog(): void {
     createPlayersDialog(this, this.eventCentre, this.players)
+  }
+
+  private presentOptionsDialog(): void {
+    createOptionsDialog(this, this.eventCentre, this.options)
   }
 
   private presentSettingsDialog(): void {

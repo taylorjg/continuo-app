@@ -2,7 +2,8 @@ import * as Phaser from 'phaser'
 import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin'
 import log from 'loglevel'
 import { EventCentre } from '../eventCentre'
-import { DEFAULT_SETTINGS, Settings } from '../settings'
+import { Options, DEFAULT_OPTIONS } from '../options'
+import { Settings, DEFAULT_SETTINGS } from '../settings'
 import { TurnClock } from '../components/turnClock'
 import { Scoreboard, TurnManager, Player, PlayerType, DEFAULT_PLAYERS } from '../turnManager'
 import { MiniScoreboard } from '../components/miniScoreboard'
@@ -20,6 +21,7 @@ export class HUDScene extends Phaser.Scene {
   private eventCentre: EventCentre
   private turnManager: TurnManager
   private turnClock: TurnClock
+  private options: Options
   private settings: Settings
   private players: readonly Player[]
   private currentPlayer: Player
@@ -39,6 +41,7 @@ export class HUDScene extends Phaser.Scene {
     super(ContinuoAppScenes.HUD)
     this.eventCentre = eventCentre
     this.miniScoreboard = null
+    this.options = DEFAULT_OPTIONS
     this.settings = DEFAULT_SETTINGS
     this.players = DEFAULT_PLAYERS
     this.currentPlayer = null
@@ -125,6 +128,7 @@ export class HUDScene extends Phaser.Scene {
     this.eventCentre.on(ContinuoAppEvents.EndMove, this.onEndMove, this)
     this.eventCentre.on(ContinuoAppEvents.GameOver, this.onGameOver, this)
     this.eventCentre.on(ContinuoAppEvents.ScoreboardUpdated, this.onScoreboardUpdated, this)
+    this.eventCentre.on(ContinuoAppEvents.OptionsChanged, this.onOptionsChanged, this)
     this.eventCentre.on(ContinuoAppEvents.SettingsChanged, this.onSettingsChanged, this)
 
     this.events.on(Phaser.Scenes.Events.WAKE, this.onWake, this)
@@ -152,10 +156,12 @@ export class HUDScene extends Phaser.Scene {
   }
 
   private onWake(_scene: Phaser.Scene, data: {
+    options: Options,
     settings: Settings,
     players: readonly Player[]
   }) {
     log.debug('[HUDScene#onWake]', data)
+    this.options = data.options
     this.settings = data.settings
     this.players = data.players
     this.scoreboard = null
@@ -163,7 +169,7 @@ export class HUDScene extends Phaser.Scene {
     this.statusBarLeft.setVisible(false)
     this.statusBarRight.setVisible(false)
     if (!this.turnClock) {
-      this.turnClock = new TurnClock(this.eventCentre, this.settings, this)
+      this.turnClock = new TurnClock(this.eventCentre, this.options, this)
     }
     this.eventCentre.emit(ContinuoAppEvents.NewGame, this.players)
     this.eventCentre.emit(ContinuoAppEvents.ReadyForNextTurn)
@@ -205,7 +211,7 @@ export class HUDScene extends Phaser.Scene {
     this.currentCardScoreLabel.setData('textWithHint', textWithHint)
     this.currentCardScoreLabel.setData('textWithoutHint', textWithoutHint)
 
-    if (this.settings.hintShowBestAvailableScore) {
+    if (this.options.hintShowBestAvailableScore) {
       this.currentCardScoreLabel.text = textWithHint
     } else {
       this.currentCardScoreLabel.text = textWithoutHint
@@ -279,17 +285,22 @@ export class HUDScene extends Phaser.Scene {
     this.updateCurrentCardScore(arg)
   }
 
-  private onSettingsChanged(settings: Settings): void {
-    log.debug('[HUDScene#onSettingsChanged]', settings)
-    this.settings = settings
+  private onOptionsChanged(options: Options): void {
+    log.debug('[HUDScene#onOptionsChanged]', options)
+    this.options = options
     const textWithHint = this.currentCardScoreLabel.getData('textWithHint') || ''
     const textWithoutHint = this.currentCardScoreLabel.getData('textWithoutHint') || ''
-    if (this.settings.hintShowBestAvailableScore) {
+    if (this.options.hintShowBestAvailableScore) {
       this.currentCardScoreLabel.text = textWithHint
     } else {
       this.currentCardScoreLabel.text = textWithoutHint
     }
     this.statusBarLeft.layout()
+  }
+
+  private onSettingsChanged(settings: Settings): void {
+    log.debug('[HUDScene#onSettingsChanged]', settings)
+    this.settings = settings
   }
 
   private onScoreboardClick(): void {

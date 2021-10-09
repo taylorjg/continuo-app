@@ -2,7 +2,8 @@ import * as Phaser from 'phaser'
 import log from 'loglevel'
 
 import { EventCentre } from '../eventCentre'
-import { DEFAULT_SETTINGS, Settings } from '../settings'
+import { Options, DEFAULT_OPTIONS } from '../options'
+import { Settings, DEFAULT_SETTINGS } from '../settings'
 import { ContinuoAppEvents } from '../constants'
 import { promisifyTween, promisifyDelayedCall } from '../promisifyThings'
 import { tweenAlongCurve } from '../specialTweens'
@@ -41,6 +42,7 @@ export abstract class BoardScene extends Phaser.Scene {
   private adapter: CommonAdapter
   private deck: CommonDeck
   private board: CommonBoard
+  private options: Options
   private settings: Settings
   private possibleMoves: CommonPossibleMove[]
   private currentPossibleMove: CommonPossibleMove
@@ -57,6 +59,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.adapter = adapter
     this.deck = this.adapter.deck
     this.board = this.adapter.emptyBoard
+    this.options = DEFAULT_OPTIONS
     this.settings = DEFAULT_SETTINGS
     this.cardSpritesMap = new Map<CommonCard, Phaser.GameObjects.Sprite>()
     this.animating = false
@@ -74,7 +77,7 @@ export abstract class BoardScene extends Phaser.Scene {
   protected abstract getBoardRange(board: CommonBoard): CommonBoardRange
 
   private highlightScoring(currentPossibleMove: CommonPossibleMove): void {
-    if (this.settings.hintShowScoringHighlights) {
+    if (this.options.hintShowScoringHighlights) {
       const scoringHighlights = this.createScoringHighlights(currentPossibleMove)
       scoringHighlights.forEach(highlight => {
         highlight.setData('isScoringHighlight', true)
@@ -407,10 +410,12 @@ export abstract class BoardScene extends Phaser.Scene {
   }
 
   private onWake(_scene: Phaser.Scene, data: {
+    options: Options,
     settings: Settings,
     players: readonly Player[]
   }) {
     log.debug('[BoardScene#onWake]', data)
+    this.options = data.options
     this.settings = data.settings
     this.boardSceneConfig.eventCentre.on(ContinuoAppEvents.NewGame, this.onNewGame, this)
     this.boardSceneConfig.eventCentre.on(ContinuoAppEvents.NextTurn, this.onNextTurn, this)
@@ -530,13 +535,5 @@ export abstract class BoardScene extends Phaser.Scene {
   private onSettingsChanged(settings: Settings) {
     log.debug('[BoardScene#onSettingsChanged]', settings)
     this.settings = settings
-    if (this.currentPossibleMove) {
-      this.unhighlightScoring()
-      if (this.settings.hintShowScoringHighlights) {
-        this.highlightScoring(this.currentPossibleMove)
-      } else {
-        this.unhighlightScoring()
-      }
-    }
   }
 }

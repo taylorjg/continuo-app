@@ -35,8 +35,6 @@ class SettingsDialogScene extends ModalDialogBaseScene {
       space: { item: 20 }
     })
     sizer.add(this.createSoundsPanel(), { align: 'left' })
-    sizer.add(this.createHintsPanel(), { align: 'left' })
-    sizer.add(this.createTurnClockPanel(), { align: 'left' })
     return sizer.layout()
   }
 
@@ -72,78 +70,6 @@ class SettingsDialogScene extends ModalDialogBaseScene {
     buttons.setData('sound-0', this.settings.soundBestScoreEnabled)
     buttons.setData('sound-1', this.settings.soundIllegalMoveEnabled)
     buttons.setData('sound-2', this.settings.soundRotationEnabled)
-    sizer.add(buttons, { padding: { left: 50 } })
-    return sizer.layout()
-  }
-
-  private createHintsPanel(): Phaser.GameObjects.GameObject {
-    const sizer = this.rexUI.add.sizer({ orientation: 'vertical' })
-    sizer.add(this.add.text(0, 0, 'Hints:', ui.TEXT_STYLE), { align: 'left' })
-    const buttons = this.rexUI.add.buttons({
-      orientation: 'vertical',
-      buttons: [
-        ui.createCheckbox(this, 'hint-0', 'Highlight scoring chains/wedges'),
-        ui.createCheckbox(this, 'hint-1', 'Show best available score')
-      ],
-      type: 'checkboxes',
-      setValueCallback: (gameObject: Phaser.GameObjects.GameObject, value: boolean, previousValue: boolean) => {
-        ui.updateCheckbox(gameObject, value)
-        if (previousValue !== undefined) {
-          switch (gameObject.name) {
-            case 'hint-0':
-              this.settings = { ...this.settings, hintShowScoringHighlights: value }
-              break
-            case 'hint-1':
-              this.settings = { ...this.settings, hintShowBestAvailableScore: value }
-              break
-          }
-        }
-      },
-      space: { top: 10, item: 10 }
-    })
-    buttons.setData('hint-0', this.settings.hintShowScoringHighlights)
-    buttons.setData('hint-1', this.settings.hintShowBestAvailableScore)
-    sizer.add(buttons, { padding: { left: 50 } })
-    return sizer.layout()
-  }
-
-  private createTurnClockPanel(): Phaser.GameObjects.GameObject {
-    const sizer = this.rexUI.add.sizer({ orientation: 'vertical' })
-    sizer.add(this.add.text(0, 0, 'Turn clock:', ui.TEXT_STYLE), { align: 'left' })
-    const buttons = this.rexUI.add.buttons({
-      orientation: 'horizontal',
-      buttons: [
-        ui.createRadioButton(this, 'turn-clock-off', 'Off'),
-        ui.createRadioButton(this, 'turn-clock-15', '15s'),
-        ui.createRadioButton(this, 'turn-clock-30', '30s'),
-        ui.createRadioButton(this, 'turn-clock-60', '60s')
-      ],
-      type: 'radio',
-      setValueCallback: (gameObject: Phaser.GameObjects.GameObject, value: boolean, previousValue: boolean) => {
-        ui.updateRadioButton(gameObject, value)
-        if (previousValue !== undefined && value) {
-          switch (gameObject.name) {
-            case 'turn-clock-off':
-              this.settings = { ...this.settings, turnClock: 0 }
-              break
-            case 'turn-clock-15':
-              this.settings = { ...this.settings, turnClock: 15 }
-              break
-            case 'turn-clock-30':
-              this.settings = { ...this.settings, turnClock: 30 }
-              break
-            case 'turn-clock-60':
-              this.settings = { ...this.settings, turnClock: 60 }
-              break
-          }
-        }
-      },
-      space: { top: 10, item: 20 }
-    })
-    buttons.setData('turn-clock-off', this.settings.turnClock == 0)
-    buttons.setData('turn-clock-15', this.settings.turnClock == 15)
-    buttons.setData('turn-clock-30', this.settings.turnClock == 30)
-    buttons.setData('turn-clock-60', this.settings.turnClock == 60)
     sizer.add(buttons, { padding: { left: 50 } })
     return sizer.layout()
   }
