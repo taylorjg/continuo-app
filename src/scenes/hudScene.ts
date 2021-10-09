@@ -106,6 +106,7 @@ export class HUDScene extends Phaser.Scene {
       space: { left: 10, right: 10, top: 10, bottom: 10 }
     })
       .add(this.currentCardScoreLabel)
+      .setVisible(false)
       .layout()
 
     this.statusBarRight = this.rexUI.add.sizer({
@@ -114,11 +115,13 @@ export class HUDScene extends Phaser.Scene {
       space: { left: 10, right: 10, top: 10, bottom: 10 }
     })
       .add(this.remainingCardsLabel)
+      .setVisible(false)
       .layout()
 
     this.eventCentre.on(ContinuoAppEvents.NextTurn, this.onNextTurn, this)
     this.eventCentre.on(ContinuoAppEvents.CardMoved, this.onCardMovedOrRotated, this)
     this.eventCentre.on(ContinuoAppEvents.CardRotated, this.onCardMovedOrRotated, this)
+    this.eventCentre.on(ContinuoAppEvents.CardMovedByTimeout, this.onCardMovedOrRotated, this)
     this.eventCentre.on(ContinuoAppEvents.StartMove, this.onStartMove, this)
     this.eventCentre.on(ContinuoAppEvents.EndMove, this.onEndMove, this)
     this.eventCentre.on(ContinuoAppEvents.GameOver, this.onGameOver, this)
@@ -158,6 +161,8 @@ export class HUDScene extends Phaser.Scene {
     this.players = data.players
     this.scoreboard = null
     this.isGameOver = false
+    this.statusBarLeft.setVisible(false)
+    this.statusBarRight.setVisible(false)
     if (!this.turnClock) {
       this.turnClock = new TurnClock(this.eventCentre, this.settings, this)
     }
@@ -185,6 +190,7 @@ export class HUDScene extends Phaser.Scene {
   private updateRemainingCards(arg: any): void {
     const numCardsLeft: number = <number>arg.numCardsLeft
     this.remainingCardsLabel.text = `Remaining cards: ${numCardsLeft}`
+    this.statusBarRight.setVisible(true)
     this.statusBarRight.layout()
   }
 
@@ -259,6 +265,8 @@ export class HUDScene extends Phaser.Scene {
   private onGameOver(scoreboard: Scoreboard): void {
     log.debug('[HUDScene#onGameOver]', scoreboard)
     this.isGameOver = true
+    this.statusBarLeft.setVisible(false)
+    this.statusBarRight.setVisible(false)
     this.presentScoreboardDialog()
   }
 

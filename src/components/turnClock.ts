@@ -36,6 +36,7 @@ export class TurnClock {
     this.eventCentre.on(ContinuoAppEvents.SettingsChanged, this.onSettingsChanged, this)
     this.eventCentre.on(ContinuoAppEvents.StartMove, this.onStartMove, this)
     this.eventCentre.on(ContinuoAppEvents.EndMove, this.onEndMove, this)
+    this.eventCentre.on(ContinuoAppEvents.PlaceCard, this.onPlaceCard, this)
     this.eventCentre.on(ContinuoAppEvents.GameAborted, this.onGameAborted, this)
   }
 
@@ -65,6 +66,11 @@ export class TurnClock {
 
   private onEndMove(arg: any): void {
     log.debug('[TurnClock#onEndMove]', arg)
+    this.killTimerEvent()
+  }
+
+  private onPlaceCard(arg: any): void {
+    log.debug('[TurnClock#onPlaceCard]', arg)
     this.killTimerEvent()
   }
 

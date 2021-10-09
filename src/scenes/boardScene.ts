@@ -510,9 +510,10 @@ export abstract class BoardScene extends Phaser.Scene {
     const toAngle = this.getPlacedCardRotationAngle(toPlacedCard)
     this.unhighlightScoring()
     await tweenAlongCurve(this, this.currentCardContainer, fromPosition, toPosition, fromAngle, toAngle)
+    this.currentPossibleMove = possibleMove
+    this.emitCurrentCardChange(ContinuoAppEvents.CardMovedByTimeout)
     this.highlightScoring(possibleMove)
     await promisifyDelayedCall(this, DURATION_PRE_FINAL_PLACEMENT)
-    this.currentPossibleMove = possibleMove
     await this.placeCurrentCardFinal()
   }
 
