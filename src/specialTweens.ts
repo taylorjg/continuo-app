@@ -7,8 +7,8 @@ export const tweenAlongCurve = (
   target: Phaser.GameObjects.Components.Transform,
   fromPosition: Phaser.Geom.Point,
   toPosition: Phaser.Geom.Point,
-  fromAngle: number = 0,
-  toAngle: number = 0
+  fromAngle: number,
+  toAngle: number
 ): Promise<void> => {
   const line = new Phaser.Geom.Line(fromPosition.x, fromPosition.y, toPosition.x, toPosition.y)
   const lineLength = Phaser.Geom.Line.Length(line)

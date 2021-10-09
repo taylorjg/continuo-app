@@ -25,7 +25,7 @@ export const HIGHLIGHT_DEPTH = 2
 export const HIGHLIGHT_COLOUR = 0xFF00FF
 
 const DURATION_ROTATE = 300
-const DURATION_RESCALE_ZOOM = 2000
+const DURATION_RESCALE_ZOOM = 1000
 const DURATION_PRE_FINAL_PLACEMENT = 2000
 
 export type BoardSceneConfig = {
@@ -49,8 +49,7 @@ export abstract class BoardScene extends Phaser.Scene {
   private currentCardContainer: Phaser.GameObjects.Container
   private animating: boolean
   private moveTimedOut: boolean
-  private bestScoreLocationsFound: Set<CommonPossibleMove>
-  private allLocationsFound: Set<CommonPossibleMove>
+  private visitedLocations: Set<CommonPossibleMove>
 
   public constructor(sceneName: string, boardSceneConfig: BoardSceneConfig, adapter: CommonAdapter) {
     super(sceneName)
@@ -62,8 +61,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.cardSpritesMap = new Map<CommonCard, Phaser.GameObjects.Sprite>()
     this.animating = false
     this.moveTimedOut = false
-    this.bestScoreLocationsFound = new Set()
-    this.allLocationsFound = new Set()
+    this.visitedLocations = new Set()
   }
 
   protected abstract getInitialPlacedCards(deck: CommonDeck, board: CommonBoard, numPlayers: number): Generator<CommonPlacedCard, void, CommonBoard>
@@ -186,8 +184,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.emitCurrentCardChange(ContinuoAppEvents.EndMove)
     this.currentPossibleMove = null
     this.currentPlayer = null
-    this.bestScoreLocationsFound.clear()
-    this.allLocationsFound.clear()
+    this.visitedLocations.clear()
   }
 
   private repositionCurrentCardContainer(possibleMove?: CommonPossibleMove): void {
@@ -216,23 +213,22 @@ export abstract class BoardScene extends Phaser.Scene {
       }
     })
 
-    if (possibleMove) {
-      this.allLocationsFound.add(possibleMove)
-    }
-
     if (possibleMove && this.settings.soundBestScoreEnabled) {
       const score = possibleMove.score
       const bestScore = this.possibleMoves[0].score
       if (score == bestScore) {
-        if (!this.bestScoreLocationsFound.has(possibleMove)) {
+        if (!this.visitedLocations.has(possibleMove)) {
           this.sound.play('best-move')
-          this.bestScoreLocationsFound.add(possibleMove)
         }
       }
     }
 
     if (!possibleMove && this.settings.soundIllegalMoveEnabled) {
       this.sound.play('illegal-move')
+    }
+
+    if (possibleMove) {
+      this.visitedLocations.add(possibleMove)
     }
   }
 
@@ -266,15 +262,14 @@ export abstract class BoardScene extends Phaser.Scene {
             if (this.settings.soundBestScoreEnabled) {
               const score = possibleMove.score
               const bestScore = this.possibleMoves[0].score
-              this.allLocationsFound.add(possibleMove)
               if (score == bestScore) {
-                if (!this.bestScoreLocationsFound.has(possibleMove)) {
+                if (!this.visitedLocations.has(possibleMove)) {
                   this.sound.play('best-move')
-                  this.bestScoreLocationsFound.add(possibleMove)
                 }
               }
             }
           }
+          this.visitedLocations.add(possibleMove)
           this.animating = false
         }
       })
@@ -498,7 +493,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.tweens.killTweensOf(this.currentCardContainer)
     this.input.setDragState(this.input.activePointer, 0)
     this.currentCardContainer.disableInteractive()
-    const possibleMove = Array.from(this.allLocationsFound.values()).reduce(
+    const possibleMove = Array.from(this.visitedLocations.values()).reduce(
       (acc, pm) => pm.score > acc.score ? pm : acc,
       this.currentPossibleMove
     )
@@ -511,7 +506,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.unhighlightScoring()
     await tweenAlongCurve(this, this.currentCardContainer, fromPosition, toPosition, fromAngle, toAngle)
     this.currentPossibleMove = possibleMove
-    this.emitCurrentCardChange(ContinuoAppEvents.CardMovedByTimeout)
+    this.emitCurrentCardChange(ContinuoAppEvents.CardMoved)
     this.highlightScoring(possibleMove)
     await promisifyDelayedCall(this, DURATION_PRE_FINAL_PLACEMENT)
     await this.placeCurrentCardFinal()

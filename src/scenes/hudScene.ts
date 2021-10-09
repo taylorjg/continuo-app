@@ -121,7 +121,6 @@ export class HUDScene extends Phaser.Scene {
     this.eventCentre.on(ContinuoAppEvents.NextTurn, this.onNextTurn, this)
     this.eventCentre.on(ContinuoAppEvents.CardMoved, this.onCardMovedOrRotated, this)
     this.eventCentre.on(ContinuoAppEvents.CardRotated, this.onCardMovedOrRotated, this)
-    this.eventCentre.on(ContinuoAppEvents.CardMovedByTimeout, this.onCardMovedOrRotated, this)
     this.eventCentre.on(ContinuoAppEvents.StartMove, this.onStartMove, this)
     this.eventCentre.on(ContinuoAppEvents.EndMove, this.onEndMove, this)
     this.eventCentre.on(ContinuoAppEvents.GameOver, this.onGameOver, this)
