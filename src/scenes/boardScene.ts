@@ -49,7 +49,7 @@ export abstract class BoardScene extends Phaser.Scene {
   private currentCardContainer: Phaser.GameObjects.Container
   private animating: boolean
   private moveTimedOut: boolean
-  private visitedLocations: Set<CommonPossibleMove>
+  private visitedPossibleMoves: Set<CommonPossibleMove>
 
   public constructor(sceneName: string, boardSceneConfig: BoardSceneConfig, adapter: CommonAdapter) {
     super(sceneName)
@@ -61,7 +61,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.cardSpritesMap = new Map<CommonCard, Phaser.GameObjects.Sprite>()
     this.animating = false
     this.moveTimedOut = false
-    this.visitedLocations = new Set()
+    this.visitedPossibleMoves = new Set()
   }
 
   protected abstract getInitialPlacedCards(deck: CommonDeck, board: CommonBoard, numPlayers: number): Generator<CommonPlacedCard, void, CommonBoard>
@@ -184,7 +184,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.emitCurrentCardChange(ContinuoAppEvents.EndMove)
     this.currentPossibleMove = null
     this.currentPlayer = null
-    this.visitedLocations.clear()
+    this.visitedPossibleMoves.clear()
   }
 
   private repositionCurrentCardContainer(possibleMove?: CommonPossibleMove): void {
@@ -217,7 +217,7 @@ export abstract class BoardScene extends Phaser.Scene {
       const score = possibleMove.score
       const bestScore = this.possibleMoves[0].score
       if (score == bestScore) {
-        if (!this.visitedLocations.has(possibleMove)) {
+        if (!this.visitedPossibleMoves.has(possibleMove)) {
           this.sound.play('best-move')
         }
       }
@@ -228,7 +228,7 @@ export abstract class BoardScene extends Phaser.Scene {
     }
 
     if (possibleMove) {
-      this.visitedLocations.add(possibleMove)
+      this.visitedPossibleMoves.add(possibleMove)
     }
   }
 
@@ -263,13 +263,13 @@ export abstract class BoardScene extends Phaser.Scene {
               const score = possibleMove.score
               const bestScore = this.possibleMoves[0].score
               if (score == bestScore) {
-                if (!this.visitedLocations.has(possibleMove)) {
+                if (!this.visitedPossibleMoves.has(possibleMove)) {
                   this.sound.play('best-move')
                 }
               }
             }
           }
-          this.visitedLocations.add(possibleMove)
+          this.visitedPossibleMoves.add(possibleMove)
           this.animating = false
         }
       })
@@ -314,6 +314,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.add.existing(this.currentCardContainer)
 
     this.input.setDraggable(this.currentCardContainer)
+    this.input.dragDistanceThreshold = 2
 
     this.input.on(Phaser.Input.Events.DRAG_START, (
       _pointer: Phaser.Input.Pointer,
@@ -493,21 +494,21 @@ export abstract class BoardScene extends Phaser.Scene {
     this.tweens.killTweensOf(this.currentCardContainer)
     this.input.setDragState(this.input.activePointer, 0)
     this.currentCardContainer.disableInteractive()
-    const possibleMove = Array.from(this.visitedLocations.values()).reduce(
-      (acc, pm) => pm.score > acc.score ? pm : acc,
+    const bestVisitedPossibleMove = Array.from(this.visitedPossibleMoves.values()).reduce(
+      (pmBestSoFar, pm) => pm.score > pmBestSoFar.score ? pm : pmBestSoFar,
       this.currentPossibleMove
     )
     const fromPlacedCard = this.currentPossibleMove.placedCard
-    const toPlacedCard = possibleMove.placedCard
+    const toPlacedCard = bestVisitedPossibleMove.placedCard
     const fromPosition = this.getCardPosition(fromPlacedCard.row, fromPlacedCard.col)
     const toPosition = this.getCardPosition(toPlacedCard.row, toPlacedCard.col)
     const fromAngle = this.getPlacedCardRotationAngle(fromPlacedCard)
     const toAngle = this.getPlacedCardRotationAngle(toPlacedCard)
     this.unhighlightScoring()
     await tweenAlongCurve(this, this.currentCardContainer, fromPosition, toPosition, fromAngle, toAngle)
-    this.currentPossibleMove = possibleMove
+    this.currentPossibleMove = bestVisitedPossibleMove
     this.emitCurrentCardChange(ContinuoAppEvents.CardMoved)
-    this.highlightScoring(possibleMove)
+    this.highlightScoring(bestVisitedPossibleMove)
     await promisifyDelayedCall(this, DURATION_PRE_FINAL_PLACEMENT)
     await this.placeCurrentCardFinal()
   }

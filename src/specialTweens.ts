@@ -22,7 +22,7 @@ export const tweenAlongCurve = (
   const tweenObject = { t: 0, angle: fromAngle }
   return promisifyTween(scene.tweens.add({
     targets: tweenObject,
-    duration: lineLength / 2,
+    duration: Math.max(lineLength / 2, 250),
     ease: 'Sine.Out',
     t: 1,
     angle: toAngle,
