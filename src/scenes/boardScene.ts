@@ -475,17 +475,23 @@ export abstract class BoardScene extends Phaser.Scene {
 
   private onRotateCW(): void {
     log.debug('[BoardScene#onRotateCW]')
-    this.rotateCurrentCardContainer(+this.boardSceneConfig.ROTATION_ANGLE)
+    if (!this.moveTimedOut) {
+      this.rotateCurrentCardContainer(+this.boardSceneConfig.ROTATION_ANGLE)
+    }
   }
 
   private onRotateCCW(): void {
     log.debug('[BoardScene#onRotateCCW]')
-    this.rotateCurrentCardContainer(-this.boardSceneConfig.ROTATION_ANGLE)
+    if (!this.moveTimedOut) {
+      this.rotateCurrentCardContainer(-this.boardSceneConfig.ROTATION_ANGLE)
+    }
   }
 
   private onPlaceCard(): void {
     log.debug('[BoardScene#onPlaceCard]')
-    this.placeCurrentCardFinal()
+    if (!this.moveTimedOut) {
+      this.placeCurrentCardFinal()
+    }
   }
 
   private async onMoveTimedOut() {
@@ -494,6 +500,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.tweens.killTweensOf(this.currentCardContainer)
     this.input.setDragState(this.input.activePointer, 0)
     this.currentCardContainer.disableInteractive()
+
     const bestVisitedPossibleMove = Array.from(this.visitedPossibleMoves.values()).reduce(
       (pmBestSoFar, pm) => pm.score > pmBestSoFar.score ? pm : pmBestSoFar,
       this.currentPossibleMove
@@ -504,12 +511,19 @@ export abstract class BoardScene extends Phaser.Scene {
     const toPosition = this.getCardPosition(toPlacedCard.row, toPlacedCard.col)
     const fromAngle = this.getPlacedCardRotationAngle(fromPlacedCard)
     const toAngle = this.getPlacedCardRotationAngle(toPlacedCard)
-    this.unhighlightScoring()
-    await tweenAlongCurve(this, this.currentCardContainer, fromPosition, toPosition, fromAngle, toAngle)
-    this.currentPossibleMove = bestVisitedPossibleMove
-    this.emitCurrentCardChange(ContinuoAppEvents.CardMoved)
-    this.highlightScoring(bestVisitedPossibleMove)
-    await promisifyDelayedCall(this, DURATION_PRE_FINAL_PLACEMENT)
+
+    const differentPosition = !Phaser.Geom.Point.Equals(fromPosition, toPosition)
+    const differentAngle = fromAngle != toAngle
+
+    if (differentPosition || differentAngle) {
+      this.unhighlightScoring()
+      await tweenAlongCurve(this, this.currentCardContainer, fromPosition, toPosition, fromAngle, toAngle)
+      this.highlightScoring(bestVisitedPossibleMove)
+      this.currentPossibleMove = bestVisitedPossibleMove
+      this.emitCurrentCardChange(ContinuoAppEvents.CardMoved)
+      await promisifyDelayedCall(this, DURATION_PRE_FINAL_PLACEMENT)
+    }
+
     await this.placeCurrentCardFinal()
   }
 
