@@ -48,6 +48,7 @@ export abstract class BoardScene extends Phaser.Scene {
   private cardSpritesMap: Map<CommonCard, Phaser.GameObjects.Sprite>
   private currentCardContainer: Phaser.GameObjects.Container
   private animating: boolean
+  private moveTimedOut: boolean
   private bestScoreLocationsFound: Set<CommonPossibleMove>
   private allLocationsFound: Set<CommonPossibleMove>
 
@@ -60,6 +61,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.settings = DEFAULT_SETTINGS
     this.cardSpritesMap = new Map<CommonCard, Phaser.GameObjects.Sprite>()
     this.animating = false
+    this.moveTimedOut = false
     this.bestScoreLocationsFound = new Set()
     this.allLocationsFound = new Set()
   }
@@ -214,7 +216,9 @@ export abstract class BoardScene extends Phaser.Scene {
       }
     })
 
-    this.allLocationsFound.add(possibleMove)
+    if (possibleMove) {
+      this.allLocationsFound.add(possibleMove)
+    }
 
     if (possibleMove && this.settings.soundBestScoreEnabled) {
       const score = possibleMove.score
@@ -233,7 +237,8 @@ export abstract class BoardScene extends Phaser.Scene {
   }
 
   private rotateCurrentCardContainer(rotationAngle: number): void {
-    if (this.animating || !(this.currentPlayer?.type == PlayerType.Human)) {
+    const isHumanMove = this.currentPlayer?.type == PlayerType.Human
+    if (this.animating || this.moveTimedOut || !isHumanMove) {
       return
     }
     const newPlacedCard = rotationAngle > 0
@@ -254,17 +259,19 @@ export abstract class BoardScene extends Phaser.Scene {
           this.animating = true
         },
         onComplete: () => {
-          this.currentPossibleMove = possibleMove
-          this.highlightScoring(this.currentPossibleMove)
-          this.emitCurrentCardChange(ContinuoAppEvents.CardRotated)
-          if (this.settings.soundBestScoreEnabled) {
-            const score = possibleMove.score
-            const bestScore = this.possibleMoves[0].score
-            this.allLocationsFound.add(possibleMove)
-            if (score == bestScore) {
-              if (!this.bestScoreLocationsFound.has(possibleMove)) {
-                this.sound.play('best-move')
-                this.bestScoreLocationsFound.add(possibleMove)
+          if (!this.moveTimedOut) {
+            this.currentPossibleMove = possibleMove
+            this.highlightScoring(this.currentPossibleMove)
+            this.emitCurrentCardChange(ContinuoAppEvents.CardRotated)
+            if (this.settings.soundBestScoreEnabled) {
+              const score = possibleMove.score
+              const bestScore = this.possibleMoves[0].score
+              this.allLocationsFound.add(possibleMove)
+              if (score == bestScore) {
+                if (!this.bestScoreLocationsFound.has(possibleMove)) {
+                  this.sound.play('best-move')
+                  this.bestScoreLocationsFound.add(possibleMove)
+                }
               }
             }
           }
@@ -335,7 +342,7 @@ export abstract class BoardScene extends Phaser.Scene {
       _pointer: Phaser.Input.Pointer,
       _gameObject: Phaser.GameObjects.GameObject
     ) => {
-      if (this.currentPossibleMove) {
+      if (this.currentPossibleMove && !this.moveTimedOut) {
         const { row, col } = this.getSnapPosition(this.currentCardContainer.x, this.currentCardContainer.y)
         const newPlacedCard = this.adapter.placedCardMoveTo(this.currentPossibleMove.placedCard, row, col)
         const possibleMove = this.findPossibleMove(newPlacedCard)
@@ -449,6 +456,7 @@ export abstract class BoardScene extends Phaser.Scene {
   private async onNextTurn(player: Player) {
     log.debug('[BoardScene#onNextTurn]', player)
     this.currentPlayer = player
+    this.moveTimedOut = false
     const card = this.deck.nextCard()
     this.possibleMoves = this.adapter.evaluateCard(this.board, card)
     switch (this.currentPlayer.type) {
@@ -486,8 +494,10 @@ export abstract class BoardScene extends Phaser.Scene {
 
   private async onMoveTimedOut() {
     log.debug('[BoardScene#onMoveTimedOut]')
+    this.moveTimedOut = true
     this.tweens.killTweensOf(this.currentCardContainer)
     this.input.setDragState(this.input.activePointer, 0)
+    this.currentCardContainer.disableInteractive()
     const possibleMove = Array.from(this.allLocationsFound.values()).reduce(
       (acc, pm) => pm.score > acc.score ? pm : acc,
       this.currentPossibleMove
@@ -503,7 +513,7 @@ export abstract class BoardScene extends Phaser.Scene {
     this.highlightScoring(possibleMove)
     await promisifyDelayedCall(this, DURATION_PRE_FINAL_PLACEMENT)
     this.currentPossibleMove = possibleMove
-    this.placeCurrentCardFinal()
+    await this.placeCurrentCardFinal()
   }
 
   private onSettingsChanged(settings: Settings) {
