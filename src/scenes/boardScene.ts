@@ -417,6 +417,7 @@ export abstract class BoardScene extends Phaser.Scene {
     log.debug('[BoardScene#onWake]', data)
     this.options = data.options
     this.settings = data.settings
+    this.boardSceneConfig.eventCentre.on(ContinuoAppEvents.GameAborted, this.onGameAborted, this)
     this.boardSceneConfig.eventCentre.on(ContinuoAppEvents.NewGame, this.onNewGame, this)
     this.boardSceneConfig.eventCentre.on(ContinuoAppEvents.NextTurn, this.onNextTurn, this)
     this.boardSceneConfig.eventCentre.on(ContinuoAppEvents.RotateCW, this.onRotateCW, this)
@@ -428,6 +429,7 @@ export abstract class BoardScene extends Phaser.Scene {
 
   private onSleep(_scene: Phaser.Scene) {
     log.debug('[BoardScene#onSleep]')
+    this.boardSceneConfig.eventCentre.off(ContinuoAppEvents.GameAborted, this.onGameAborted, this)
     this.boardSceneConfig.eventCentre.off(ContinuoAppEvents.NewGame, this.onNewGame, this)
     this.boardSceneConfig.eventCentre.off(ContinuoAppEvents.NextTurn, this.onNextTurn, this)
     this.boardSceneConfig.eventCentre.off(ContinuoAppEvents.RotateCW, this.onRotateCW, this)
@@ -435,6 +437,13 @@ export abstract class BoardScene extends Phaser.Scene {
     this.boardSceneConfig.eventCentre.off(ContinuoAppEvents.PlaceCard, this.onPlaceCard, this)
     this.boardSceneConfig.eventCentre.off(ContinuoAppEvents.MoveTimedOut, this.onMoveTimedOut, this)
     this.boardSceneConfig.eventCentre.off(ContinuoAppEvents.SettingsChanged, this.onSettingsChanged, this)
+  }
+
+  private onGameAborted() {
+    log.debug('[BoardScene#onGameAborted]')
+    this.tweens.killAll()
+    this.input.setDragState(this.input.activePointer, 0)
+    this.currentCardContainer.disableInteractive()
   }
 
   private onNewGame(players: readonly Player[]) {

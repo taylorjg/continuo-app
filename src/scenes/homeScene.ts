@@ -49,6 +49,7 @@ export class HomeScene extends Phaser.Scene {
     this.load.image('play', 'assets/icons/49-play@2x.png')
     this.load.image('house', 'assets/icons/53-house@2x.png')
     this.load.image('group', 'assets/icons/112-group@2x.png')
+    this.load.image('equalizer', 'assets/icons/95-equalizer@2x.png')
     this.load.image('checkmark', 'assets/icons/258-checkmark@2x.png')
     this.load.image('circlex', 'assets/icons/298-circlex@2x.png')
     this.load.image('cw-arrow', 'assets/icons/cw-arrow.png')
@@ -72,12 +73,12 @@ export class HomeScene extends Phaser.Scene {
     const continuoCardSprite = createContinuoCardSprite(this).setScale(.4, .4)
     const hexagoCardSprite = createHexagoCardSprite(this).setScale(.5, .5)
     const groupSprite = new Phaser.GameObjects.Sprite(this, 0, 0, 'group')
-    const group2Sprite = new Phaser.GameObjects.Sprite(this, 0, 0, 'group')
+    const equalizerSprite = new Phaser.GameObjects.Sprite(this, 0, 0, 'equalizer')
 
     const playContinuoButton = ui.createHomeSceneButton(this, 'playContinuoButton', 'Play Continuo', continuoCardSprite)
     const playHexagoButton = ui.createHomeSceneButton(this, 'playHexagoButton', 'Play Hexago', hexagoCardSprite)
     const playersButton = ui.createHomeSceneButton(this, 'playersButton', 'Players', groupSprite)
-    const optionsButton = ui.createHomeSceneButton(this, 'optionsButton', 'Game Options', group2Sprite)
+    const optionsButton = ui.createHomeSceneButton(this, 'optionsButton', 'Game Options', equalizerSprite)
 
     this.rexUI.add.sizer({
       orientation: 'vertical',

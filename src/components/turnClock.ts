@@ -107,6 +107,7 @@ export class TurnClock {
     this.remainingTimePanel.setVisible(false)
     if (this.timerEvent) {
       this.timerEvent.remove()
+      this.timerEvent.destroy()
       this.timerEvent = null
     }
   }

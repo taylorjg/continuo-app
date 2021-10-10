@@ -23,7 +23,7 @@ class OptionsDialogScene extends ModalDialogBaseScene {
 
   protected getDialogConfig(): Dialog.IConfig {
     return {
-      title: this.add.text(0, 0, 'Options', ui.TEXT_STYLE),
+      title: this.add.text(0, 0, 'Game Options', ui.TEXT_STYLE),
       content: this.createContent(),
       expand: { title: false }
     }
