@@ -181,6 +181,8 @@ export class HUDScene extends Phaser.Scene {
       this.scene.wake(ContinuoAppScenes.Home)
     } else {
       const onYes = () => {
+        this.time.clearPendingEvents()
+        this.time.removeAllEvents()
         this.scene.wake(ContinuoAppScenes.Home)
         this.eventCentre.emit(ContinuoAppEvents.GameAborted)
       }

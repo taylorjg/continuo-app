@@ -441,6 +441,8 @@ export abstract class BoardScene extends Phaser.Scene {
 
   private onGameAborted() {
     log.debug('[BoardScene#onGameAborted]')
+    this.time.clearPendingEvents()
+    this.time.removeAllEvents()
     this.tweens.killAll()
     this.input.setDragState(this.input.activePointer, 0)
     this.currentCardContainer.disableInteractive()
@@ -511,6 +513,8 @@ export abstract class BoardScene extends Phaser.Scene {
   private async onMoveTimedOut() {
     log.debug('[BoardScene#onMoveTimedOut]')
     this.moveTimedOut = true
+    this.time.clearPendingEvents()
+    this.time.removeAllEvents()
     this.tweens.killTweensOf(this.currentCardContainer)
     this.input.setDragState(this.input.activePointer, 0)
     this.currentCardContainer.disableInteractive()
@@ -536,6 +540,9 @@ export abstract class BoardScene extends Phaser.Scene {
       this.currentPossibleMove = bestVisitedPossibleMove
       this.emitCurrentCardChange(ContinuoAppEvents.CardMoved)
       await promisifyDelayedCall(this, DURATION_PRE_FINAL_PLACEMENT)
+    } else {
+      this.currentCardContainer.setPosition(fromPosition.x, fromPosition.y)
+      this.currentCardContainer.setAngle(fromAngle)
     }
 
     await this.placeCurrentCardFinal()
